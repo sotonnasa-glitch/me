@@ -1,0 +1,6 @@
+{
+  "name": "Tekvix - پلتفرم خدمات هوش مصنوعی و دیجیتال",
+  "description": "پلتفرم جامع خدمات هوش مصنوعی و دیجیتال برای ساخت ایده‌های بزرگ: طراحی وب‌سایت، تولید ویدیو، ساخت تصویر و موزیک با هوش مصنوعی",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
