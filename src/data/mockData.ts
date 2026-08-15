@@ -4,8 +4,8 @@ export const BRAND_INFO = {
   name: 'تکویکس',
   latinName: 'Tekvix',
   tagline: 'پلتفرم خدمات هوش مصنوعی و دیجیتال',
-  telegramHandle: '@arnirhq',
-  telegramUrl: 'https://t.me/arnirhq',
+  telegramHandle: '@Lawat_kar',
+  telegramUrl: 'https://t.me/Lawat_kar',
   heroHeadline: 'خدمات هوش مصنوعی برای خلق ایده‌های بزرگ',
   heroSubtext: 'از ساخت وب‌سایت و طراحی تصاویر اختصاصی تا تولید ویدیو، موزیک و محتوای دیجیتال — سفارش خود را ثبت کنید و برای برآورد هزینه با ما در ارتباط باشید.',
 };

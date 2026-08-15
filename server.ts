@@ -1,11 +1,7 @@
 import express from 'express';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const PORT = 3000;
 
@@ -64,7 +60,7 @@ async function startServer() {
 - اگر کاربر درباره قیمت یا زمان تحویل پرسید، محدوده تخمینی و مزایای تکویکس را با دقت توضیح دهید و کاربر را به ثبت سفارش مستقیم دعوت کنید.
 - اگر کاربر ایده یا سناریو خواست (مثلاً سناریوی ویدیوی تبلیغاتی یا پرامپت)، پرامپت‌ها و سناریوهای خلاقانه با جزییات ارائه دهید.
 - برای ساختاردهی زیبا از بولت‌پوینت‌ها و ایموجی‌های مناسب استفاده کنید.
-- همواره در انتهای پاسخ‌های مرتبط، به کاربر بگویید که با کلیک روی دکمه «ثبت سفارش آنی» در پایین صفحه یا ارتباط با تلگرام (@arnirhq) می‌تواند پروژه خود را نهایی کند.
+- همواره در انتهای پاسخ‌های مرتبط، به کاربر بگویید که با کلیک روی دکمه «ثبت سفارش آنی» در پایین صفحه یا ارتباط با تلگرام (@Lawat_kar) می‌تواند پروژه خود را نهایی کند.
 `;
 
       if (ai) {
@@ -106,7 +102,7 @@ async function startServer() {
       let fallbackText = '';
 
       if (lower.includes('قیمت') || lower.includes('هزینه') || lower.includes('تعرفه')) {
-        fallbackText = `💡 **برآورد هزینه خدمات تکویکس:**\n\n• **طراحی وب‌سایت با هوش مصنوعی:** از ۴,۵۰۰,۰۰۰ تومان (تحویل ۳ تا ۵ روز)\n• **تولید تیزر و ویدیوی هوش مصنوعی:** از ۲,۸۰۰,۰۰۰ تومان (تحویل ۲ روز)\n• **ساخت ربات تلگرام پیشرفته:** از ۳,۵۰۰,۰۰۰ تومان\n• **خلق بسته تصاویر و گرافیک:** از ۱,۲۰۰,۰۰۰ تومان\n\nبرای سفارش اختصاصی می‌توانید مستقیماً فرم ثبت سفارش را تکمیل کنید یا به تلگرام @arnirhq پیام دهید.`;
+        fallbackText = `💡 **برآورد هزینه خدمات تکویکس:**\n\n• **طراحی وب‌سایت با هوش مصنوعی:** از ۴,۵۰۰,۰۰۰ تومان (تحویل ۳ تا ۵ روز)\n• **تولید تیزر و ویدیوی هوش مصنوعی:** از ۲,۸۰۰,۰۰۰ تومان (تحویل ۲ روز)\n• **ساخت ربات تلگرام پیشرفته:** از ۳,۵۰۰,۰۰۰ تومان\n• **خلق بسته تصاویر و گرافیک:** از ۱,۲۰۰,۰۰۰ تومان\n\nبرای سفارش اختصاصی می‌توانید مستقیماً فرم ثبت سفارش را تکمیل کنید یا به تلگرام @Lawat_kar پیام دهید.`;
       } else if (lower.includes('ویدیو') || lower.includes('تیزر') || lower.includes('فیلم')) {
         fallbackText = `🎬 **تولید ویدیو و تیزر با هوش مصنوعی در تکویکس:**\n\nما با استفاده از جدیدترین موتورهای تولید تصویر و ویدیو، سناریوهای تبلیغاتی خیره‌کننده، گویندگی طبیعی و انیمیشن‌های روان 4K خلق می‌کنیم.\n\n✨ می‌توانید در بخش «وبلاگ و ویدیوها» نمونه ویدیوها را تماشا کنید یا سناریوی مدنظرتان را بگویید تا پرامپت اختصاصی برایتان بنویسم!`;
       } else if (lower.includes('ربات') || lower.includes('تلگرام')) {
@@ -125,6 +121,62 @@ async function startServer() {
     }
   });
 
+  // Helper to escape HTML for Telegram Markdown/HTML parse mode
+  function escapeTgHtml(text: string | undefined | null): string {
+    if (!text) return '';
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function parseTelegramError(description: string, chatId: string): string {
+    const desc = description || '';
+    if (desc.includes('chat not found')) {
+      if (chatId.startsWith('@')) {
+        return `خطا: تلگرام برای چت‌های شخصی نام‌کاربری (مثل ${chatId}) را قبول نمی‌کند. لطفاً شناسه عددی (Chat ID) خود را از ربات @userinfobot دریافت و وارد کنید، یا اگر کانال است، ربات را ادمین کانال کنید.`;
+      }
+      return 'خطا: چت تلگرام یافت نشد. آیا ربات را استارت (/start) کرده‌اید؟ لطفاً ابتدا در تلگرام وارد ربات شده و دکمه Start را بزنید.';
+    }
+    if (desc.includes('Unauthorized') || desc.includes('bot_token')) {
+      return 'خطا: توکن ربات تلگرام نامعتبر است. لطفاً توکن دقیق دریافتی از @BotFather را وارد کنید.';
+    }
+    if (desc.includes('bot was blocked by the user')) {
+      return 'خطا: ربات توسط این کاربر بلاک شده است. لطفاً وارد ربات شده و آن را Unblock و Start کنید.';
+    }
+    return `خطای تلگرام: ${description}`;
+  }
+
+  // Helper to extract clean Telegram/Phone URL for direct PV chat
+  const getClientDirectChatUrl = (rawContact: string): { url: string; isPhone: boolean } => {
+    const contact = (rawContact || '').trim();
+    if (!contact) {
+      return { url: 'https://t.me/Lawat_kar', isPhone: false };
+    }
+    // Check if starts with @ or is a username
+    if (contact.startsWith('@')) {
+      const username = contact.replace(/^@+/, '').trim();
+      return { url: `https://t.me/${username}`, isPhone: false };
+    }
+    // Check if phone number (Iranian or international)
+    const digitsOnly = contact.replace(/\D/g, '');
+    if (digitsOnly.length >= 10) {
+      let intlPhone = digitsOnly;
+      if (digitsOnly.startsWith('09')) {
+        intlPhone = '98' + digitsOnly.slice(1);
+      } else if (digitsOnly.startsWith('9') && digitsOnly.length === 10) {
+        intlPhone = '98' + digitsOnly;
+      }
+      return { url: `https://t.me/+${intlPhone}`, isPhone: true };
+    }
+    // Check if alphanumeric username without @
+    if (/^[a-zA-Z0-9_]{3,32}$/.test(contact)) {
+      return { url: `https://t.me/${contact}`, isPhone: false };
+    }
+    // Fallback to Telegram search
+    return { url: `https://t.me/${contact.replace(/\s+/g, '')}`, isPhone: false };
+  };
+
   // 3. Telegram Bot Order Notification API
   app.post('/api/telegram/send-order', async (req, res) => {
     try {
@@ -135,22 +187,25 @@ async function startServer() {
         return;
       }
 
-      const effectiveToken = botToken || process.env.TELEGRAM_BOT_TOKEN;
-      const effectiveChatId = chatId || process.env.TELEGRAM_CHAT_ID;
+      const effectiveToken = (botToken || process.env.TELEGRAM_BOT_TOKEN || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus').trim();
+      const effectiveChatId = (chatId || process.env.TELEGRAM_CHAT_ID || '7460143967').trim();
 
-      const orderId = order.id || 'ORD-' + Math.floor(1000 + Math.random() * 9000);
-      const fullName = order.fullName || 'کاربر تکویکس';
-      const contact = order.telegramOrPhone || 'ثبت نشده';
-      const serviceTitle = order.serviceTitle || 'خدمات هوش مصنوعی';
-      const message = order.message || 'بدون توضیح';
+      const orderId = escapeTgHtml(order.id || 'ORD-' + Math.floor(1000 + Math.random() * 9000));
+      const fullName = escapeTgHtml(order.fullName || 'کاربر تکویکس');
+      const rawContact = (order.telegramOrPhone || 'ثبت نشده').trim();
+      const contactEscaped = escapeTgHtml(rawContact);
+      const serviceTitle = escapeTgHtml(order.serviceTitle || 'خدمات هوش مصنوعی');
+      const message = escapeTgHtml(order.message || 'بدون توضیح');
       const dateStr = new Date().toLocaleString('fa-IR');
+
+      const { url: pvUrl, isPhone } = getClientDirectChatUrl(rawContact);
 
       const telegramMessage = `
 🚀 <b>سفارش جدید در تکویکس (Tekvix AI)</b>
 
 📌 <b>کد رهگیری:</b> <code>${orderId}</code>
-👤 <b>نام مشتری:</b> ${fullName}
-📱 <b>شماره / آیدی تلگرام:</b> <code>${contact}</code>
+👤 <b>نام مشتری:</b> <b>${fullName}</b>
+📱 <b>آیدی / شماره تماس:</b> <a href="${pvUrl}">${contactEscaped}</a> 👈 <i>(لمس کنید)</i>
 💼 <b>سرویس انتخابی:</b> ${serviceTitle}
 📝 <b>توضیحات و نیازمندی:</b>
 <i>${message}</i>
@@ -158,6 +213,18 @@ async function startServer() {
 ⏰ <b>زمان ثبت:</b> ${dateStr}
 🌐 <b>منبع:</b> وب‌سایت تکویکس
       `.trim();
+
+      // Inline Keyboard for 1-Tap Direct PV Open
+      const inlineKeyboard = {
+        inline_keyboard: [
+          [
+            {
+              text: '💬 ورود مستقیم به پی‌وی مشتری (چت)',
+              url: pvUrl,
+            },
+          ],
+        ],
+      };
 
       // If Bot Token and Chat ID are configured, perform real Telegram Bot API call
       if (effectiveToken && effectiveChatId) {
@@ -169,6 +236,8 @@ async function startServer() {
             chat_id: effectiveChatId,
             text: telegramMessage,
             parse_mode: 'HTML',
+            reply_markup: inlineKeyboard,
+            disable_web_page_preview: true,
           }),
         });
 
@@ -179,26 +248,29 @@ async function startServer() {
             success: true,
             telegramSent: true,
             messageId: tgData.result?.message_id,
+            pvUrl,
+            message: 'پیام سفارش فوراً به ربات تلگرام ارسال شد!',
           });
           return;
         } else {
+          const userFriendlyError = parseTelegramError(tgData.description, effectiveChatId);
           console.warn('Telegram Bot API returned error:', tgData);
           res.json({
             success: true,
             telegramSent: false,
-            telegramError: tgData.description,
-            fallbackUrl: `https://t.me/arnirhq?text=${encodeURIComponent(`سفارش ${orderId}: ${serviceTitle} - ${contact}`)}`,
+            telegramError: userFriendlyError,
+            fallbackUrl: `https://t.me/Lawat_kar?text=${encodeURIComponent(`سفارش ${orderId}: ${serviceTitle} - ${rawContact}`)}`,
           });
           return;
         }
       }
 
-      // Simulated success with direct link fallback if token is not yet provided by user
+      // If token not provided
       res.json({
         success: true,
         telegramSent: false,
-        note: 'ربات تلگرام هنوز در تنظیمات کانفیگ نشده است اما سفارش در دیتابیس ثبت شد.',
-        directLink: `https://t.me/arnirhq?text=${encodeURIComponent(`سفارش ${orderId}\nمشتری: ${fullName}\nتماس: ${contact}\nسرویس: ${serviceTitle}\nتوضیحات: ${message}`)}`,
+        note: 'ربات تلگرام در تنظیمات ادمین تنظیم نشده است.',
+        directLink: `https://t.me/Lawat_kar?text=${encodeURIComponent(`سفارش ${orderId}\nمشتری: ${fullName}\nتماس: ${rawContact}\nسرویس: ${serviceTitle}\nتوضیحات: ${message}`)}`,
       });
     } catch (err: any) {
       console.error('Error sending order to Telegram:', err);
@@ -210,35 +282,57 @@ async function startServer() {
   app.post('/api/telegram/test-bot', async (req, res) => {
     try {
       const { botToken, chatId } = req.body;
-      const effectiveToken = botToken || process.env.TELEGRAM_BOT_TOKEN;
-      const effectiveChatId = chatId || process.env.TELEGRAM_CHAT_ID;
+      const effectiveToken = (botToken || process.env.TELEGRAM_BOT_TOKEN || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus').trim();
+      const effectiveChatId = (chatId || process.env.TELEGRAM_CHAT_ID || '7460143967').trim();
 
-      if (!effectiveToken || !effectiveChatId) {
+      if (!effectiveToken) {
         res.status(400).json({
-          error: 'لطفاً توکن ربات و چت‌آیدی را وارد کنید.',
+          success: false,
+          error: 'توکن ربات تلگرام وارد نشده است. لطفاً توکن را از @BotFather دریافت و وارد کنید.',
+        });
+        return;
+      }
+
+      if (!effectiveChatId) {
+        res.status(400).json({
+          success: false,
+          error: 'شناسه چت (Chat ID) وارد نشده است. لطفاً شناسه عددی خود را از @userinfobot دریافت کنید.',
         });
         return;
       }
 
       const tgUrl = `https://api.telegram.org/bot${effectiveToken}/sendMessage`;
+      const testMsg = `🔔 <b>پیام تست اتصال تکویکس (Tekvix AI)</b>\n\n✅ ربات تلگرام شما با موفقیت به وب‌سایت متصل شد!\nاز این پس تمامی سفارشات ثبت‌شده توسط کاربران، بی‌درنگ همراه با جزئیات کامل به این چت ارسال می‌شوند.\n\n⏰ <b>زمان تست:</b> ${new Date().toLocaleString('fa-IR')}`;
+
       const tgRes = await fetch(tgUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: effectiveChatId,
-          text: `🔔 <b>پیام تست اتصال تکویکس</b>\n\nربات تلگرام شما با موفقیت به پلتفرم تکویکس متصل شد! از این پس سفارشات جدید به این چت ارسال خواهند شد.\n⏰ زمان: ${new Date().toLocaleString('fa-IR')}`,
+          text: testMsg,
           parse_mode: 'HTML',
         }),
       });
 
       const data = await tgRes.json();
       if (data.ok) {
-        res.json({ success: true, message: 'پیام تست با موفقیت ارسال شد!' });
+        res.json({
+          success: true,
+          message: 'پیام تست با موفقیت به تلگرام شما ارسال شد! اتصال کاملاً برقرار است.',
+        });
       } else {
-        res.status(400).json({ success: false, error: data.description || 'خطا در ارسال پیام به تلگرام' });
+        const friendlyError = parseTelegramError(data.description, effectiveChatId);
+        res.status(400).json({
+          success: false,
+          error: friendlyError,
+          rawError: data.description,
+        });
       }
     } catch (error: any) {
-      res.status(500).json({ error: error?.message || 'خطا در اتصال به تلگرام' });
+      res.status(500).json({
+        success: false,
+        error: error?.message || 'خطا در ارتباط با سرور تلگرام',
+      });
     }
   });
 

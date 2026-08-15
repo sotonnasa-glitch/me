@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Sparkles,
   Menu,
   X,
   ArrowLeft,
   Send,
-  Shield,
   Bell,
   Video,
   User,
@@ -25,11 +24,33 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAdmin,
   onOpenGoogleAuth,
 }) => {
-  const { brandInfo, orders, currentUser, navigateToSection } = useSiteData();
+  const { brandInfo, currentUser, navigateToSection } = useSiteData();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const pendingCount = orders.filter((o) => o.status === 'new').length;
+  // Secret 5-Tap Easter Egg state for Admin Access
+  const tapCountRef = useRef(0);
+  const tapTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleSecretLogoTap = (e: React.MouseEvent) => {
+    e.preventDefault();
+    tapCountRef.current += 1;
+
+    if (tapTimerRef.current) {
+      clearTimeout(tapTimerRef.current);
+    }
+
+    if (tapCountRef.current >= 5) {
+      tapCountRef.current = 0;
+      onOpenAdmin();
+      return;
+    }
+
+    // Reset tap count after 2.5 seconds if 5 taps not completed
+    tapTimerRef.current = setTimeout(() => {
+      tapCountRef.current = 0;
+    }, 2500);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -54,12 +75,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     { label: 'تماس', href: '#contact' },
   ];
 
-  const handleAdminClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onOpenAdmin();
-  };
-
   const handleVideoLinkClick = (e: React.MouseEvent) => {
     e.preventDefault();
     navigateToSection('blog');
@@ -83,39 +98,34 @@ export const Navbar: React.FC<NavbarProps> = ({
       )}
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex items-center justify-between">
-        {/* Right Corner (Start in RTL): Custom Purple Frame + Tekvix AI Logo */}
-        <div className="flex items-center gap-2.5 sm:gap-3.5">
+        {/* Right Corner (Start in RTL): Custom Purple Frame + Tekvix AI Logo (Secret 5-tap area) */}
+        <div
+          id="nav-brand-container"
+          onClick={handleSecretLogoTap}
+          className="flex items-center gap-2.5 sm:gap-3.5 cursor-pointer select-none"
+        >
           {/* Purple Bordered Square Frame with Embedded Reference 3D Crystal Asset */}
-          <button
-            type="button"
+          <div
             id="nav-crystal-frame"
-            onClick={handleAdminClick}
-            className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#090517] border border-purple-500/50 hover:border-purple-400 p-0.5 flex items-center justify-center shadow-[0_0_16px_rgba(168,85,247,0.4)] hover:shadow-[0_0_24px_rgba(168,85,247,0.7)] transition-all cursor-pointer group focus:outline-none"
-            title="ورود به پنل مدیریت"
+            className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#090517] border border-purple-500/50 hover:border-purple-400 p-0.5 flex items-center justify-center shadow-[0_0_16px_rgba(168,85,247,0.4)] hover:shadow-[0_0_24px_rgba(168,85,247,0.7)] transition-all group"
           >
             <CrystalCubeIcon size={36} className="transition-transform group-hover:scale-105" />
             <span className="absolute -top-1 -start-1 w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping opacity-75" />
             <span className="absolute -top-1 -start-1 w-2.5 h-2.5 rounded-full bg-cyan-400" />
-          </button>
+          </div>
 
           {/* Tekvix AI Brand Logo */}
-          <a
-            href="#"
-            id="nav-logo"
-            className="flex items-center gap-2 group focus:outline-none"
-          >
-            <div className="flex flex-col">
-              <span className="text-lg sm:text-xl font-black tracking-tight text-white font-sans flex items-center gap-1.5">
-                <span>{brandInfo.latinName || 'Tekvix'}</span>
-                <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-purple-500/20 border border-purple-500/40 text-purple-300">
-                  AI
-                </span>
+          <div className="flex flex-col">
+            <span className="text-lg sm:text-xl font-black tracking-tight text-white font-sans flex items-center gap-1.5">
+              <span>{brandInfo.latinName || 'Tekvix'}</span>
+              <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-purple-500/20 border border-purple-500/40 text-purple-300">
+                AI
               </span>
-              <span className="text-[10px] sm:text-[11px] text-gray-400 hidden sm:inline-block">
-                {brandInfo.tagline || 'پلتفرم خدمات هوش مصنوعی'}
-              </span>
-            </div>
-          </a>
+            </span>
+            <span className="text-[10px] sm:text-[11px] text-gray-400 hidden sm:inline-block">
+              {brandInfo.tagline || 'پلتفرم خدمات هوش مصنوعی'}
+            </span>
+          </div>
         </div>
 
         {/* Desktop Nav Links */}
@@ -136,7 +146,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           ))}
         </nav>
 
-        {/* Desktop Action Buttons (Google Sign-In + Admin + Order CTA) */}
+        {/* Desktop Action Buttons (Google Sign-In + Direct Telegram + Order CTA) */}
         <div className="hidden sm:flex items-center gap-2 sm:gap-2.5">
           {/* Google Sign-in / Profile Button */}
           {onOpenGoogleAuth && (
@@ -185,30 +195,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          {/* Admin Panel Button with Shield */}
-          <button
-            type="button"
-            onClick={handleAdminClick}
-            id="nav-admin-panel-btn"
-            className="relative flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-purple-200 hover:text-white bg-purple-950/70 hover:bg-purple-900/80 rounded-xl border border-purple-500/40 shadow-[0_0_12px_rgba(168,85,247,0.25)] transition-all cursor-pointer group"
-            title="ورود به پنل مدیریت سایت و سفارشات"
-          >
-            <Shield className="w-4 h-4 text-purple-300 group-hover:text-purple-100 transition-transform group-hover:scale-110" />
-            <span>پنل ادمین</span>
-            {pendingCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-black text-[10px] font-bold">
-                {pendingCount}
-              </span>
-            )}
-          </button>
-
           {/* Direct Telegram Support Button */}
           <a
             href={brandInfo.telegramUrl}
             target="_blank"
             rel="noopener noreferrer"
             id="nav-telegram-link"
-            className="hidden xl:flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-xl border border-white/10 transition-all"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-xl border border-white/10 transition-all"
             title="پشتیبانی در تلگرام"
           >
             <Send className="w-3.5 h-3.5 rotate-180 text-purple-400" />
@@ -220,7 +213,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             type="button"
             id="nav-place-order-btn"
             onClick={() => onOpenOrderModal()}
-            className="relative group px-4 sm:px-5 py-2 rounded-xl font-medium text-xs sm:text-sm text-white overflow-hidden transition-all duration-300 focus:outline-none"
+            className="relative group px-4 sm:px-5 py-2 rounded-xl font-medium text-xs sm:text-sm text-white overflow-hidden transition-all duration-300 focus:outline-none cursor-pointer"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 rounded-xl transition-all duration-300 group-hover:scale-105 shadow-[0_0_20px_rgba(147,51,234,0.4)] group-hover:shadow-[0_0_28px_rgba(147,51,234,0.7)]" />
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
@@ -248,26 +241,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          {/* Shield Admin Button */}
-          <button
-            type="button"
-            id="mobile-nav-shield-admin-btn"
-            onClick={handleAdminClick}
-            className="p-2.5 rounded-xl bg-purple-900/60 border border-purple-500/50 text-purple-200 active:scale-95 shadow-[0_0_12px_rgba(168,85,247,0.3)] transition-all cursor-pointer flex items-center justify-center relative"
-            title="ورود به پنل مدیریت"
-          >
-            <Shield className="w-4 h-4 text-purple-300" />
-            {pendingCount > 0 && (
-              <span className="absolute -top-1 -end-1 w-2.5 h-2.5 bg-amber-400 rounded-full" />
-            )}
-          </button>
-
           {/* Order Button */}
           <button
             type="button"
             id="mobile-place-order-cta"
             onClick={() => onOpenOrderModal()}
-            className="px-3 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-semibold shadow-[0_0_14px_rgba(147,51,234,0.5)] active:scale-95"
+            className="px-3 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-semibold shadow-[0_0_14px_rgba(147,51,234,0.5)] active:scale-95 cursor-pointer"
           >
             سفارش
           </button>
@@ -277,7 +256,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             type="button"
             id="mobile-menu-toggle-btn"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="w-9 h-9 rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center text-gray-200 hover:text-white"
+            className="w-9 h-9 rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center text-gray-200 hover:text-white cursor-pointer"
             aria-label="منوی سایت"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -331,29 +310,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               type="button"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onOpenAdmin();
-              }}
-              className="w-full py-2.5 rounded-xl bg-purple-950/60 border border-purple-500/30 text-purple-200 text-sm font-semibold flex items-center justify-center gap-2"
-            >
-              <Shield className="w-4 h-4 text-purple-400" />
-              <span>ورود به پنل مدیریت سایت</span>
-              {pendingCount > 0 && (
-                <span className="px-2 py-0.5 rounded-full bg-amber-500 text-black text-xs font-bold">
-                  {pendingCount} جدید
-                </span>
-              )}
-            </button>
-
-            <button
-              type="button"
               id="drawer-order-button"
               onClick={() => {
                 setMobileMenuOpen(false);
                 onOpenOrderModal();
               }}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-medium text-center shadow-[0_0_20px_rgba(147,51,234,0.5)] flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-medium text-center shadow-[0_0_20px_rgba(147,51,234,0.5)] flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>ثبت سفارش آنلاین</span>
               <ArrowLeft className="w-4 h-4" />

@@ -47,7 +47,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
               {brandInfo.tagline} — ارائه تخصصی‌ترین خدمات طراحی وب‌سایت، تصویرسازی، تیزر ویدیویی، موسیقی و توسعه ربات تلگرام با هوش مصنوعی.
             </p>
 
-            {/* Telegram Badge & Admin link */}
+            {/* Telegram Support Link */}
             <div className="pt-2 flex flex-wrap items-center gap-3">
               <a
                 href={brandInfo.telegramUrl}
@@ -58,17 +58,6 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
                 <Send className="w-4 h-4 rotate-180" />
                 <span>پشتیبانی مستقیم در تلگرام: {brandInfo.telegramHandle}</span>
               </a>
-
-              {onOpenAdmin && (
-                <button
-                  type="button"
-                  onClick={onOpenAdmin}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 text-gray-300 hover:text-purple-300 text-xs font-medium transition-all"
-                >
-                  <Shield className="w-3.5 h-3.5 text-purple-400" />
-                  <span>ورود به پنل ادمین</span>
-                </button>
-              )}
             </div>
           </div>
 

@@ -75,9 +75,9 @@ const INITIAL_ORDERS: OrderItem[] = [
 ];
 
 const DEFAULT_TELEGRAM_SETTINGS: TelegramBotSettings = {
-  botToken: '',
-  chatId: '',
-  botUsername: 'arnirhq',
+  botToken: '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus',
+  chatId: '7460143967',
+  botUsername: 'Tekvixbot',
   autoNotifyNewOrders: true,
   notifyOnStatusChange: true,
 };
@@ -189,7 +189,16 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [brandInfo, setBrandInfo] = useState<BrandInfo>(() => {
     try {
       const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_brand`);
-      return saved ? JSON.parse(saved) : DEFAULT_BRAND_INFO;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          ...DEFAULT_BRAND_INFO,
+          ...parsed,
+          telegramHandle: parsed.telegramHandle && parsed.telegramHandle !== '@arnirhq' ? parsed.telegramHandle : '@Lawat_kar',
+          telegramUrl: parsed.telegramUrl && !parsed.telegramUrl.includes('arnirhq') ? parsed.telegramUrl : 'https://t.me/Lawat_kar',
+        };
+      }
+      return DEFAULT_BRAND_INFO;
     } catch {
       return DEFAULT_BRAND_INFO;
     }
@@ -207,7 +216,17 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [telegramSettings, setTelegramSettings] = useState<TelegramBotSettings>(() => {
     try {
       const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_telegram`);
-      return saved ? JSON.parse(saved) : DEFAULT_TELEGRAM_SETTINGS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          ...DEFAULT_TELEGRAM_SETTINGS,
+          ...parsed,
+          botToken: parsed.botToken || DEFAULT_TELEGRAM_SETTINGS.botToken,
+          chatId: parsed.chatId || DEFAULT_TELEGRAM_SETTINGS.chatId,
+          botUsername: parsed.botUsername || DEFAULT_TELEGRAM_SETTINGS.botUsername,
+        };
+      }
+      return DEFAULT_TELEGRAM_SETTINGS;
     } catch {
       return DEFAULT_TELEGRAM_SETTINGS;
     }
@@ -506,20 +525,15 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const newOrder: OrderItem = {
       id: `ord-${Date.now().toString().slice(-5)}`,
       createdAt: new Date().toISOString(),
-      fullName: orderData.fullName,
-      telegramOrPhone: orderData.telegramOrPhone,
+      fullName: orderData.fullName.trim(),
+      telegramOrPhone: orderData.telegramOrPhone.trim(),
       serviceId: orderData.serviceId,
       serviceTitle: targetService ? targetService.title : 'سفارش متفرقه هوش مصنوعی',
-      message: orderData.message,
+      message: (orderData.message || '').trim(),
       status: 'new',
       priceQuoted: calculatedPrice,
     };
     setOrders((prev) => [newOrder, ...prev]);
-
-    // Send Telegram Notification automatically if enabled
-    if (telegramSettings.autoNotifyNewOrders) {
-      sendOrderToTelegramBot(newOrder).catch((e) => console.log('Telegram order auto-send:', e));
-    }
 
     return newOrder;
   };

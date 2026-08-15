@@ -19,7 +19,8 @@ import {
   Sparkles,
   Columns3,
   ListFilter,
-  RotateCcw
+  RotateCcw,
+  Bot
 } from 'lucide-react';
 import { useSiteData } from '../../../context/SiteDataContext';
 import { OrderItem, OrderStatus } from '../../../types';
@@ -32,6 +33,7 @@ export const OrdersManager: React.FC = () => {
     updateOrderDetails,
     deleteOrder,
     addOrder,
+    sendOrderToTelegramBot,
     services,
     newOrdersCount,
     inProgressOrdersCount,
@@ -46,6 +48,31 @@ export const OrdersManager: React.FC = () => {
   const [priceInput, setPriceInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isCreatingManual, setIsCreatingManual] = useState(false);
+  const [sendingTgOrderId, setSendingTgOrderId] = useState<string | null>(null);
+  const [tgFeedback, setTgFeedback] = useState<{ id: string; message: string; isError?: boolean } | null>(null);
+
+  const handleSendToTg = async (ord: OrderItem) => {
+    setSendingTgOrderId(ord.id);
+    setTgFeedback(null);
+    try {
+      const res = await sendOrderToTelegramBot(ord);
+      setTgFeedback({
+        id: ord.id,
+        message: res.message || 'پیام سفارش به تلگرام ارسال شد.',
+        isError: !res.success,
+      });
+      setTimeout(() => setTgFeedback(null), 4000);
+    } catch (e: any) {
+      setTgFeedback({
+        id: ord.id,
+        message: 'خطا در ارسال به تلگرام',
+        isError: true,
+      });
+      setTimeout(() => setTgFeedback(null), 4000);
+    } finally {
+      setSendingTgOrderId(null);
+    }
+  };
 
   // Manual order form
   const [manualForm, setManualForm] = useState({
@@ -62,8 +89,17 @@ export const OrdersManager: React.FC = () => {
   };
 
   const getTelegramUrl = (contact: string) => {
-    const clean = contact.trim().replace(/^@/, '');
-    return `https://t.me/${clean}`;
+    const raw = (contact || '').trim();
+    if (raw.startsWith('@')) {
+      return `https://t.me/${raw.slice(1)}`;
+    }
+    const digitsOnly = raw.replace(/\D/g, '');
+    if (digitsOnly.length >= 10) {
+      let intl = digitsOnly;
+      if (digitsOnly.startsWith('09')) intl = '98' + digitsOnly.slice(1);
+      return `https://t.me/+${intl}`;
+    }
+    return `https://t.me/${raw}`;
   };
 
   const handleStartEdit = (order: OrderItem) => {
@@ -112,8 +148,8 @@ export const OrdersManager: React.FC = () => {
   const completedOrders = filterOrderList(orders.filter((o) => o.status === 'completed'));
 
   const renderOrderCard = (ord: OrderItem, showColumnActions = true) => {
-    const contactStr = ord.telegramOrPhone || '';
-    const isTelegram = contactStr.startsWith('@');
+    const contactStr = (ord.telegramOrPhone || '').trim();
+    const isTelegram = contactStr.length > 0;
     const isNew = ord.status === 'new' || (ord.status as any) === 'pending' || (ord.status as any) === 'contacted';
     const isInProgress = ord.status === 'in_progress';
     const isCompleted = ord.status === 'completed';
@@ -268,8 +304,18 @@ export const OrdersManager: React.FC = () => {
                 </div>
               )}
 
-              {/* Utility edit / delete buttons */}
+              {/* Utility edit / delete / telegram buttons */}
               <div className="flex items-center gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleSendToTg(ord)}
+                  disabled={sendingTgOrderId === ord.id}
+                  className="p-1.5 rounded-lg bg-purple-950/40 hover:bg-purple-900/60 text-purple-300 hover:text-white border border-purple-500/30 transition-colors disabled:opacity-50"
+                  title="ارسال دستی این سفارش به ربات تلگرام"
+                >
+                  <Bot className={`w-3.5 h-3.5 ${sendingTgOrderId === ord.id ? 'animate-spin' : ''}`} />
+                </button>
+
                 <button
                   type="button"
                   onClick={() => handleStartEdit(ord)}
@@ -292,6 +338,20 @@ export const OrdersManager: React.FC = () => {
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* Telegram notification feedback toast */}
+          {tgFeedback && tgFeedback.id === ord.id && (
+            <div
+              className={`p-2 rounded-xl text-[11px] font-semibold flex items-center gap-1.5 animate-in fade-in ${
+                tgFeedback.isError
+                  ? 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+                  : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+              }`}
+            >
+              {tgFeedback.isError ? <AlertCircle className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+              <span>{tgFeedback.message}</span>
             </div>
           )}
         </div>

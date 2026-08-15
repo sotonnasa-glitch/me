@@ -139,35 +139,32 @@ export const TekvixAiAssistant: React.FC<TekvixAiAssistantProps> = ({
 
   return (
     <>
-      {/* Floating Trigger Button */}
+      {/* Floating Trigger Button (Compact & Sleek) */}
       {!isOpen && (
-        <div className="fixed bottom-6 start-6 z-40 flex items-center gap-3">
+        <div className="fixed bottom-6 start-6 z-40 flex items-center">
           <button
             type="button"
+            id="floating-ai-assistant-btn"
             onClick={() => setIsOpen(true)}
-            aria-label="دستیار هوش مصنوعی جیمینی"
-            className="group relative flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-3.5 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 text-white font-bold shadow-[0_0_30px_rgba(147,51,234,0.45)] border border-purple-400/40 transition-all duration-300 hover:scale-105 active:scale-95"
+            aria-label="دستیار هوش مصنوعی تکویکس"
+            className="group relative flex items-center gap-2 p-2.5 sm:px-3.5 sm:py-2.5 rounded-full bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold shadow-[0_0_24px_rgba(147,51,234,0.5)] border border-purple-400/50 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+            title="گفتگو با دستیار هوش مصنوعی تکویکس"
           >
-            <div className="relative">
-              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white animate-pulse" />
+            <div className="relative flex items-center justify-center">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/20 flex items-center justify-center">
+                <Bot className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white animate-pulse" />
               </div>
-              <span className="absolute -top-1 -end-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#09090b]" />
+              <span className="absolute -top-0.5 -end-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#09090b]" />
             </div>
 
-            <div className="flex flex-col text-start">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs sm:text-sm tracking-tight font-sans">هوش مصنوعی تکویکس</span>
-                <span className="px-1.5 py-0.2 rounded bg-white/20 text-[9px] font-mono uppercase tracking-wider">
-                  Gemini 3.7
-                </span>
-              </div>
-              <span className="text-[10px] text-purple-200 font-normal hidden sm:block">
-                مشاوره هوشمند، نگارش سناریو و استعلام آنی
+            <div className="hidden sm:flex items-center gap-1.5 text-start">
+              <span className="text-xs tracking-tight font-sans">هوش مصنوعی</span>
+              <span className="px-1.5 py-0.2 rounded bg-purple-950/60 border border-purple-300/30 text-[9px] font-mono text-purple-200 uppercase">
+                Gemini
               </span>
             </div>
 
-            <Sparkles className="w-4 h-4 text-purple-200 group-hover:rotate-12 transition-transform" />
+            <Sparkles className="w-3.5 h-3.5 text-amber-300 group-hover:rotate-12 transition-transform" />
           </button>
         </div>
       )}

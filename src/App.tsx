@@ -120,61 +120,26 @@ function MainWebsite() {
         {isEnabled('contact') && <ContactSection />}
       </main>
 
-      {/* Floating Bottom Quick Controls */}
-      <div className="fixed bottom-6 start-6 z-40 flex items-center gap-2.5 animate-in fade-in duration-300">
-        
-        {/* Instant Admin Shortcut Button */}
-        <button
-          type="button"
-          id="floating-admin-btn"
-          onClick={() => setIsAdminOpen(true)}
-          className="relative px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-[#0d071f]/95 hover:bg-[#1a0f3c] text-purple-200 hover:text-white border border-purple-500/40 shadow-[0_0_20px_rgba(168,85,247,0.35)] backdrop-blur-xl transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-2 cursor-pointer group focus:outline-none"
-          title="ورود مستقیم به پنل مدیریت"
-        >
-          <div className="w-6 h-6 rounded-lg bg-purple-600/30 flex items-center justify-center border border-purple-400/40">
-            <Shield className="w-3.5 h-3.5 text-purple-300 group-hover:text-white transition-colors" />
-          </div>
-          <span className="text-xs font-bold tracking-wide hidden sm:inline">پنل مدیریت</span>
-          {newOrdersCount > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-extrabold shadow-sm animate-pulse">
-              {newOrdersCount}
-            </span>
-          )}
-        </button>
-
+      {/* Floating Bottom Quick Controls (Scroll to top and jump) */}
+      <div className="fixed bottom-6 end-6 z-30 flex items-center gap-2.5 animate-in fade-in duration-300">
         {/* Quick Return to Movie / Video Page Button */}
         <button
           type="button"
           id="floating-video-jump-btn"
           onClick={() => navigateToSection('blog')}
-          className="px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-purple-950/80 hover:bg-purple-900 text-purple-200 hover:text-white border border-purple-500/40 shadow-lg backdrop-blur-xl transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-1.5"
+          className="px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-purple-950/80 hover:bg-purple-900 text-purple-200 hover:text-white border border-purple-500/40 shadow-lg backdrop-blur-xl transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer"
           title="پرش به بخش فیلم و ویدیوها"
         >
           <Video className="w-4 h-4 text-purple-300 animate-pulse" />
-          <span className="text-xs font-bold hidden sm:inline">صفحه فیلم</span>
+          <span className="text-xs font-bold hidden sm:inline">فیلم‌ها</span>
         </button>
-
-        {/* Google User Profile Quick Badge */}
-        {currentUser && (
-          <button
-            type="button"
-            onClick={() => setIsGoogleAuthOpen(true)}
-            className="p-1.5 sm:px-3 sm:py-2 rounded-2xl bg-zinc-900/90 hover:bg-zinc-800 text-white border border-purple-500/30 shadow-lg flex items-center gap-2 transition-all hover:scale-105"
-            title="پروفایل کاربر گوگل"
-          >
-            <img src={currentUser.avatar} alt="User" className="w-6 h-6 rounded-xl object-cover" />
-            <span className="text-xs font-semibold hidden md:inline max-w-[90px] truncate">
-              {currentUser.name}
-            </span>
-          </button>
-        )}
 
         {/* Return To Top Button */}
         {showScrollTop && (
           <button
             type="button"
             onClick={scrollToTop}
-            className="p-3 rounded-2xl bg-[#09090b]/90 hover:bg-zinc-800 text-white border border-zinc-700/80 shadow-2xl backdrop-blur-xl transition-all duration-200 hover:scale-105 active:scale-95 group focus:outline-none"
+            className="p-2.5 sm:p-3 rounded-2xl bg-[#09090b]/90 hover:bg-zinc-800 text-white border border-zinc-700/80 shadow-2xl backdrop-blur-xl transition-all duration-200 hover:scale-105 active:scale-95 group focus:outline-none cursor-pointer"
             title="بازگشت به بالای صفحه"
           >
             <ArrowUp className="w-4 h-4 text-purple-400 group-hover:-translate-y-0.5 transition-transform" />
@@ -182,7 +147,7 @@ function MainWebsite() {
         )}
       </div>
 
-      {/* Intelligent Gemini AI Assistant (Floating Assistant) */}
+      {/* Intelligent Gemini AI Assistant (Floating Assistant - compact) */}
       <TekvixAiAssistant onOpenOrderModal={handleOpenOrderModal} />
 
       {/* Footer */}

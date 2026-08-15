@@ -21,7 +21,7 @@ export const SettingsManager: React.FC = () => {
     updateBrandInfo,
     telegramSettings,
     updateTelegramSettings,
-    testTelegramBotNotification,
+    testTelegramBotConnection,
   } = useSiteData();
 
   const [form, setForm] = useState({
@@ -45,7 +45,7 @@ export const SettingsManager: React.FC = () => {
   });
 
   const [savedSuccess, setSavedSuccess] = useState(false);
-  const [testResult, setTestResult] = useState<{ success?: boolean; message?: string } | null>(
+  const [testResult, setTestResult] = useState<{ success?: boolean; message?: string; error?: string } | null>(
     null
   );
   const [isTestingBot, setIsTestingBot] = useState(false);
@@ -62,12 +62,14 @@ export const SettingsManager: React.FC = () => {
     setIsTestingBot(true);
     setTestResult(null);
     try {
-      const res = await testTelegramBotNotification();
+      // First save the current token and chat ID
+      updateTelegramSettings(botForm);
+      const res = await testTelegramBotConnection();
       setTestResult(res);
-    } catch (err) {
+    } catch (err: any) {
       setTestResult({
         success: false,
-        message: 'خطا در ارتباط با سرور یا ارسال پیام تلگرام',
+        error: err?.message || 'خطا در برقراری ارتباط با سرور تلگرام',
       });
     } finally {
       setIsTestingBot(false);
@@ -130,36 +132,55 @@ export const SettingsManager: React.FC = () => {
             </label>
           </div>
 
+          {/* Step by step guide */}
+          <div className="p-4 rounded-2xl bg-purple-950/40 border border-purple-500/20 text-xs text-zinc-300 space-y-2">
+            <h3 className="font-bold text-amber-300 flex items-center gap-1.5 text-xs">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>راهنمای ۳ مرحله‌ای فعال‌سازی ارسال پیام به ربات تلگرام:</span>
+            </h3>
+            <ol className="list-decimal list-inside space-y-1.5 text-[11px] text-zinc-300 leading-relaxed pr-1">
+              <li>
+                <strong className="text-white">دریافت توکن:</strong> در تلگرام به <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" className="text-purple-300 underline font-mono">@BotFather</a> رفته، دستور <code className="bg-black/40 px-1 py-0.5 rounded text-amber-300">/newbot</code> را بزنید و توکن داده‌شده را در کادر زیر وارد کنید.
+              </li>
+              <li>
+                <strong className="text-white">استارت ربات:</strong> حتماً وارد ربات تلگرامی که ساختید شوید و دکمه <span className="text-emerald-400 font-bold">Start (شروع)</span> را بزنید (تلگرام به رباتی که استارت نشده اجازه ارسال پیام نمی‌دهد).
+              </li>
+              <li>
+                <strong className="text-white">دریافت شناسه چت (Chat ID):</strong> به ربات رایگان <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" className="text-purple-300 underline font-mono">@userinfobot</a> پیام دهید تا شناسه عددی (مثل <code className="bg-black/40 px-1 py-0.5 rounded text-amber-300">123456789</code>) را به شما بدهد و در کادر چت‌آیدی وارد کنید.
+              </li>
+            </ol>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-zinc-300 mb-1">
-                توکن ربات تلگرام (Telegram Bot Token)
+                توکن ربات تلگرام (Telegram Bot Token) <span className="text-rose-400">*</span>
               </label>
               <input
-                type="password"
+                type="text"
                 value={botForm.botToken}
                 onChange={(e) => setBotForm({ ...botForm, botToken: e.target.value })}
-                placeholder="123456789:ABCDefghIJKlmnoPQRstuvWXyz..."
+                placeholder="7123456789:AAHq..."
                 className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-white font-mono focus:border-purple-500 focus:outline-none"
               />
               <span className="text-[10px] text-zinc-500 mt-1 block">
-                دریافت از @BotFather در تلگرام (یا خالی بگذارید تا از آیدی پشتیبانی استفاده شود)
+                توکن اختصاصی دریافت‌شده از BotFather@
               </span>
             </div>
 
             <div>
               <label className="block text-xs font-medium text-zinc-300 mb-1">
-                چت‌آیدی یا آیدی تلگرام ادمین (Admin Chat ID / Username)
+                شناسه چت عددی یا کانال (Chat ID) <span className="text-rose-400">*</span>
               </label>
               <input
                 type="text"
                 value={botForm.chatId}
                 onChange={(e) => setBotForm({ ...botForm, chatId: e.target.value })}
-                placeholder="مثال: @arnirhq یا 12345678"
+                placeholder="مثال عددی: 123456789 یا @my_channel"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-white font-mono focus:border-purple-500 focus:outline-none"
               />
               <span className="text-[10px] text-zinc-500 mt-1 block">
-                شناسه چت یا نام کاربری دریافت‌کننده اعلانات سفارشات جدید
+                شناسه عددی اکانت شما (از userinfobot@) یا نام کانال
               </span>
             </div>
           </div>
@@ -184,18 +205,18 @@ export const SettingsManager: React.FC = () => {
 
           {testResult && (
             <div
-              className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 animate-in fade-in ${
+              className={`p-3 rounded-xl text-xs font-semibold flex items-start gap-2 animate-in fade-in leading-relaxed ${
                 testResult.success
                   ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300'
-                  : 'bg-amber-500/15 border border-amber-500/30 text-amber-300'
+                  : 'bg-rose-500/15 border border-rose-500/30 text-rose-300'
               }`}
             >
               {testResult.success ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
               ) : (
-                <Bot className="w-4 h-4 text-amber-400" />
+                <Bot className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
               )}
-              <span>{testResult.message}</span>
+              <span>{testResult.success ? testResult.message : (testResult.error || testResult.message)}</span>
             </div>
           )}
         </div>
@@ -224,7 +245,7 @@ export const SettingsManager: React.FC = () => {
                     telegramUrl: `https://t.me/${val.replace(/^@/, '')}`,
                   });
                 }}
-                placeholder="@arnirhq"
+                placeholder="@Lawat_kar"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-white font-mono focus:border-purple-500 focus:outline-none"
               />
               <span className="text-[10px] text-gray-500 mt-1 block">
@@ -240,7 +261,7 @@ export const SettingsManager: React.FC = () => {
                 type="text"
                 value={form.telegramUrl}
                 onChange={(e) => setForm({ ...form, telegramUrl: e.target.value })}
-                placeholder="https://t.me/arnirhq"
+                placeholder="https://t.me/Lawat_kar"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-white font-mono focus:border-purple-500 focus:outline-none"
               />
             </div>
