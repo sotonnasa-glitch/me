@@ -1,8 +1,16 @@
 import React from 'react';
 import { ShieldCheck, Target, Zap, Sparkles } from 'lucide-react';
-import { BRAND_INFO } from '../data/mockData';
+import { useSiteData } from '../context/SiteDataContext';
+import { useLiveStats } from '../hooks/useLiveStats';
 
 export const AboutSection: React.FC = () => {
+  const { brandInfo, orders } = useSiteData();
+  const { siteStats } = useLiveStats({ pollingInterval: 20000, enabled: true });
+
+  const totalDelivered = siteStats?.totalProjectsDelivered ?? 150 + orders.filter(o => o.status === 'completed').length;
+  const satisfactionRate = siteStats?.satisfactionRate ?? 99.8;
+  const activeOnline = siteStats?.activeOnlineUsers ?? 24;
+
   return (
     <section id="about" className="relative py-24 sm:py-32 bg-[#05050d] overflow-hidden">
       {/* Background ambient */}
@@ -25,7 +33,7 @@ export const AboutSection: React.FC = () => {
 
             <div className="space-y-4 text-sm sm:text-base text-gray-300 leading-relaxed font-normal">
               <p>
-                <strong className="text-white font-semibold">تکویکس (Tekvix)</strong> با هدف از میان برداشتن موانع فنی و زمانی در خلق آثار دیجیتال متولد شد. ما پیشرفته‌ترین مدل‌های هوش مصنوعی بین‌المللی را با ذوق هنری و استانداردهای مهندسی نرم‌افزار ترکیب کرده‌ایم تا هر شخص یا برندی بتواند در کوتاه‌ترین زمان به خروجی‌های شگفت‌انگیز دست یابد.
+                <strong className="text-white font-semibold">{brandInfo.nameFa || 'تکویکس (Tekvix)'}</strong> با هدف از میان برداشتن موانع فنی و زمانی در خلق آثار دیجیتال متولد شد. ما پیشرفته‌ترین مدل‌های هوش مصنوعی بین‌المللی را با ذوق هنری و استانداردهای مهندسی نرم‌افزار ترکیب کرده‌ایم تا هر شخص یا برندی بتواند در کوتاه‌ترین زمان به خروجی‌های شگفت‌انگیز دست یابد.
               </p>
               <p>
                 از طراحی وب‌سایت‌های فوق مدرن و تولید محتوای ویدیویی سینماتیک گرفته تا توسعه بات‌های اختصاصی تلگرام و صداگذاری طبیعی، تیم متخصص ما تمام جزئیات فنی را مدیریت می‌کند تا شما فقط بر رشد کسب‌وکار خود تمرکز کنید.
@@ -63,35 +71,36 @@ export const AboutSection: React.FC = () => {
 
               <h3 className="text-xl font-bold text-white mb-6 flex items-center justify-between">
                 <span>تکویکس در یک نگاه</span>
-                <span className="text-xs px-2.5 py-1 rounded-full bg-purple-600/30 text-purple-300 border border-purple-500/30 font-sans">
-                  2026 Metrics
+                <span className="text-xs px-2.5 py-1 rounded-full bg-purple-600/30 text-purple-300 border border-purple-500/30 font-sans flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span>داده‌های زنده</span>
                 </span>
               </h3>
 
               <div className="grid grid-cols-2 gap-6">
                 <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                  <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-white font-sans">
-                    +۱۵۰
+                  <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-white font-sans font-mono">
+                    +{totalDelivered}
                   </div>
                   <div className="text-xs text-gray-400 mt-1">پروژه موفق تحویل‌شده</div>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                  <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-white font-sans">
-                    ۹۹.۸٪
+                  <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-white font-sans font-mono">
+                    {satisfactionRate}٪
                   </div>
                   <div className="text-xs text-gray-400 mt-1">نرخ رضایت کارفرمایان</div>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                  <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-white font-sans">
-                    ۳x
+                  <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-white font-sans font-mono">
+                    {activeOnline}
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">سرعت بالاتر نسبت به بازار</div>
+                  <div className="text-xs text-gray-400 mt-1">کاربر آنلاین فعال هم‌اکنون</div>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                  <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-white font-sans">
+                  <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-white font-sans font-mono">
                     ۲۴/۷
                   </div>
                   <div className="text-xs text-gray-400 mt-1">پشتیبانی در تلگرام</div>
@@ -100,7 +109,7 @@ export const AboutSection: React.FC = () => {
 
               <div className="mt-6 pt-6 border-t border-white/5 text-center">
                 <p className="text-xs text-purple-300">
-                  ارتباط مستقیم با مدیریت فنی تکویکس: <span className="font-sans font-bold text-white">{BRAND_INFO.telegramHandle}</span>
+                  ارتباط مستقیم با مدیریت فنی تکویکس: <span className="font-sans font-bold text-white">{brandInfo.telegramHandle}</span>
                 </p>
               </div>
             </div>

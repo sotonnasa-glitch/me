@@ -12,18 +12,21 @@ import {
   ExternalLink,
   ChevronLeft,
   Eye,
-  Check
+  Check,
+  MessageSquare
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteDataContext';
 import { BlogPost } from '../types';
 import { UniversalBackButton } from './common/UniversalBackButton';
+import { BlogComments } from './blog/BlogComments';
 
 interface BlogSectionProps {
   onOpenOrderModal?: (serviceId?: string) => void;
+  onOpenAuthModal?: () => void;
 }
 
-export const BlogSection: React.FC<BlogSectionProps> = ({ onOpenOrderModal }) => {
-  const { blogPosts, sectionsConfig } = useSiteData();
+export const BlogSection: React.FC<BlogSectionProps> = ({ onOpenOrderModal, onOpenAuthModal }) => {
+  const { blogPosts, blogComments, sectionsConfig } = useSiteData();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [activeArticle, setActiveArticle] = useState<BlogPost | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -171,15 +174,22 @@ export const BlogSection: React.FC<BlogSectionProps> = ({ onOpenOrderModal }) =>
 
                 {/* Tags and Action */}
                 <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between gap-2">
-                  <div className="flex flex-wrap gap-1">
-                    {post.tags && post.tags.slice(0, 2).map((t, idx) => (
-                      <span
-                        key={idx}
-                        className="text-[10px] px-2 py-0.5 rounded-md bg-zinc-900 text-zinc-400 border border-zinc-800"
-                      >
-                        #{t}
-                      </span>
-                    ))}
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap gap-1">
+                      {post.tags && post.tags.slice(0, 2).map((t, idx) => (
+                        <span
+                          key={idx}
+                          className="text-[10px] px-2 py-0.5 rounded-md bg-zinc-900 text-zinc-400 border border-zinc-800"
+                        >
+                          #{t}
+                        </span>
+                      ))}
+                    </div>
+
+                    <span className="flex items-center gap-1 text-[11px] text-zinc-400 font-mono">
+                      <MessageSquare className="w-3 h-3 text-purple-400" />
+                      <span>{blogComments.filter((c) => c.postId === post.id).length}</span>
+                    </span>
                   </div>
 
                   <span className="inline-flex items-center gap-1 text-xs font-bold text-purple-400 group-hover:text-purple-300 group-hover:-translate-x-1 transition-all">
@@ -319,11 +329,18 @@ export const BlogSection: React.FC<BlogSectionProps> = ({ onOpenOrderModal }) =>
                     onOpenOrderModal('ai-website');
                   }
                 }}
-                className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs sm:text-sm font-bold shadow-lg shadow-purple-600/30 transition-all shrink-0"
+                className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs sm:text-sm font-bold shadow-lg shadow-purple-600/30 transition-all shrink-0 cursor-pointer"
               >
                 ثبت سفارش آنلاین این خدمت
               </button>
             </div>
+
+            {/* Interactive Commenting Section */}
+            <BlogComments
+              postId={activeArticle.id}
+              postTitle={activeArticle.title}
+              onOpenAuthModal={onOpenAuthModal}
+            />
 
           </div>
         </div>

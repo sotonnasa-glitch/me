@@ -9,6 +9,8 @@ export interface Service {
   badge?: string;
   popular?: boolean;
   active?: boolean;
+  availabilityStatus?: 'available' | 'unavailable' | 'coming_soon';
+  availabilityNote?: string;
   deliverables: string[];
   estimatedPrice?: string;
   deliveryDays?: string;
@@ -146,9 +148,39 @@ export interface UserProfile {
   name: string;
   email: string;
   avatar: string;
+  phone?: string;
+  telegram?: string;
+  bio?: string;
   provider: 'google' | 'guest';
   joinedAt: string;
   savedServiceIds?: string[];
+}
+
+export interface BlogComment {
+  id: string;
+  postId: string;
+  authorName: string;
+  authorEmail?: string;
+  authorAvatar?: string;
+  content: string;
+  createdAt: string;
+  likesCount: number;
+  rating?: number;
+  status?: 'approved' | 'pending';
+}
+
+export interface SiteReview {
+  id: string;
+  authorName: string;
+  authorRole?: string;
+  authorAvatar?: string;
+  authorTelegram?: string;
+  rating: number; // 1 to 5
+  comment: string;
+  serviceCategory?: string;
+  createdAt: string;
+  verified: boolean;
+  likesCount?: number;
 }
 
 export interface TelegramBotSettings {
@@ -181,4 +213,99 @@ export interface SiteDataState {
   siteViewsCount: number;
   serviceClicksCount: Record<string, number>;
 }
+
+export interface DatabaseUser {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  telegram?: string;
+  avatar?: string;
+  role: 'admin' | 'user' | 'client';
+  lastLoginAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AnalyticsEvent {
+  id: string;
+  eventType: 'page_view' | 'service_click' | 'order_created' | 'chat_message' | 'video_play' | 'custom';
+  path?: string;
+  serviceId?: string;
+  device?: 'mobile' | 'desktop' | 'tablet';
+  referrer?: string;
+  value?: number;
+  metadata?: Record<string, any>;
+  createdAt: string;
+}
+
+export interface AdminLiveStats {
+  totalUsers: number;
+  activeUsers: number;
+  totalOrders: number;
+  ordersByStatus: {
+    new: number;
+    in_progress: number;
+    completed: number;
+    cancelled: number;
+  };
+  totalRevenue: number;
+  conversionRate: number;
+  dailyTrend: {
+    date: string;
+    day: string;
+    views: number;
+    mobile: number;
+    desktop: number;
+    tablet?: number;
+    orders: number;
+    revenue: number;
+  }[];
+  monthlyTrend: {
+    name: string;
+    views: number;
+    mobile: number;
+    desktop: number;
+    orders: number;
+    revenue: number;
+  }[];
+  quarterlyTrend: {
+    name: string;
+    views: number;
+    mobile: number;
+    desktop: number;
+    orders: number;
+    revenue: number;
+  }[];
+  servicePerformance: {
+    id: string;
+    name: string;
+    fullTitle: string;
+    views: number;
+    inquiries: number;
+    revenue: number;
+    conversionRate: number;
+  }[];
+  deviceBreakdown: {
+    name: string;
+    value: number;
+    count: number;
+    color: string;
+  }[];
+  recentEvents: AnalyticsEvent[];
+  lastUpdated: string;
+}
+
+export interface SitePublicStats {
+  activeOnlineUsers: number;
+  totalCompletedProjects: number;
+  totalSatisfiedClients: number;
+  aiModelsActive: number;
+  platformUptime: string;
+  averageResponseTime: string;
+  liveOrdersCount: number;
+  totalViews: number;
+  lastUpdated: string;
+}
+
 

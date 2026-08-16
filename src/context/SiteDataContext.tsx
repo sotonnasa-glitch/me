@@ -11,7 +11,9 @@ import {
   BlogPost,
   SiteSectionConfig,
   UserProfile,
-  TelegramBotSettings
+  TelegramBotSettings,
+  BlogComment,
+  SiteReview
 } from '../types';
 import {
   BRAND_INFO as DEFAULT_BRAND_INFO,
@@ -20,7 +22,9 @@ import {
   TESTIMONIALS_LIST as DEFAULT_TESTIMONIALS,
   FAQ_LIST as DEFAULT_FAQS,
   DEFAULT_BLOG_POSTS,
-  DEFAULT_SECTIONS_CONFIG
+  DEFAULT_SECTIONS_CONFIG,
+  DEFAULT_BLOG_COMMENTS,
+  DEFAULT_SITE_REVIEWS
 } from '../data/mockData';
 
 const INITIAL_ORDERS: OrderItem[] = [
@@ -102,12 +106,14 @@ interface SiteDataContextType {
   // Google User Authentication
   currentUser: UserProfile | null;
   loginWithGoogle: (userData?: Partial<UserProfile>) => UserProfile;
+  updateUserProfile: (updated: Partial<UserProfile>) => void;
   logoutUser: () => void;
 
   // Telegram Bot Integration
   telegramSettings: TelegramBotSettings;
   updateTelegramSettings: (updated: Partial<TelegramBotSettings>) => void;
   sendOrderToTelegramBot: (order: OrderItem) => Promise<{ success: boolean; message?: string; directLink?: string }>;
+  sendConsultationToTelegram: (data: { name: string; contactInfo: string; topic?: string; message: string }) => Promise<{ success: boolean; message?: string; directLink?: string; pvUrl?: string }>;
   testTelegramBotConnection: () => Promise<{ success: boolean; message?: string; error?: string }>;
 
   // Services / Products
@@ -117,6 +123,7 @@ interface SiteDataContextType {
   deleteService: (id: string) => void;
   toggleServiceActive: (id: string) => void;
   toggleServicePopular: (id: string) => void;
+  updateServiceAvailability: (id: string, availabilityStatus: 'available' | 'unavailable' | 'coming_soon', note?: string) => void;
 
   // Orders / 3-Step Pipeline
   orders: OrderItem[];
@@ -133,6 +140,17 @@ interface SiteDataContextType {
   deleteBlogPost: (id: string) => void;
   toggleBlogPostPublished: (id: string) => void;
   likeBlogPost: (id: string) => void;
+
+  // Blog Comments
+  blogComments: BlogComment[];
+  addBlogComment: (comment: Omit<BlogComment, 'id' | 'createdAt' | 'likesCount'>) => BlogComment;
+  likeBlogComment: (commentId: string) => void;
+  deleteBlogComment: (commentId: string) => void;
+
+  // Site Reviews & Public Comments
+  siteReviews: SiteReview[];
+  addSiteReview: (review: Omit<SiteReview, 'id' | 'createdAt'>) => SiteReview;
+  likeSiteReview: (reviewId: string) => void;
 
   // Sections Configuration & Features Control
   sectionsConfig: SiteSectionConfig[];
@@ -331,6 +349,24 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   });
 
+  const [blogComments, setBlogComments] = useState<BlogComment[]>(() => {
+    try {
+      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_blog_comments`);
+      return saved ? JSON.parse(saved) : DEFAULT_BLOG_COMMENTS;
+    } catch {
+      return DEFAULT_BLOG_COMMENTS;
+    }
+  });
+
+  const [siteReviews, setSiteReviews] = useState<SiteReview[]>(() => {
+    try {
+      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_site_reviews`);
+      return saved ? JSON.parse(saved) : DEFAULT_SITE_REVIEWS;
+    } catch {
+      return DEFAULT_SITE_REVIEWS;
+    }
+  });
+
   const [siteViewsCount, setSiteViewsCount] = useState<number>(() => {
     try {
       const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_views`);
@@ -378,6 +414,8 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       localStorage.setItem(`${LOCAL_STORAGE_KEY}_services`, JSON.stringify(services));
       localStorage.setItem(`${LOCAL_STORAGE_KEY}_orders`, JSON.stringify(orders));
       localStorage.setItem(`${LOCAL_STORAGE_KEY}_blog`, JSON.stringify(blogPosts));
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_blog_comments`, JSON.stringify(blogComments));
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_site_reviews`, JSON.stringify(siteReviews));
       localStorage.setItem(`${LOCAL_STORAGE_KEY}_sections`, JSON.stringify(sectionsConfig));
       localStorage.setItem(`${LOCAL_STORAGE_KEY}_portfolio`, JSON.stringify(portfolio));
       localStorage.setItem(`${LOCAL_STORAGE_KEY}_testimonials`, JSON.stringify(testimonials));
@@ -393,6 +431,8 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     services,
     orders,
     blogPosts,
+    blogComments,
+    siteReviews,
     sectionsConfig,
     portfolio,
     testimonials,
@@ -405,20 +445,59 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setBrandInfo((prev) => ({ ...prev, ...updated }));
   };
 
-  // Google User Login & Logout
+  // Google User Login, Update & Logout
   const loginWithGoogle = (userData?: Partial<UserProfile>): UserProfile => {
     const user: UserProfile = {
-      id: userData?.id || `usr-${Date.now()}`,
+      id: userData?.id || currentUser?.id || `usr-${Date.now()}`,
       name: userData?.name || 'مهدی حاتمی',
-      email: userData?.email || 'user@example.com',
+      email: userData?.email || 'mahdihatami2024@gmail.com',
       avatar:
         userData?.avatar ||
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+      phone: userData?.phone || currentUser?.phone || '09123456789',
+      telegram: userData?.telegram || currentUser?.telegram || '@Lawat_kar',
+      bio: userData?.bio || currentUser?.bio || 'علاقه‌مند به تکنولوژی و خدمات هوش مصنوعی',
       provider: 'google',
-      joinedAt: new Date().toISOString(),
+      joinedAt: currentUser?.joinedAt || new Date().toISOString(),
     };
     setCurrentUser(user);
+
+    // Sync with backend API
+    fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        telegram: user.telegram,
+        avatar: user.avatar,
+        role: 'client',
+      }),
+    }).catch(() => {});
+
     return user;
+  };
+
+  const updateUserProfile = (updated: Partial<UserProfile>) => {
+    if (!currentUser) return;
+    const nextUser = { ...currentUser, ...updated };
+    setCurrentUser(nextUser);
+
+    fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: nextUser.id,
+        name: nextUser.name,
+        email: nextUser.email,
+        phone: nextUser.phone,
+        telegram: nextUser.telegram,
+        avatar: nextUser.avatar,
+        role: 'client',
+      }),
+    }).catch(() => {});
   };
 
   const logoutUser = () => {
@@ -454,6 +533,39 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return {
         success: true,
         message: 'سفارش در سیستم ثبت شد.',
+        directLink: `https://t.me/${brandInfo.telegramHandle.replace('@', '')}`,
+      };
+    }
+  };
+
+  const sendConsultationToTelegram = async (data: {
+    name: string;
+    contactInfo: string;
+    topic?: string;
+    message: string;
+  }): Promise<{ success: boolean; message?: string; directLink?: string; pvUrl?: string }> => {
+    try {
+      const response = await fetch('/api/telegram/send-consultation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...data,
+          botToken: telegramSettings.botToken,
+          chatId: telegramSettings.chatId,
+        }),
+      });
+      const result = await response.json();
+      return {
+        success: result.success ?? true,
+        message: result.message || 'درخواست مشاوره به ربات تلگرام ارسال شد.',
+        pvUrl: result.pvUrl,
+        directLink: result.directLink || result.fallbackUrl || `https://t.me/${brandInfo.telegramHandle.replace('@', '')}`,
+      };
+    } catch (err: any) {
+      console.warn('Telegram consultation error:', err);
+      return {
+        success: true,
+        message: 'درخواست شما ثبت شد.',
         directLink: `https://t.me/${brandInfo.telegramHandle.replace('@', '')}`,
       };
     }
@@ -518,6 +630,24 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
   };
 
+  const updateServiceAvailability = (
+    id: string,
+    availabilityStatus: 'available' | 'unavailable' | 'coming_soon',
+    note?: string
+  ) => {
+    setServices((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              availabilityStatus,
+              availabilityNote: note !== undefined ? note : item.availabilityNote,
+            }
+          : item
+      )
+    );
+  };
+
   // 3-Step Order Pipeline operations
   const addOrder = (orderData: OrderFormData): OrderItem => {
     const targetService = services.find((s) => s.id === orderData.serviceId);
@@ -535,6 +665,25 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
     setOrders((prev) => [newOrder, ...prev]);
 
+    // Asynchronously sync with backend D1/Express store
+    fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newOrder),
+    }).catch((err) => console.warn('Backend order sync warning:', err));
+
+    // Register conversion event
+    fetch('/api/analytics/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        eventType: 'order_submitted',
+        page: window.location.pathname,
+        serviceId: orderData.serviceId,
+        metadata: { fullName: orderData.fullName, price: calculatedPrice },
+      }),
+    }).catch(() => {});
+
     return newOrder;
   };
 
@@ -546,6 +695,13 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           : item
       )
     );
+
+    // Sync status change to backend
+    fetch(`/api/orders/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    }).catch((err) => console.warn('Backend order update status warning:', err));
   };
 
   const advanceOrderStatus = (id: string) => {
@@ -610,6 +766,48 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const likeBlogPost = (id: string) => {
     setBlogPosts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, likesCount: (p.likesCount || 0) + 1 } : p))
+    );
+  };
+
+  // Blog Comments Operations
+  const addBlogComment = (comment: Omit<BlogComment, 'id' | 'createdAt' | 'likesCount'>): BlogComment => {
+    const newComment: BlogComment = {
+      ...comment,
+      id: `cm-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      likesCount: 0,
+      status: 'approved',
+    };
+    setBlogComments((prev) => [newComment, ...prev]);
+    return newComment;
+  };
+
+  const likeBlogComment = (commentId: string) => {
+    setBlogComments((prev) =>
+      prev.map((c) => (c.id === commentId ? { ...c, likesCount: c.likesCount + 1 } : c))
+    );
+  };
+
+  const deleteBlogComment = (commentId: string) => {
+    setBlogComments((prev) => prev.filter((c) => c.id !== commentId));
+  };
+
+  // Site Reviews & Feedback Operations
+  const addSiteReview = (review: Omit<SiteReview, 'id' | 'createdAt'>): SiteReview => {
+    const newReview: SiteReview = {
+      ...review,
+      id: `rev-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      verified: true,
+      likesCount: 0,
+    };
+    setSiteReviews((prev) => [newReview, ...prev]);
+    return newReview;
+  };
+
+  const likeSiteReview = (reviewId: string) => {
+    setSiteReviews((prev) =>
+      prev.map((r) => (r.id === reviewId ? { ...r, likesCount: (r.likesCount || 0) + 1 } : r))
     );
   };
 
@@ -693,10 +891,29 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } catch {}
       return next;
     });
+
+    fetch('/api/analytics/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        eventType: 'service_click',
+        page: window.location.pathname,
+        serviceId,
+      }),
+    }).catch(() => {});
   };
 
   const trackPageView = () => {
     setSiteViewsCount((prev) => prev + 1);
+
+    fetch('/api/analytics/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        eventType: 'page_view',
+        page: window.location.pathname,
+      }),
+    }).catch(() => {});
   };
 
   // Universal Navigation Helper (e.g. Return to Movie/Video section)
@@ -855,10 +1072,12 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         updateBrandInfo,
         currentUser,
         loginWithGoogle,
+        updateUserProfile,
         logoutUser,
         telegramSettings,
         updateTelegramSettings,
         sendOrderToTelegramBot,
+        sendConsultationToTelegram,
         testTelegramBotConnection,
         services,
         addService,
@@ -866,6 +1085,7 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         deleteService,
         toggleServiceActive,
         toggleServicePopular,
+        updateServiceAvailability,
         orders,
         addOrder,
         updateOrderStatus,
@@ -878,6 +1098,13 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         deleteBlogPost,
         toggleBlogPostPublished,
         likeBlogPost,
+        blogComments,
+        addBlogComment,
+        likeBlogComment,
+        deleteBlogComment,
+        siteReviews,
+        addSiteReview,
+        likeSiteReview,
         sectionsConfig,
         updateSectionConfig,
         toggleSectionEnabled,

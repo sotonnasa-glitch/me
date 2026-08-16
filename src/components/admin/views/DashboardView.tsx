@@ -41,6 +41,7 @@ import {
   CartesianGrid
 } from 'recharts';
 import { useSiteData } from '../../../context/SiteDataContext';
+import { useLiveStats } from '../../../hooks/useLiveStats';
 import { AdminTab } from '../AdminSidebar';
 import { SiteSectionConfig } from '../../../types';
 
@@ -69,6 +70,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     realAnalytics
   } = useSiteData();
 
+  const { adminStats, siteStats, isRefreshing, refetch } = useLiveStats({
+    pollingInterval: 15000,
+    enabled: true,
+  });
+
   const [timeRange, setTimeRange] = useState<'7days' | '30days' | '3months'>('7days');
   const [selectedSectionKeys, setSelectedSectionKeys] = useState<string[]>([]);
   const [sectionSearch, setSectionSearch] = useState('');
@@ -80,6 +86,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const activeServices = services.filter((s) => s.active !== false);
 
   const getChartData = () => {
+    if (adminStats) {
+      if (timeRange === '7days') {
+        return adminStats.dailyTrend.map((d) => ({
+          name: d.day,
+          mobile: d.mobile,
+          desktop: d.desktop,
+          orders: d.orders,
+        }));
+      }
+      if (timeRange === '30days') {
+        return adminStats.monthlyTrend.map((m) => ({
+          name: m.name,
+          mobile: m.mobile,
+          desktop: m.desktop,
+          orders: m.orders,
+        }));
+      }
+      return adminStats.quarterlyTrend.map((q) => ({
+        name: q.name,
+        mobile: q.mobile,
+        desktop: q.desktop,
+        orders: q.orders,
+      }));
+    }
+
     if (timeRange === '7days') {
       return realAnalytics.dailyTrend.map((d) => {
         const total = d.views || 25;
@@ -95,19 +126,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     if (timeRange === '30days') {
       const base = siteViewsCount || 120;
       return [
-        { name: 'هفته ۱', mobile: Math.round(base * 0.22 * 0.7), desktop: Math.round(base * 0.22 * 0.3) },
-        { name: 'هفته ۲', mobile: Math.round(base * 0.26 * 0.7), desktop: Math.round(base * 0.26 * 0.3) },
-        { name: 'هفته ۳', mobile: Math.round(base * 0.24 * 0.7), desktop: Math.round(base * 0.24 * 0.3) },
-        { name: 'هفته ۴ (جاری)', mobile: Math.round(base * 0.28 * 0.7), desktop: Math.round(base * 0.28 * 0.3) },
+        { name: 'هفته ۱', mobile: Math.round(base * 0.22 * 0.7), desktop: Math.round(base * 0.22 * 0.3), orders: 4 },
+        { name: 'هفته ۲', mobile: Math.round(base * 0.26 * 0.7), desktop: Math.round(base * 0.26 * 0.3), orders: 6 },
+        { name: 'هفته ۳', mobile: Math.round(base * 0.24 * 0.7), desktop: Math.round(base * 0.24 * 0.3), orders: 5 },
+        { name: 'هفته ۴ (جاری)', mobile: Math.round(base * 0.28 * 0.7), desktop: Math.round(base * 0.28 * 0.3), orders: 8 },
       ];
     }
 
     // 3months
     const total3M = (siteViewsCount || 150) * 3;
     return [
-      { name: '۲ ماه قبل', mobile: Math.round(total3M * 0.28 * 0.7), desktop: Math.round(total3M * 0.28 * 0.3) },
-      { name: 'ماه قبل', mobile: Math.round(total3M * 0.34 * 0.7), desktop: Math.round(total3M * 0.34 * 0.3) },
-      { name: 'ماه جاری', mobile: Math.round(total3M * 0.38 * 0.7), desktop: Math.round(total3M * 0.38 * 0.3) },
+      { name: '۲ ماه قبل', mobile: Math.round(total3M * 0.28 * 0.7), desktop: Math.round(total3M * 0.28 * 0.3), orders: 12 },
+      { name: 'ماه قبل', mobile: Math.round(total3M * 0.34 * 0.7), desktop: Math.round(total3M * 0.34 * 0.3), orders: 18 },
+      { name: 'ماه جاری', mobile: Math.round(total3M * 0.38 * 0.7), desktop: Math.round(total3M * 0.38 * 0.3), orders: 23 },
     ];
   };
 

@@ -672,3 +672,85 @@ export const DEFAULT_SECTIONS_CONFIG: SiteSectionConfig[] = [
   }
 ];
 
+export const DEFAULT_BLOG_COMMENTS: import('../types').BlogComment[] = [
+  {
+    id: 'cm-1',
+    postId: 'post-ai-websites-2026',
+    authorName: 'محمدرضا سلطانی',
+    authorEmail: 'm.soltani@example.com',
+    authorAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+    content: 'مقاله فوق‌العاده کاربردی و دقیقی بود! سرعت ساخت وب‌سایت با تکویکس واقعاً شگفت‌انگیزه، ما پروژه‌مون رو ظرف ۳ روز تحویل گرفتیم.',
+    createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+    likesCount: 14,
+    rating: 5,
+    status: 'approved'
+  },
+  {
+    id: 'cm-2',
+    postId: 'post-ai-video-generation',
+    authorName: 'سارا نیک‌زاد',
+    authorEmail: 'sara.nik@example.com',
+    authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+    content: 'ویدیوهایی که با ابزارهای هوش مصنوعی تکویکس ساخته میشه کیفیت 4K واقعی داره و برای پیج اینستاگرام ما بازخورد بی‌نظیری داشت.',
+    createdAt: new Date(Date.now() - 3600000 * 18).toISOString(),
+    likesCount: 9,
+    rating: 5,
+    status: 'approved'
+  },
+  {
+    id: 'cm-3',
+    postId: 'post-telegram-bot-ai-integration',
+    authorName: 'امیرحسین عباسی',
+    authorEmail: 'amir.abbasi@gmail.com',
+    authorAvatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
+    content: 'ربات تلگرامی که برامون ساختید مجهز به هوش مصنوعی پاسخگو و اتصال به وب‌هوک کار ما رو کاملاً اتوماتیک کرده. خسته نباشید به تیم تکویکس.',
+    createdAt: new Date(Date.now() - 3600000 * 36).toISOString(),
+    likesCount: 12,
+    rating: 5,
+    status: 'approved'
+  }
+];
+
+export const DEFAULT_SITE_REVIEWS: import('../types').SiteReview[] = [
+  {
+    id: 'rev-1',
+    authorName: 'مهندس نوید صادقی',
+    authorRole: 'بنیان‌گذار صرافی کریپتو آریا',
+    authorAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+    authorTelegram: '@navid_crypto',
+    rating: 5,
+    serviceCategory: 'طراحی وب‌سایت با هوش مصنوعی',
+    comment: 'طراحی دارک و سرعت لود فوق‌العاده وب‌سایتی که تیم تکویکس برامون ساخت فراتر از انتظار بود. در تلگرام هم پشتیبانی بسیار محترمانه و سریعی دارند.',
+    createdAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+    verified: true,
+    likesCount: 28
+  },
+  {
+    id: 'rev-2',
+    authorName: 'الهام فرهمند',
+    authorRole: 'مدیر مارکتینگ برند بیوتی‌پلاس',
+    authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+    authorTelegram: '@elham_marketing',
+    rating: 5,
+    serviceCategory: 'تولید ویدیو و تیزر 4K',
+    comment: 'تیزر تبلیغاتی ۳۰ ثانیه‌ای که با سناریوی هوش مصنوعی تولید کردند فروش کمپین عید ما رو ۳ برابر کرد. کیفیت تصاویر و انیمیشن‌ها عالی بود.',
+    createdAt: new Date(Date.now() - 3600000 * 28).toISOString(),
+    verified: true,
+    likesCount: 19
+  },
+  {
+    id: 'rev-3',
+    authorName: 'آرش کیانی',
+    authorRole: 'مدیرعامل فروشگاه آنلاین بست‌بای',
+    authorAvatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
+    authorTelegram: '@arash_kiani',
+    rating: 5,
+    serviceCategory: 'ساخت ربات پیشرفته تلگرام',
+    comment: 'ربات تلگرام فروشگاهی ما با قابلیت سفارش‌گیری خودکار و اتصال به درگاه پرداخت در کمتر از ۴ روز تحویل داده شد. به همه دوستان پیشنهاد می‌کنم.',
+    createdAt: new Date(Date.now() - 3600000 * 48).toISOString(),
+    verified: true,
+    likesCount: 34
+  }
+];
+
+

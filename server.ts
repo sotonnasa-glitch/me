@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
+import { db } from './src/server/db';
 
 const PORT = 3000;
 
@@ -29,6 +30,147 @@ async function startServer() {
   // 1. Health Check
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', serverTime: new Date().toISOString() });
+  });
+
+  // 2. LIVE ADMIN STATS (GET /api/admin/stats)
+  app.get('/api/admin/stats', (req, res) => {
+    try {
+      const stats = db.getAdminStats();
+      res.json({
+        success: true,
+        stats,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      console.error('Error fetching admin stats:', error);
+      res.status(500).json({ success: false, error: 'خطا در دریافت آمار پنل ادمین', details: error?.message });
+    }
+  });
+
+  // 3. LIVE SITE PUBLIC STATS (GET /api/site/stats)
+  app.get('/api/site/stats', (req, res) => {
+    try {
+      const siteStats = db.getSiteStats();
+      res.json({
+        success: true,
+        stats: siteStats,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      console.error('Error fetching site stats:', error);
+      res.status(500).json({ success: false, error: 'خطا در دریافت آمار زنده وب‌سایت', details: error?.message });
+    }
+  });
+
+  // 4. RECORD ANALYTICS EVENT (POST /api/analytics/event)
+  app.post('/api/analytics/event', (req, res) => {
+    try {
+      const { eventType, path: eventPath, serviceId, device, referrer, value, metadata } = req.body;
+      if (!eventType) {
+        res.status(400).json({ success: false, error: 'eventType الزامی است' });
+        return;
+      }
+
+      const event = db.recordEvent({
+        eventType,
+        path: eventPath || '/',
+        serviceId,
+        device: device || 'mobile',
+        referrer,
+        value: Number(value) || 0,
+        metadata,
+      });
+
+      res.json({ success: true, event });
+    } catch (error: any) {
+      console.error('Error recording analytics event:', error);
+      res.status(500).json({ success: false, error: 'خطا در ثبت رویداد' });
+    }
+  });
+
+  // 5. ORDERS REST API (GET, POST, PATCH, DELETE)
+  app.get('/api/orders', (req, res) => {
+    try {
+      const orders = db.getOrders();
+      res.json({ success: true, orders, count: orders.length });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: 'خطا در واکشی سفارش‌ها' });
+    }
+  });
+
+  app.post('/api/orders', async (req, res) => {
+    try {
+      const { fullName, telegramOrPhone, serviceId, serviceTitle, budget, message, priceQuoted, adminNotes } = req.body;
+      if (!fullName || !telegramOrPhone || !serviceId) {
+        res.status(400).json({ success: false, error: 'اطلاعات سفارش ناقص است' });
+        return;
+      }
+
+      const newOrder = db.createOrder({
+        fullName,
+        telegramOrPhone,
+        serviceId,
+        serviceTitle: serviceTitle || 'خدمت اختصاصی',
+        message: message || '',
+        priceQuoted,
+        adminNotes,
+        status: 'new',
+      });
+
+      res.status(201).json({ success: true, order: newOrder });
+    } catch (error: any) {
+      console.error('Error creating order:', error);
+      res.status(500).json({ success: false, error: 'خطا در ثبت سفارش' });
+    }
+  });
+
+  app.patch('/api/orders/:id', (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const updated = db.updateOrder(id, updates);
+      if (!updated) {
+        res.status(404).json({ success: false, error: 'سفارش یافت نشد' });
+        return;
+      }
+      res.json({ success: true, order: updated });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: 'خطا در به‌روزرسانی سفارش' });
+    }
+  });
+
+  app.delete('/api/orders/:id', (req, res) => {
+    try {
+      const { id } = req.params;
+      const success = db.deleteOrder(id);
+      res.json({ success });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: 'خطا در حذف سفارش' });
+    }
+  });
+
+  // 6. USERS REST API (GET, POST)
+  app.get('/api/users', (req, res) => {
+    try {
+      const users = db.getUsers();
+      res.json({ success: true, users, count: users.length });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: 'خطا در دریافت کاربران' });
+    }
+  });
+
+  app.post('/api/users', (req, res) => {
+    try {
+      const { id, name, email, phone, telegram, avatar, role } = req.body;
+      if (!id || !name || !email) {
+        res.status(400).json({ success: false, error: 'شناسه، نام و ایمیل کاربر الزامی است' });
+        return;
+      }
+      const user = db.upsertUser({ id, name, email, phone, telegram, avatar, role });
+      res.json({ success: true, user });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: 'خطا در ثبت اطلاعات کاربر' });
+    }
   });
 
   // 2. Gemini AI Assistant Endpoint
@@ -275,6 +417,103 @@ async function startServer() {
     } catch (err: any) {
       console.error('Error sending order to Telegram:', err);
       res.status(500).json({ error: 'خطا در ارتباط با سرور تلگرام', details: err?.message });
+    }
+  });
+
+  // 3.5 Telegram Consultation & Lead Notification API
+  app.post('/api/telegram/send-consultation', async (req, res) => {
+    try {
+      const { name, contactInfo, topic, message, botToken, chatId } = req.body;
+
+      if (!name || !contactInfo) {
+        res.status(400).json({ error: 'نام و اطلاعات تماس الزامی است.' });
+        return;
+      }
+
+      const effectiveToken = (botToken || process.env.TELEGRAM_BOT_TOKEN || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus').trim();
+      const effectiveChatId = (chatId || process.env.TELEGRAM_CHAT_ID || '7460143967').trim();
+
+      const fullName = escapeTgHtml(name.trim());
+      const rawContact = contactInfo.trim();
+      const contactEscaped = escapeTgHtml(rawContact);
+      const consultationTopic = escapeTgHtml(topic || 'مشاوره و استعلام عمومی هوش مصنوعی');
+      const userMessage = escapeTgHtml(message || 'بدون پیام تکمیلی');
+      const dateStr = new Date().toLocaleString('fa-IR');
+
+      const { url: pvUrl } = getClientDirectChatUrl(rawContact);
+
+      const telegramMessage = `
+💬 <b>درخواست مشاوره و استعلام جدید در تکویکس</b>
+
+👤 <b>نام کاربر:</b> <b>${fullName}</b>
+📱 <b>آیدی / شماره تماس:</b> <a href="${pvUrl}">${contactEscaped}</a> 👈 <i>(لمس کنید)</i>
+🎯 <b>موضوع مشاوره:</b> ${consultationTopic}
+📝 <b>متن پیام و شرح ایده:</b>
+<i>${userMessage}</i>
+
+⏰ <b>زمان ثبت:</b> ${dateStr}
+🌐 <b>بخش:</b> فرم مشاوره و تماس سایت
+      `.trim();
+
+      // Inline Keyboard with 1-Tap Direct PV Button
+      const inlineKeyboard = {
+        inline_keyboard: [
+          [
+            {
+              text: '🚀 ورود مستقیم به پی‌وی کاربر (چت تلگرام)',
+              url: pvUrl,
+            },
+          ],
+        ],
+      };
+
+      if (effectiveToken && effectiveChatId) {
+        const tgUrl = `https://api.telegram.org/bot${effectiveToken}/sendMessage`;
+        const tgRes = await fetch(tgUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: effectiveChatId,
+            text: telegramMessage,
+            parse_mode: 'HTML',
+            reply_markup: inlineKeyboard,
+            disable_web_page_preview: true,
+          }),
+        });
+
+        const tgData = await tgRes.json();
+
+        if (tgData.ok) {
+          res.json({
+            success: true,
+            telegramSent: true,
+            messageId: tgData.result?.message_id,
+            pvUrl,
+            message: 'درخواست مشاوره با موفقیت به ربات تلگرام ارسال شد.',
+          });
+          return;
+        } else {
+          const userFriendlyError = parseTelegramError(tgData.description, effectiveChatId);
+          res.json({
+            success: true,
+            telegramSent: false,
+            telegramError: userFriendlyError,
+            pvUrl,
+            fallbackUrl: `https://t.me/Lawat_kar?text=${encodeURIComponent(`مشاوره تکویکس\nکاربر: ${fullName}\nتماس: ${rawContact}\nموضوع: ${consultationTopic}\nپیام: ${userMessage}`)}`,
+          });
+          return;
+        }
+      }
+
+      res.json({
+        success: true,
+        telegramSent: false,
+        pvUrl,
+        directLink: `https://t.me/Lawat_kar?text=${encodeURIComponent(`مشاوره تکویکس\nکاربر: ${fullName}\nتماس: ${rawContact}\nموضوع: ${consultationTopic}\nپیام: ${userMessage}`)}`,
+      });
+    } catch (err: any) {
+      console.error('Error sending consultation to Telegram:', err);
+      res.status(500).json({ error: 'خطا در ارسال پیام مشاوره به تلگرام', details: err?.message });
     }
   });
 

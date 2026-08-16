@@ -7,6 +7,7 @@ import { ServicesSection } from './components/ServicesSection';
 import { HowItWorks } from './components/HowItWorks';
 import { PortfolioSection } from './components/PortfolioSection';
 import { TestimonialsSection } from './components/TestimonialsSection';
+import { CustomerReviewsSection } from './components/CustomerReviewsSection';
 import { BlogSection } from './components/BlogSection';
 import { AboutSection } from './components/AboutSection';
 import { FAQSection } from './components/FAQSection';
@@ -102,9 +103,17 @@ function MainWebsite() {
         {isEnabled('portfolio') && <PortfolioSection />}
 
         {/* 6. Blog & Cinema Video Player Section */}
-        {isEnabled('blog') && <BlogSection onOpenOrderModal={handleOpenOrderModal} />}
+        {isEnabled('blog') && (
+          <BlogSection
+            onOpenOrderModal={handleOpenOrderModal}
+            onOpenAuthModal={() => setIsGoogleAuthOpen(true)}
+          />
+        )}
 
-        {/* 7. Testimonials Section */}
+        {/* 7. Dedicated Customer Reviews & Ratings Center */}
+        <CustomerReviewsSection onOpenAuthModal={() => setIsGoogleAuthOpen(true)} />
+
+        {/* 8. Testimonials Section */}
         {isEnabled('testimonials') && <TestimonialsSection />}
 
         {/* 8. About Brand Story Section */}
@@ -158,6 +167,7 @@ function MainWebsite() {
         isOpen={isOrderModalOpen}
         onClose={handleCloseOrderModal}
         initialServiceId={selectedServiceForOrder}
+        onOpenGoogleAuth={() => setIsGoogleAuthOpen(true)}
       />
 
       {/* Google Authentication & Account Modal */}

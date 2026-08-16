@@ -3,7 +3,7 @@ import { Send, CheckCircle2, MessageSquare, Copy, ExternalLink } from 'lucide-re
 import { useSiteData } from '../context/SiteDataContext';
 
 export const ContactSection: React.FC = () => {
-  const { brandInfo, addOrder } = useSiteData();
+  const { brandInfo, addOrder, sendConsultationToTelegram } = useSiteData();
   const [formData, setFormData] = useState({
     name: '',
     contactInfo: '',
@@ -11,6 +11,8 @@ export const ContactSection: React.FC = () => {
   });
   const [copied, setCopied] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [consultationResult, setConsultationResult] = useState<{ directLink?: string; pvUrl?: string } | null>(null);
 
   const handleCopyTelegram = () => {
     navigator.clipboard.writeText(brandInfo.telegramHandle);
@@ -18,18 +20,30 @@ export const ContactSection: React.FC = () => {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.contactInfo) return;
 
-    // Automatically record lead/order in site database
+    setIsSending(true);
+
+    // 1. Record lead/order in site database
     addOrder({
       fullName: formData.name,
       telegramOrPhone: formData.contactInfo,
-      serviceTitle: 'مشاوره و استعلام عمومی',
+      serviceTitle: 'درخواست مشاوره تخصصی',
       message: formData.message,
     });
 
+    // 2. Dispatch instant notification to registered Telegram Bot
+    const res = await sendConsultationToTelegram({
+      name: formData.name,
+      contactInfo: formData.contactInfo,
+      topic: 'مشاوره و استعلام مستقیم از سایت',
+      message: formData.message || 'درخواست گفت‌وگو و مشاوره هوش مصنوعی',
+    });
+
+    setConsultationResult(res);
+    setIsSending(false);
     setSubmitted(true);
   };
 
@@ -120,24 +134,38 @@ export const ContactSection: React.FC = () => {
           {/* Contact Form */}
           <div className="lg:col-span-7 p-7 sm:p-8 rounded-3xl bg-[#090717] border border-white/[0.08] shadow-xl">
             {submitted ? (
-              <div className="py-12 text-center flex flex-col items-center justify-center">
-                <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 mb-4 shadow-[0_0_20px_rgba(168,85,247,0.3)]">
+              <div className="py-10 text-center flex flex-col items-center justify-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.3)]">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">پیام شما دریافت شد!</h3>
-                <p className="text-sm text-gray-300 max-w-sm mx-auto mb-6">
-                  به زودی از طریق تلگرام یا اطلاعات تماسی که وارد کردید با شما ارتباط برقرار خواهیم کرد.
+                <h3 className="text-xl font-bold text-white">درخواست مشاوره شما با موفقیت دریافت و ارسال شد!</h3>
+                <p className="text-xs sm:text-sm text-gray-300 max-w-sm mx-auto leading-relaxed">
+                  پیام شما مستقیماً به ربات پشتیبانی تلگرام تکویکس متصل شد. کارشناس مشاوره در اسرع وقت پاسخگوی شما خواهد بود.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSubmitted(false);
-                    setFormData({ name: '', contactInfo: '', message: '' });
-                  }}
-                  className="px-6 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-purple-300 border border-purple-500/20"
-                >
-                  ارسال پیام دیگر
-                </button>
+
+                {/* Direct Telegram Chat Button */}
+                <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+                  <a
+                    href={consultationResult?.pvUrl || consultationResult?.directLink || brandInfo.telegramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-purple-600/30 flex items-center gap-2 transition-all cursor-pointer"
+                  >
+                    <span>گفت‌وگوی فوری در تلگرام (@Lawat_kar)</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSubmitted(false);
+                      setFormData({ name: '', contactInfo: '', message: '' });
+                    }}
+                    className="px-5 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-xs font-medium text-purple-300 border border-purple-500/20 cursor-pointer"
+                  >
+                    ارسال پیام دیگر
+                  </button>
+                </div>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
@@ -195,9 +223,10 @@ export const ContactSection: React.FC = () => {
                 <button
                   type="submit"
                   id="contact-submit-btn"
-                  className="w-full py-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm shadow-[0_0_20px_rgba(147,51,234,0.4)] transition-all flex items-center justify-center gap-2"
+                  disabled={isSending}
+                  className="w-full py-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm shadow-[0_0_20px_rgba(147,51,234,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                 >
-                  <span>ارسال پیام و ثبت در سیستم</span>
+                  <span>{isSending ? 'در حال اتصال به ربات و ارسال...' : 'ارسال پیام و درخواست مشاوره'}</span>
                   <Send className="w-4 h-4 rotate-180" />
                 </button>
               </form>

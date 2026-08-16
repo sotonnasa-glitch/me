@@ -66,7 +66,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navLinks = [
     { label: 'خدمات', href: '#services' },
-    { label: '🎬 فیلم‌ها و ویدیوها', href: '#blog', isHighlight: true },
+    { label: '🎬 فیلم‌ها و مقالات', href: '#blog', isHighlight: true },
+    { label: '💬 نظرات کاربران', href: '#reviews' },
     { label: 'ویژگی‌ها', href: '#features' },
     { label: 'نحوه کار', href: '#how-it-works' },
     { label: 'نمونه‌کارها', href: '#portfolio' },
