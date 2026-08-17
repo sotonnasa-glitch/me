@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SiteDataProvider, useSiteData } from './context/SiteDataContext';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
+import { OpeningEventBanner } from './components/OpeningEventBanner';
 import { InteractiveFeatures } from './components/InteractiveFeatures';
 import { ServicesSection } from './components/ServicesSection';
 import { HowItWorks } from './components/HowItWorks';
@@ -87,6 +88,9 @@ function MainWebsite() {
             onOpenAdmin={() => setIsAdminOpen(true)}
           />
         )}
+
+        {/* 1.5. Special Opening Promotional Event Banner (Free First Orders) */}
+        <OpeningEventBanner onOpenOrderModal={handleOpenOrderModal} />
 
         {/* 2. Interactive Features & Live Dashboard */}
         {isEnabled('features') && <InteractiveFeatures />}

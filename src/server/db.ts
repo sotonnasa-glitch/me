@@ -1,6 +1,14 @@
 import fs from 'fs';
 import path from 'path';
-import { DatabaseUser, OrderItem, AnalyticsEvent, AdminLiveStats, SitePublicStats } from '../types';
+import {
+  DatabaseUser,
+  OrderItem,
+  AnalyticsEvent,
+  AdminLiveStats,
+  SitePublicStats,
+  OpeningEventConfig,
+  OpeningEventState,
+} from '../types';
 
 export interface DailyStatRecord {
   stat_date: string;
@@ -21,6 +29,19 @@ class TekvixDatabase {
   private events: AnalyticsEvent[] = [];
   private dailyStats: Map<string, DailyStatRecord> = new Map();
   private totalViewsCount: number = 2840;
+  private openingEventConfig: OpeningEventConfig = {
+    isActive: true,
+    title: 'جشن افتتاحیه TEKVIX | اولین سفارش‌ها رایگان',
+    subtitle: 'فرصت استثنایی برای ۲ سفارش اول با ۱۰۰٪ تخفیف و هزینه کاملاً رایگان',
+    badgeText: '🎉 کمپین افتتاحیه ویژه',
+    highlightText: '🔥 فقط ۲ سفارش اول رایگان!',
+    description:
+      'هر خدمتی که از TEKVIX انتخاب کنی، برای ۲ نفر اول کاملاً رایگان انجام می‌شود. 🤖✨',
+    startDate: new Date(Date.now() - 24 * 3600000).toISOString(),
+    endDate: new Date(Date.now() + 7 * 86400000).toISOString(),
+    maxWinners: 2,
+    termsNote: 'هر کاربر فقط یک‌بار امکان استفاده از جایزه را دارد. سفارش‌های لغوشده محاسبه نمی‌شوند.',
+  };
 
   constructor() {
     const dataDir = path.join(process.cwd(), 'data');
@@ -56,6 +77,12 @@ class TekvixDatabase {
         }
         if (typeof data.totalViewsCount === 'number') {
           this.totalViewsCount = data.totalViewsCount;
+        }
+        if (data.openingEventConfig) {
+          this.openingEventConfig = {
+            ...this.openingEventConfig,
+            ...data.openingEventConfig,
+          };
         }
         loaded = this.orders.size > 0;
       } catch (err) {
@@ -289,6 +316,7 @@ class TekvixDatabase {
         events: this.events.slice(-500),
         dailyStats: Array.from(this.dailyStats.values()),
         totalViewsCount: this.totalViewsCount,
+        openingEventConfig: this.openingEventConfig,
         savedAt: new Date().toISOString(),
       };
       fs.writeFileSync(this.dbPath, JSON.stringify(data, null, 2), 'utf-8');
@@ -298,6 +326,63 @@ class TekvixDatabase {
   }
 
   // --- PUBLIC API METHODS ---
+
+  public getOpeningEventState(): OpeningEventState {
+    const allOrders = this.getOrders();
+    const config = this.openingEventConfig;
+    const now = Date.now();
+    const start = new Date(config.startDate).getTime();
+    const end = new Date(config.endDate).getTime();
+
+    // Eligible winning orders: non-cancelled orders flagged as promo
+    const promoOrders = allOrders.filter(
+      (o) => o.isPromoEvent && o.status !== 'cancelled'
+    );
+
+    const winners = promoOrders.slice(0, config.maxWinners).map((o) => ({
+      orderId: o.id,
+      fullName: o.fullName,
+      telegramOrPhone: o.telegramOrPhone,
+      serviceId: o.serviceId,
+      serviceTitle: o.serviceTitle,
+      createdAt: o.createdAt,
+      status: o.status,
+    }));
+
+    const totalEligible = winners.length;
+    const remaining = Math.max(0, config.maxWinners - totalEligible);
+
+    let status: 'active' | 'completed' | 'expired' | 'disabled' = 'active';
+    if (!config.isActive) {
+      status = 'disabled';
+    } else if (now > end) {
+      status = 'expired';
+    } else if (remaining <= 0) {
+      status = 'completed';
+    } else if (now < start) {
+      status = 'disabled';
+    }
+
+    const isCurrentlyOpen = status === 'active' && remaining > 0;
+
+    return {
+      config,
+      status,
+      totalEligibleOrders: totalEligible,
+      remainingCapacity: remaining,
+      winners,
+      isCurrentlyOpen,
+    };
+  }
+
+  public updateOpeningEventConfig(updates: Partial<OpeningEventConfig>): OpeningEventConfig {
+    this.openingEventConfig = {
+      ...this.openingEventConfig,
+      ...updates,
+    };
+    this.saveToFile();
+    return this.openingEventConfig;
+  }
 
   public getUsers(): DatabaseUser[] {
     return Array.from(this.users.values()).sort(
@@ -342,10 +427,36 @@ class TekvixDatabase {
   public createOrder(order: Omit<OrderItem, 'id' | 'createdAt' | 'status'> & { id?: string; status?: OrderItem['status'] }): OrderItem {
     const newId = order.id || `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
     const now = new Date().toISOString();
+
+    // Server-side Promo Event Validation
+    const eventState = this.getOpeningEventState();
+    let isPromo = false;
+    let promoName: string | undefined = undefined;
+    let price = order.priceQuoted;
+
+    if (order.isPromoEvent && eventState.isCurrentlyOpen) {
+      // Ensure this user hasn't already claimed the award
+      const cleanContact = order.telegramOrPhone.trim().toLowerCase().replace('@', '');
+      const existingUserClaim = this.getOrders().some((o) => {
+        if (!o.isPromoEvent || o.status === 'cancelled') return false;
+        const oContact = o.telegramOrPhone.trim().toLowerCase().replace('@', '');
+        return oContact === cleanContact;
+      });
+
+      if (!existingUserClaim) {
+        isPromo = true;
+        promoName = eventState.config.title;
+        price = '۰ تومان (رایگان - جایزه افتتاحیه)';
+      }
+    }
+
     const newOrder: OrderItem = {
       ...order,
       id: newId,
       status: order.status || 'new',
+      isPromoEvent: isPromo,
+      promoEventName: promoName,
+      priceQuoted: price,
       createdAt: now,
       updatedAt: now,
     };
@@ -357,8 +468,8 @@ class TekvixDatabase {
       path: '/order',
       serviceId: order.serviceId,
       device: 'mobile',
-      value: 4500000,
-      metadata: { orderId: newId, customer: order.fullName },
+      value: isPromo ? 0 : 4500000,
+      metadata: { orderId: newId, customer: order.fullName, isPromo },
     });
 
     this.saveToFile();

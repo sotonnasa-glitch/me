@@ -13,7 +13,9 @@ import {
   UserProfile,
   TelegramBotSettings,
   BlogComment,
-  SiteReview
+  SiteReview,
+  OpeningEventConfig,
+  OpeningEventState,
 } from '../types';
 import {
   BRAND_INFO as DEFAULT_BRAND_INFO,
@@ -176,6 +178,11 @@ interface SiteDataContextType {
   addFAQ: (item: Omit<FAQItem, 'id'>) => FAQItem;
   updateFAQ: (id: string, updated: Partial<FAQItem>) => void;
   deleteFAQ: (id: string) => void;
+
+  // Opening Promotional Event
+  openingEventState: OpeningEventState;
+  updateOpeningEventConfig: (updated: Partial<OpeningEventConfig>) => void;
+  refreshOpeningEvent: () => Promise<void>;
 
   // Real Analytics & Tracking
   siteViewsCount: number;
@@ -393,6 +400,109 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return {};
     }
   });
+
+  const [openingEventConfig, setOpeningEventConfig] = useState<OpeningEventConfig>(() => {
+    try {
+      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_opening_event`);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {
+      isActive: true,
+      title: 'جشن افتتاحیه TEKVIX | اولین سفارش‌ها رایگان',
+      subtitle: 'فرصت استثنایی برای ۲ سفارش اول با ۱۰۰٪ تخفیف و هزینه کاملاً رایگان',
+      badgeText: '🎉 کمپین افتتاحیه ویژه',
+      highlightText: '🔥 فقط ۲ سفارش اول رایگان!',
+      description:
+        'هر خدمتی که از TEKVIX انتخاب کنی، برای ۲ نفر اول کاملاً رایگان انجام می‌شود. 🤖✨',
+      startDate: new Date(Date.now() - 24 * 3600000).toISOString(),
+      endDate: new Date(Date.now() + 7 * 86400000).toISOString(),
+      maxWinners: 2,
+      termsNote: 'هر کاربر فقط یک‌بار امکان استفاده از جایزه را دارد. سفارش‌های لغوشده محاسبه نمی‌شوند.',
+    };
+  });
+
+  // Calculate real-time state for Opening Event
+  const calculateOpeningEventState = (): OpeningEventState => {
+    const now = Date.now();
+    const start = new Date(openingEventConfig.startDate).getTime();
+    const end = new Date(openingEventConfig.endDate).getTime();
+
+    // Eligible winning orders: non-cancelled orders flagged as promo
+    const promoOrders = orders.filter(
+      (o) => o.isPromoEvent && o.status !== 'cancelled'
+    );
+
+    const winners = promoOrders.slice(0, openingEventConfig.maxWinners).map((o) => ({
+      orderId: o.id,
+      fullName: o.fullName,
+      telegramOrPhone: o.telegramOrPhone,
+      serviceId: o.serviceId,
+      serviceTitle: o.serviceTitle,
+      createdAt: o.createdAt,
+      status: o.status,
+    }));
+
+    const totalEligible = winners.length;
+    const remaining = Math.max(0, openingEventConfig.maxWinners - totalEligible);
+
+    let status: 'active' | 'completed' | 'expired' | 'disabled' = 'active';
+    if (!openingEventConfig.isActive) {
+      status = 'disabled';
+    } else if (now > end) {
+      status = 'expired';
+    } else if (remaining <= 0) {
+      status = 'completed';
+    } else if (now < start) {
+      status = 'disabled';
+    }
+
+    const isCurrentlyOpen = status === 'active' && remaining > 0;
+
+    return {
+      config: openingEventConfig,
+      status,
+      totalEligibleOrders: totalEligible,
+      remainingCapacity: remaining,
+      winners,
+      isCurrentlyOpen,
+    };
+  };
+
+  const openingEventState = calculateOpeningEventState();
+
+  const updateOpeningEventConfig = (updated: Partial<OpeningEventConfig>) => {
+    setOpeningEventConfig((prev) => {
+      const next = { ...prev, ...updated };
+      try {
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_opening_event`, JSON.stringify(next));
+      } catch {}
+      fetch('/api/opening-event/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(next),
+      }).catch((err) => console.warn('Failed to sync opening event config to backend:', err));
+      return next;
+    });
+  };
+
+  const refreshOpeningEvent = async () => {
+    try {
+      const res = await fetch('/api/opening-event');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.event && data.event.config) {
+          setOpeningEventConfig(data.event.config);
+        }
+      }
+    } catch (err) {
+      console.warn('Could not refresh opening event from server:', err);
+    }
+  };
+
+  // Fetch initial opening event on mount
+  useEffect(() => {
+    refreshOpeningEvent();
+  }, []);
 
   // Track initial page view on mount
   useEffect(() => {
@@ -651,7 +761,11 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // 3-Step Order Pipeline operations
   const addOrder = (orderData: OrderFormData): OrderItem => {
     const targetService = services.find((s) => s.id === orderData.serviceId);
-    const calculatedPrice = targetService?.estimatedPrice || 'استعلامی';
+    const isPromo = Boolean(orderData.isPromoEvent && openingEventState.isCurrentlyOpen);
+    const calculatedPrice = isPromo
+      ? '۰ تومان (رایگان - جایزه افتتاحیه)'
+      : targetService?.estimatedPrice || 'استعلامی';
+
     const newOrder: OrderItem = {
       id: `ord-${Date.now().toString().slice(-5)}`,
       createdAt: new Date().toISOString(),
@@ -662,6 +776,8 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       message: (orderData.message || '').trim(),
       status: 'new',
       priceQuoted: calculatedPrice,
+      isPromoEvent: isPromo,
+      promoEventName: isPromo ? openingEventConfig.title : undefined,
     };
     setOrders((prev) => [newOrder, ...prev]);
 
@@ -680,7 +796,7 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         eventType: 'order_submitted',
         page: window.location.pathname,
         serviceId: orderData.serviceId,
-        metadata: { fullName: orderData.fullName, price: calculatedPrice },
+        metadata: { fullName: orderData.fullName, price: calculatedPrice, isPromo },
       }),
     }).catch(() => {});
 
@@ -732,6 +848,9 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const deleteOrder = (id: string) => {
     setOrders((prev) => prev.filter((item) => item.id !== id));
+    fetch(`/api/orders/${id}`, {
+      method: 'DELETE',
+    }).catch((err) => console.warn('Backend order delete warning:', err));
   };
 
   // Blog operations
@@ -1122,6 +1241,9 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         addFAQ,
         updateFAQ,
         deleteFAQ,
+        openingEventState,
+        updateOpeningEventConfig,
+        refreshOpeningEvent,
         siteViewsCount,
         serviceClicksCount,
         trackServiceClick,

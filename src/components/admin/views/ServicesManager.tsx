@@ -553,6 +553,42 @@ export const ServicesManager: React.FC<{ isOpenAddModalDirectly?: boolean; onClo
                 </div>
               </div>
 
+              {/* Availability Status & Note */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-300 mb-1">
+                    وضعیت پذیرش سفارش
+                  </label>
+                  <select
+                    value={formData.availabilityStatus || 'available'}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        availabilityStatus: e.target.value as 'available' | 'unavailable' | 'coming_soon',
+                      })
+                    }
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#15102d] border border-white/10 focus:border-purple-500 text-xs text-white focus:outline-none cursor-pointer"
+                  >
+                    <option value="available">🟢 در دسترس و آماده پذیرش سفارش</option>
+                    <option value="unavailable">🔴 موقتاً تکمیل ظرفیت / غیرفعال</option>
+                    <option value="coming_soon">🟡 به‌زودی (Coming Soon)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-300 mb-1">
+                    یادداشت وضعیت (اختیاری)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.availabilityNote || ''}
+                    onChange={(e) => setFormData({ ...formData, availabilityNote: e.target.value })}
+                    placeholder="مثال: تحویل سریع فوری، ظرفیت محدود"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 focus:border-purple-500 text-xs text-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
               {/* Checkboxes: Active & Popular */}
               <div className="flex items-center gap-6 pt-2">
                 <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-200">

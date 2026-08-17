@@ -11,6 +11,7 @@ import { SettingsManager } from './views/SettingsManager';
 import { BackupManager } from './views/BackupManager';
 import { BlogManager } from './views/BlogManager';
 import { AnalyticsView } from './views/AnalyticsView';
+import { OpeningEventManager } from './views/OpeningEventManager';
 import { CustomizerDrawer, AdminThemePreset, AdminRadius, AdminMode } from './CustomizerDrawer';
 import { Menu, Sparkles, Layers } from 'lucide-react';
 
@@ -137,6 +138,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onSwitchToSite }) => {
               onOpenCustomizer={() => setIsCustomizerOpen(true)}
             />
           )}
+
+          {activeTab === 'opening_event' && <OpeningEventManager />}
 
           {activeTab === 'services' && (
             <ServicesManager

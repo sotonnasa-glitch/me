@@ -14,12 +14,14 @@ import {
   X,
   Shield,
   Newspaper,
-  BarChart3
+  BarChart3,
+  Gift,
 } from 'lucide-react';
 import { useSiteData } from '../../context/SiteDataContext';
 
 export type AdminTab =
   | 'overview'
+  | 'opening_event'
   | 'orders'
   | 'services'
   | 'blog'
@@ -45,7 +47,15 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   onCloseMobile,
   onSwitchToSite,
 }) => {
-  const { newOrdersCount, inProgressOrdersCount, services, orders, blogPosts, navigateToSection } = useSiteData();
+  const {
+    newOrdersCount,
+    inProgressOrdersCount,
+    services,
+    orders,
+    blogPosts,
+    openingEventState,
+    navigateToSection,
+  } = useSiteData();
 
   const handleReturnToVideoPage = () => {
     onCloseMobile();
@@ -64,6 +74,16 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       icon: LayoutDashboard,
       badge: null,
       colorClass: 'text-purple-400'
+    },
+    {
+      id: 'opening_event' as AdminTab,
+      label: 'ایونت افتتاحیه و سفارش رایگان',
+      icon: Gift,
+      badge: openingEventState.isCurrentlyOpen
+        ? `🔥 ${openingEventState.remainingCapacity} ظرفیت`
+        : 'افتتاحیه',
+      badgeHighlight: openingEventState.isCurrentlyOpen,
+      colorClass: 'text-amber-400'
     },
     {
       id: 'orders' as AdminTab,

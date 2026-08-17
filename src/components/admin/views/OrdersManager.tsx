@@ -48,6 +48,7 @@ export const OrdersManager: React.FC = () => {
   const [priceInput, setPriceInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isCreatingManual, setIsCreatingManual] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<OrderItem | null>(null);
   const [sendingTgOrderId, setSendingTgOrderId] = useState<string | null>(null);
   const [tgFeedback, setTgFeedback] = useState<{ id: string; message: string; isError?: boolean } | null>(null);
 
@@ -174,7 +175,14 @@ export const OrdersManager: React.FC = () => {
               {ord.id.slice(-3)}
             </div>
             <div className="min-w-0">
-              <h4 className="font-bold text-sm text-white truncate">{ord.fullName}</h4>
+              <div className="flex items-center gap-1.5">
+                <h4 className="font-bold text-sm text-white truncate">{ord.fullName}</h4>
+                {ord.isPromoEvent && (
+                  <span className="px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-black shrink-0">
+                    🎁 رایگان افتتاحیه
+                  </span>
+                )}
+              </div>
               <span className="text-[11px] text-zinc-400 block truncate">
                 سرویس: <span className="text-purple-300 font-medium">{ord.serviceTitle}</span>
               </span>
@@ -327,13 +335,9 @@ export const OrdersManager: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={() => {
-                    if (confirm(`آیا از حذف سفارش ${ord.fullName} اطمینان دارید؟`)) {
-                      deleteOrder(ord.id);
-                    }
-                  }}
-                  className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition-colors"
-                  title="حذف"
+                  onClick={() => setOrderToDelete(ord)}
+                  className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition-colors cursor-pointer"
+                  title="حذف سفارش"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -799,6 +803,62 @@ export const OrdersManager: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* In-App Delete Confirmation Modal (Safe for iframe) */}
+      {orderToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="w-full max-w-md rounded-2xl bg-[#0e0720] border border-rose-500/30 p-6 space-y-4 shadow-2xl text-start">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-rose-400" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">حذف سفارش مشتری</h3>
+                <p className="text-xs text-zinc-400">این عملیات غیرقابل بازگشت است.</p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs space-y-1">
+              <div className="flex justify-between">
+                <span className="text-zinc-400">نام مشتری:</span>
+                <span className="text-white font-bold">{orderToDelete.fullName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-400">سرویس:</span>
+                <span className="text-purple-300 font-medium">{orderToDelete.serviceTitle}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-400">تماس:</span>
+                <span className="text-zinc-200 font-mono">{orderToDelete.telegramOrPhone}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-zinc-300">
+              آیا از حذف کامل این سفارش از سیستم اطمینان دارید؟
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setOrderToDelete(null)}
+                className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold border border-zinc-800 transition-colors cursor-pointer"
+              >
+                انصراف
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  deleteOrder(orderToDelete.id);
+                  setOrderToDelete(null);
+                }}
+                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-600/30 transition-all cursor-pointer"
+              >
+                بله، حذف کن
+              </button>
+            </div>
           </div>
         </div>
       )}

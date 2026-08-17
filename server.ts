@@ -100,7 +100,19 @@ async function startServer() {
 
   app.post('/api/orders', async (req, res) => {
     try {
-      const { fullName, telegramOrPhone, serviceId, serviceTitle, budget, message, priceQuoted, adminNotes } = req.body;
+      const {
+        fullName,
+        telegramOrPhone,
+        serviceId,
+        serviceTitle,
+        budget,
+        message,
+        priceQuoted,
+        adminNotes,
+        isPromoEvent,
+        promoEventName,
+        userEmail,
+      } = req.body;
       if (!fullName || !telegramOrPhone || !serviceId) {
         res.status(400).json({ success: false, error: 'اطلاعات سفارش ناقص است' });
         return;
@@ -114,6 +126,9 @@ async function startServer() {
         message: message || '',
         priceQuoted,
         adminNotes,
+        isPromoEvent: Boolean(isPromoEvent),
+        promoEventName,
+        userEmail,
         status: 'new',
       });
 
@@ -121,6 +136,29 @@ async function startServer() {
     } catch (error: any) {
       console.error('Error creating order:', error);
       res.status(500).json({ success: false, error: 'خطا در ثبت سفارش' });
+    }
+  });
+
+  // 5.1. OPENING EVENT API (GET, POST config)
+  app.get('/api/opening-event', (req, res) => {
+    try {
+      const eventState = db.getOpeningEventState();
+      res.json({ success: true, event: eventState });
+    } catch (error: any) {
+      console.error('Error fetching opening event state:', error);
+      res.status(500).json({ success: false, error: 'خطا در دریافت وضعیت ایونت افتتاحیه' });
+    }
+  });
+
+  app.post('/api/opening-event/config', (req, res) => {
+    try {
+      const updates = req.body;
+      const updatedConfig = db.updateOpeningEventConfig(updates);
+      const eventState = db.getOpeningEventState();
+      res.json({ success: true, config: updatedConfig, event: eventState });
+    } catch (error: any) {
+      console.error('Error updating opening event config:', error);
+      res.status(500).json({ success: false, error: 'خطا در به‌روزرسانی تنظیمات ایونت' });
     }
   });
 

@@ -19,7 +19,9 @@ import {
   Bot,
   Palette,
   Music,
-  FileText
+  FileText,
+  Gift,
+  Flame,
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteDataContext';
 import { OrderFormData } from '../types';
@@ -44,12 +46,23 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     sendOrderToTelegramBot,
     currentUser,
     trackServiceClick,
+    openingEventState,
   } = useSiteData();
+
+  // Filter out inactive/unavailable services completely from order menu
+  const availableServices = services.filter(
+    (s) => s.active !== false && s.availabilityStatus !== 'unavailable'
+  );
+
+  const defaultServiceId =
+    (initialServiceId && availableServices.some((s) => s.id === initialServiceId))
+      ? initialServiceId
+      : availableServices[0]?.id || 'ai-website';
 
   const [formData, setFormData] = useState<OrderFormData>({
     fullName: '',
     telegramOrPhone: '',
-    serviceId: initialServiceId || services[0]?.id || 'ai-website',
+    serviceId: defaultServiceId,
     message: '',
   });
 
@@ -60,7 +73,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   const [countdown, setCountdown] = useState(10);
   const [copiedCode, setCopiedCode] = useState(false);
 
-  // Quick service categories pills
+  // Quick service categories pills (only available ones)
   const quickCategories = [
     { id: 'ai-website', label: 'طراحی وب‌سایت', icon: Globe },
     { id: 'ai-video', label: 'ویدیو سینمایی', icon: Clapperboard },
@@ -68,26 +81,25 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     { id: 'image-creation', label: 'تصویر و گرافیک', icon: Palette },
     { id: 'ai-music', label: 'موزیک و صدا', icon: Music },
     { id: 'text-content', label: 'تولید محتوا', icon: FileText },
-  ];
+  ].filter((cat) => availableServices.some((s) => s.id === cat.id));
 
   useEffect(() => {
     if (currentUser) {
       setFormData((prev) => ({
         ...prev,
         fullName: prev.fullName || currentUser.name,
-        telegramOrPhone: prev.telegramOrPhone || currentUser.email,
       }));
     }
   }, [currentUser]);
 
   useEffect(() => {
-    if (initialServiceId) {
+    if (initialServiceId && availableServices.some((s) => s.id === initialServiceId)) {
       setFormData((prev) => ({ ...prev, serviceId: initialServiceId }));
       trackServiceClick(initialServiceId);
-    } else if (services.length > 0 && !formData.serviceId) {
-      setFormData((prev) => ({ ...prev, serviceId: services[0].id }));
+    } else if (availableServices.length > 0 && !availableServices.some((s) => s.id === formData.serviceId)) {
+      setFormData((prev) => ({ ...prev, serviceId: availableServices[0].id }));
     }
-  }, [initialServiceId, services]);
+  }, [initialServiceId, availableServices]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -116,7 +128,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       newErrors.fullName = 'لطفاً نام و نام خانوادگی خود را وارد کنید.';
     }
     if (!formData.telegramOrPhone.trim()) {
-      newErrors.telegramOrPhone = 'لطفاً آیدی تلگرام یا شماره تماس خود را وارد کنید.';
+      newErrors.telegramOrPhone = 'لطفاً آیدی تلگرام خود را وارد کنید.';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -124,9 +136,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
 
   const handleQuickFill = () => {
     setFormData({
-      fullName: currentUser ? currentUser.name : 'مهدی حاتمی',
-      telegramOrPhone: '@Lawat_kar',
-      serviceId: formData.serviceId || 'ai-website',
+      fullName: currentUser ? currentUser.name : 'کاربر تکویکس',
+      telegramOrPhone: '@username',
+      serviceId: availableServices[0]?.id || 'ai-website',
       message: 'درخواست پیاده‌سازی پروژه هوش مصنوعی اختصاصی با بالاترین کیفیت و سرعت تحویل.',
     });
     setErrors({});
@@ -147,8 +159,14 @@ export const OrderModal: React.FC<OrderModalProps> = ({
 
     setIsSubmitting(true);
 
+    const isPromo = Boolean(openingEventState.isCurrentlyOpen);
+
     // 1. Save directly to centralized site database context
-    const created = addOrder(formData);
+    const created = addOrder({
+      ...formData,
+      isPromoEvent: isPromo,
+      promoEventName: isPromo ? openingEventState.config.title : undefined,
+    });
     setSubmittedOrderId(created.id);
 
     // 2. Dispatch telegram notification to bot
@@ -162,7 +180,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     }
   };
 
-  const selectedService = services.find((s) => s.id === formData.serviceId) || services[0];
+  const selectedService = availableServices.find((s) => s.id === formData.serviceId) || availableServices[0];
 
   return (
     <div
@@ -328,6 +346,28 @@ export const OrderModal: React.FC<OrderModalProps> = ({
           /* ================= ORDER FORM STATE ================= */
           <form onSubmit={handleSubmit} className="relative z-10 space-y-4 sm:space-y-5 my-auto py-2">
             
+            {/* Opening Promo Event Banner Indicator inside modal */}
+            {openingEventState.isCurrentlyOpen && (
+              <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/20 via-purple-600/20 to-pink-500/20 border border-amber-400/50 flex items-center justify-between gap-2.5 shadow-[0_0_20px_rgba(251,191,36,0.2)] animate-in fade-in duration-200">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 shrink-0">
+                    <Gift className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 font-black text-amber-300 text-xs truncate">
+                      <span>🎉 ۱۰۰٪ تخفیف و رایگان (ایونت افتتاحیه)</span>
+                    </div>
+                    <p className="text-[10px] text-purple-200/90 truncate">
+                      ظرفیت باقی‌مانده: {openingEventState.remainingCapacity} از {openingEventState.config.maxWinners} سفارش اول
+                    </p>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded-xl bg-amber-400 text-black text-[10px] font-black shrink-0 shadow-sm">
+                  هزینه: ۰ تومان
+                </span>
+              </div>
+            )}
+
             {/* Google Authentication Quick Bar */}
             {currentUser ? (
               <div className="p-3 rounded-2xl bg-gradient-to-r from-purple-950/60 to-indigo-950/60 border border-purple-500/40 flex items-center justify-between text-xs text-purple-200">

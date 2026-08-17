@@ -81,6 +81,9 @@ export interface OrderItem {
   adminNotes?: string;
   priceQuoted?: string;
   updatedAt?: string;
+  isPromoEvent?: boolean;
+  promoEventName?: string;
+  userEmail?: string;
 }
 
 export interface OrderFormData {
@@ -88,6 +91,40 @@ export interface OrderFormData {
   telegramOrPhone: string;
   serviceId: string;
   message: string;
+  isPromoEvent?: boolean;
+  promoEventName?: string;
+}
+
+export interface OpeningEventConfig {
+  isActive: boolean;
+  title: string;
+  subtitle: string;
+  badgeText: string;
+  highlightText: string;
+  description: string;
+  startDate: string; // ISO format
+  endDate: string; // ISO format
+  maxWinners: number;
+  termsNote?: string;
+}
+
+export interface OpeningEventWinner {
+  orderId: string;
+  fullName: string;
+  telegramOrPhone: string;
+  serviceId: string;
+  serviceTitle: string;
+  createdAt: string;
+  status: OrderStatus;
+}
+
+export interface OpeningEventState {
+  config: OpeningEventConfig;
+  status: 'active' | 'completed' | 'expired' | 'disabled';
+  totalEligibleOrders: number;
+  remainingCapacity: number;
+  winners: OpeningEventWinner[];
+  isCurrentlyOpen: boolean;
 }
 
 export interface BlogPost {
