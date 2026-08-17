@@ -11,7 +11,12 @@ import {
   Bot,
   ShieldCheck,
   Zap,
-  ExternalLink
+  ExternalLink,
+  KeyRound,
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle
 } from 'lucide-react';
 import { useSiteData } from '../../../context/SiteDataContext';
 
@@ -22,6 +27,7 @@ export const SettingsManager: React.FC = () => {
     telegramSettings,
     updateTelegramSettings,
     testTelegramBotConnection,
+    changeAdminPassword,
   } = useSiteData();
 
   const [form, setForm] = useState({
@@ -44,6 +50,17 @@ export const SettingsManager: React.FC = () => {
     autoNotifyNewOrders: telegramSettings.autoNotifyNewOrders,
   });
 
+  // Password Management state
+  const [passwordForm, setPasswordForm] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [showOldPass, setShowOldPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [passwordStatus, setPasswordStatus] = useState<{ success?: boolean; message?: string; error?: string } | null>(null);
+  const [isChangingPass, setIsChangingPass] = useState(false);
+
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [testResult, setTestResult] = useState<{ success?: boolean; message?: string; error?: string } | null>(
     null
@@ -56,6 +73,39 @@ export const SettingsManager: React.FC = () => {
     updateTelegramSettings(botForm);
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 3000);
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordStatus(null);
+
+    if (!passwordForm.newPassword) {
+      setPasswordStatus({ error: 'لطفاً رمز عبور جدید را وارد کنید.' });
+      return;
+    }
+    if (passwordForm.newPassword.length < 4) {
+      setPasswordStatus({ error: 'رمز عبور جدید باید حداقل ۴ کاراکتر باشد.' });
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordStatus({ error: 'رمز عبور جدید و تکرار آن یکسان نیستند.' });
+      return;
+    }
+
+    setIsChangingPass(true);
+    try {
+      const res = await changeAdminPassword(passwordForm.oldPassword, passwordForm.newPassword);
+      if (res.success) {
+        setPasswordStatus({ success: true, message: res.message || 'رمز عبور با موفقیت تغییر یافت.' });
+        setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      } else {
+        setPasswordStatus({ error: res.error || 'رمز عبور فعلی نادرست است.' });
+      }
+    } catch (err: any) {
+      setPasswordStatus({ error: 'خطا در ارتباط با سرور.' });
+    } finally {
+      setIsChangingPass(false);
+    }
   };
 
   const handleTestBot = async () => {
@@ -169,19 +219,43 @@ export const SettingsManager: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1">
-                شناسه چت عددی یا کانال (Chat ID) <span className="text-rose-400">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-medium text-zinc-300">
+                  شناسه چت عددی یا کانال (Chat ID) <span className="text-rose-400">*</span>
+                </label>
+                <span className="text-[10px] text-amber-400 font-mono">شناسه چت شما: 7460143967</span>
+              </div>
               <input
                 type="text"
                 value={botForm.chatId}
                 onChange={(e) => setBotForm({ ...botForm, chatId: e.target.value })}
-                placeholder="مثال عددی: 123456789 یا @my_channel"
+                placeholder="7460143967 یا -1003569018930"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-white font-mono focus:border-purple-500 focus:outline-none"
               />
-              <span className="text-[10px] text-zinc-500 mt-1 block">
-                شناسه عددی اکانت شما (از userinfobot@) یا نام کانال
-              </span>
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                <span className="text-[10px] text-zinc-400">انتخاب سریع:</span>
+                <button
+                  type="button"
+                  onClick={() => setBotForm({ ...botForm, chatId: '7460143967' })}
+                  className="px-2 py-0.5 rounded-md bg-purple-950/60 border border-purple-500/30 text-purple-300 hover:text-white text-[10px] transition-colors"
+                >
+                  چت شخصی شما (7460143967)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBotForm({ ...botForm, chatId: '-1003569018930' })}
+                  className="px-2 py-0.5 rounded-md bg-purple-950/60 border border-purple-500/30 text-purple-300 hover:text-white text-[10px] transition-colors"
+                >
+                  کانال تکویکس (-1003569018930)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBotForm({ ...botForm, chatId: '7460143967, -1003569018930' })}
+                  className="px-2 py-0.5 rounded-md bg-purple-950/60 border border-purple-500/30 text-purple-300 hover:text-white text-[10px] transition-colors"
+                >
+                  ارسال همزمان به چت و کانال
+                </button>
+              </div>
             </div>
           </div>
 
@@ -374,6 +448,119 @@ export const SettingsManager: React.FC = () => {
               placeholder="مثال: 🔥 ثبت سفارش با تخفیف ویژه..."
               className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-white focus:border-purple-500 focus:outline-none"
             />
+          </div>
+        </div>
+
+        {/* ADMIN PASSWORD MANAGEMENT (NEW) */}
+        <div className="p-6 rounded-3xl bg-[#09061c] border border-amber-500/30 space-y-4 shadow-xl">
+          <div className="flex items-center justify-between pb-3 border-b border-amber-500/20">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-md">
+                <KeyRound className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  <span>تغییر رمز عبور ورود به پنل مدیریت</span>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-mono border border-amber-500/30">
+                    امنیت پنل
+                  </span>
+                </h2>
+                <span className="text-[11px] text-zinc-400">
+                  برای جلوگیری از دسترسی غیرمجاز، رمز پنل ادمین را به یک رمز دلخواه و ایمن تغییر دهید.
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {passwordStatus && (
+            <div
+              className={`p-3.5 rounded-2xl border text-xs font-semibold flex items-center gap-2 ${
+                passwordStatus.success
+                  ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+                  : 'bg-rose-500/15 border-rose-500/30 text-rose-300'
+              }`}
+            >
+              {passwordStatus.success ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              )}
+              <span>{passwordStatus.message || passwordStatus.error}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1">
+            {/* Old Password */}
+            <div>
+              <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                رمز عبور فعلی
+              </label>
+              <div className="relative">
+                <input
+                  type={showOldPass ? 'text' : 'password'}
+                  value={passwordForm.oldPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
+                  placeholder="رمز عبور قبلی..."
+                  className="w-full ps-3.5 pe-9 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-white focus:border-amber-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowOldPass(!showOldPass)}
+                  className="absolute end-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  {showOldPass ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* New Password */}
+            <div>
+              <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                رمز عبور جدید
+              </label>
+              <div className="relative">
+                <input
+                  type={showNewPass ? 'text' : 'password'}
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                  placeholder="حداقل ۴ کاراکتر..."
+                  className="w-full ps-3.5 pe-9 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-white focus:border-amber-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPass(!showNewPass)}
+                  className="absolute end-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  {showNewPass ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Confirm New Password */}
+            <div>
+              <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                تکرار رمز عبور جدید
+              </label>
+              <input
+                type="password"
+                value={passwordForm.confirmPassword}
+                onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                placeholder="تکرار رمز عبور جدید..."
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-white focus:border-amber-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <button
+              type="button"
+              onClick={handleChangePassword}
+              disabled={isChangingPass || !passwordForm.newPassword}
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span>{isChangingPass ? 'در حال تغییر...' : 'ثبت و تغییر رمز ادمین'}</span>
+            </button>
           </div>
         </div>
 

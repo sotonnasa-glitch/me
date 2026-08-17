@@ -16,8 +16,10 @@ import {
   FolderGit2
 } from 'lucide-react';
 import { INTERACTIVE_FEATURE_TABS, FEATURES_STRENGTHS } from '../data/mockData';
+import { useSiteData } from '../context/SiteDataContext';
 
 export const InteractiveFeatures: React.FC = () => {
+  const { brandInfo } = useSiteData();
   const [activeTabId, setActiveTabId] = useState<string>(INTERACTIVE_FEATURE_TABS[0].id);
 
   const activeTab =
@@ -137,12 +139,12 @@ export const InteractiveFeatures: React.FC = () => {
                 <span>پشتیبانی و مشاوره ۲۴ ساعته آنلاین است</span>
               </span>
               <a
-                href="https://t.me/arnirhq"
+                href={brandInfo.telegramUrl || 'https://t.me/Lawat_kar'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-purple-400 hover:text-purple-300 font-medium hover:underline"
               >
-                ارتباط سریع ←
+                ارتباط سریع ({brandInfo.telegramHandle || '@Lawat_kar'}) ←
               </a>
             </div>
           </div>

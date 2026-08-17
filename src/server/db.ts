@@ -29,6 +29,7 @@ class TekvixDatabase {
   private events: AnalyticsEvent[] = [];
   private dailyStats: Map<string, DailyStatRecord> = new Map();
   private totalViewsCount: number = 2840;
+  private adminPassword: string = 'admin123';
   private openingEventConfig: OpeningEventConfig = {
     isActive: true,
     title: 'جشن افتتاحیه TEKVIX | اولین سفارش‌ها رایگان',
@@ -77,6 +78,9 @@ class TekvixDatabase {
         }
         if (typeof data.totalViewsCount === 'number') {
           this.totalViewsCount = data.totalViewsCount;
+        }
+        if (typeof data.adminPassword === 'string' && data.adminPassword.trim()) {
+          this.adminPassword = data.adminPassword.trim();
         }
         if (data.openingEventConfig) {
           this.openingEventConfig = {
@@ -316,6 +320,7 @@ class TekvixDatabase {
         events: this.events.slice(-500),
         dailyStats: Array.from(this.dailyStats.values()),
         totalViewsCount: this.totalViewsCount,
+        adminPassword: this.adminPassword,
         openingEventConfig: this.openingEventConfig,
         savedAt: new Date().toISOString(),
       };
@@ -327,6 +332,23 @@ class TekvixDatabase {
 
   // --- PUBLIC API METHODS ---
 
+  public getAdminPassword(): string {
+    return this.adminPassword || 'admin123';
+  }
+
+  public verifyAdminPassword(input: string): boolean {
+    const cleanInput = (input || '').trim();
+    const currentPass = (this.adminPassword || 'admin123').trim();
+    return cleanInput === currentPass;
+  }
+
+  public setAdminPassword(newPass: string): boolean {
+    if (!newPass || !newPass.trim()) return false;
+    this.adminPassword = newPass.trim();
+    this.saveToFile();
+    return true;
+  }
+
   public getOpeningEventState(): OpeningEventState {
     const allOrders = this.getOrders();
     const config = this.openingEventConfig;
@@ -334,9 +356,9 @@ class TekvixDatabase {
     const start = new Date(config.startDate).getTime();
     const end = new Date(config.endDate).getTime();
 
-    // Eligible winning orders: non-cancelled orders flagged as promo
+    // Eligible winning orders: non-cancelled orders flagged as promo or price is free
     const promoOrders = allOrders.filter(
-      (o) => o.isPromoEvent && o.status !== 'cancelled'
+      (o) => (o.isPromoEvent || o.priceQuoted?.includes('رایگان') || Boolean(o.promoEventName)) && o.status !== 'cancelled'
     );
 
     const winners = promoOrders.slice(0, config.maxWinners).map((o) => ({

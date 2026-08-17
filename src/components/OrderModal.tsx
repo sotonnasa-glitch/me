@@ -31,6 +31,7 @@ interface OrderModalProps {
   onClose: () => void;
   initialServiceId?: string;
   onOpenGoogleAuth?: () => void;
+  onOpenOrderTracking?: (orderId: string) => void;
 }
 
 export const OrderModal: React.FC<OrderModalProps> = ({
@@ -38,6 +39,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   onClose,
   initialServiceId,
   onOpenGoogleAuth,
+  onOpenOrderTracking,
 }) => {
   const {
     services,
@@ -329,6 +331,24 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                   <span>مشاهده در ربات Tekvixbot@</span>
                 </a>
               </div>
+
+              {/* Instant Pipeline Tracking Button */}
+              {onOpenOrderTracking && (
+                <div className="pt-2 border-t border-purple-500/20">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (submittedOrderId) {
+                        onOpenOrderTracking(submittedOrderId);
+                      }
+                    }}
+                    className="w-full py-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    <Layers className="w-4 h-4 text-emerald-400" />
+                    <span>مشاهده وضعیت و پیگیری لحظه‌ای این سفارش</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Close Button & Timer */}
@@ -493,11 +513,11 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                 )}
               </div>
 
-              {/* Field 2: Telegram or Phone Contact */}
+              {/* Field 2: Telegram Contact */}
               <div>
                 <label htmlFor="modal-contact" className="block text-xs font-medium text-gray-200 mb-1.5 flex items-center gap-1">
-                  <Phone className="w-3.5 h-3.5 text-purple-400" />
-                  <span>آیدی تلگرام یا شماره تماس</span>
+                  <Send className="w-3.5 h-3.5 text-purple-400 rotate-180" />
+                  <span>آیدی تلگرام</span>
                   <span className="text-rose-400">*</span>
                 </label>
                 <input
@@ -508,7 +528,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                     setFormData({ ...formData, telegramOrPhone: e.target.value });
                     if (errors.telegramOrPhone) setErrors({ ...errors, telegramOrPhone: undefined });
                   }}
-                  placeholder="مثال: @Lawat_kar یا 09123456789"
+                  placeholder="مثال: @Lawat_kar"
                   className={`w-full px-4 py-3 rounded-2xl bg-[#120c2b] border text-white placeholder:text-gray-500 text-xs sm:text-sm focus:outline-none transition-all font-mono ${
                     errors.telegramOrPhone
                       ? 'border-rose-500 bg-rose-950/20 focus:border-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.2)]'

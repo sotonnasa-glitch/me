@@ -16,16 +16,26 @@ import { CTASection } from './components/CTASection';
 import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
 import { OrderModal } from './components/OrderModal';
+import { OrderTrackingModal } from './components/OrderTrackingModal';
 import { AdminLayout } from './components/admin/AdminLayout';
+import { AdminAuthModal } from './components/admin/AdminAuthModal';
 import { GoogleAuthModal } from './components/common/GoogleAuthModal';
 import { TekvixAiAssistant } from './components/common/TekvixAiAssistant';
 import { UniversalBackButton } from './components/common/UniversalBackButton';
 import { ArrowUp, Shield, Sparkles, Video, User } from 'lucide-react';
 
 function MainWebsite() {
-  const { sectionsConfig, newOrdersCount, currentUser, navigateToSection } = useSiteData();
+  const {
+    sectionsConfig,
+    newOrdersCount,
+    currentUser,
+    navigateToSection,
+    isAdminAuthenticated
+  } = useSiteData();
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isAdminAuthOpen, setIsAdminAuthOpen] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [isOrderTrackingOpen, setIsOrderTrackingOpen] = useState(false);
   const [isGoogleAuthOpen, setIsGoogleAuthOpen] = useState(false);
   const [selectedServiceForOrder, setSelectedServiceForOrder] = useState<string | undefined>(undefined);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -41,6 +51,14 @@ function MainWebsite() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleOpenAdmin = () => {
+    if (isAdminAuthenticated) {
+      setIsAdminOpen(true);
+    } else {
+      setIsAdminAuthOpen(true);
+    }
+  };
 
   const handleOpenOrderModal = (serviceId?: string) => {
     setSelectedServiceForOrder(serviceId);
@@ -76,8 +94,9 @@ function MainWebsite() {
       {/* Sticky Glassmorphic Navbar */}
       <Navbar
         onOpenOrderModal={handleOpenOrderModal}
-        onOpenAdmin={() => setIsAdminOpen(true)}
+        onOpenAdmin={handleOpenAdmin}
         onOpenGoogleAuth={() => setIsGoogleAuthOpen(true)}
+        onOpenOrderTracking={() => setIsOrderTrackingOpen(true)}
       />
 
       <main>
@@ -85,7 +104,7 @@ function MainWebsite() {
         {isEnabled('hero') && (
           <Hero
             onOpenOrderModal={() => handleOpenOrderModal()}
-            onOpenAdmin={() => setIsAdminOpen(true)}
+            onOpenAdmin={handleOpenAdmin}
           />
         )}
 
@@ -164,7 +183,10 @@ function MainWebsite() {
       <TekvixAiAssistant onOpenOrderModal={handleOpenOrderModal} />
 
       {/* Footer */}
-      <Footer onOpenAdmin={() => setIsAdminOpen(true)} />
+      <Footer
+        onOpenAdmin={handleOpenAdmin}
+        onOpenOrderTracking={() => setIsOrderTrackingOpen(true)}
+      />
 
       {/* Unified Place Order / Get Quote Modal */}
       <OrderModal
@@ -172,6 +194,27 @@ function MainWebsite() {
         onClose={handleCloseOrderModal}
         initialServiceId={selectedServiceForOrder}
         onOpenGoogleAuth={() => setIsGoogleAuthOpen(true)}
+        onOpenOrderTracking={(orderId) => {
+          setIsOrderModalOpen(false);
+          setIsOrderTrackingOpen(true);
+        }}
+      />
+
+      {/* 3-Step Real-time Order Tracking Pipeline Modal */}
+      <OrderTrackingModal
+        isOpen={isOrderTrackingOpen}
+        onClose={() => setIsOrderTrackingOpen(false)}
+        onOpenOrderModal={() => handleOpenOrderModal()}
+      />
+
+      {/* Admin Password Authentication Gate Modal */}
+      <AdminAuthModal
+        isOpen={isAdminAuthOpen}
+        onSuccess={() => {
+          setIsAdminAuthOpen(false);
+          setIsAdminOpen(true);
+        }}
+        onCancel={() => setIsAdminAuthOpen(false)}
       />
 
       {/* Google Authentication & Account Modal */}

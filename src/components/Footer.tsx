@@ -1,12 +1,13 @@
 import React from 'react';
-import { Sparkles, Send, ArrowUp, Shield } from 'lucide-react';
+import { Sparkles, Send, ArrowUp, Shield, Search, PackageCheck } from 'lucide-react';
 import { useSiteData } from '../context/SiteDataContext';
 
 interface FooterProps {
   onOpenAdmin?: () => void;
+  onOpenOrderTracking?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
+export const Footer: React.FC<FooterProps> = ({ onOpenAdmin, onOpenOrderTracking }) => {
   const { brandInfo, services } = useSiteData();
 
   const scrollToTop = () => {
@@ -47,7 +48,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
               {brandInfo.tagline} — ارائه تخصصی‌ترین خدمات طراحی وب‌سایت، تصویرسازی، تیزر ویدیویی، موسیقی و توسعه ربات تلگرام با هوش مصنوعی.
             </p>
 
-            {/* Telegram Support Link */}
+            {/* Telegram Support Link & Order Tracking */}
             <div className="pt-2 flex flex-wrap items-center gap-3">
               <a
                 href={brandInfo.telegramUrl}
@@ -58,6 +59,17 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
                 <Send className="w-4 h-4 rotate-180" />
                 <span>پشتیبانی مستقیم در تلگرام: {brandInfo.telegramHandle}</span>
               </a>
+
+              {onOpenOrderTracking && (
+                <button
+                  type="button"
+                  onClick={onOpenOrderTracking}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-900/60 to-indigo-950/80 border border-purple-500/40 text-purple-200 hover:text-white text-xs font-bold transition-all shadow-md cursor-pointer hover:border-purple-400"
+                >
+                  <PackageCheck className="w-4 h-4 text-emerald-400" />
+                  <span>پیگیری آنلاین سفارش</span>
+                </button>
+              )}
             </div>
           </div>
 

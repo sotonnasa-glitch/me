@@ -193,7 +193,7 @@ export const ContactSection: React.FC = () => {
 
                 <div>
                   <label htmlFor="contact-info" className="block text-xs font-medium text-gray-300 mb-2">
-                    آیدی تلگرام یا شماره موبایل <span className="text-rose-400">*</span>
+                    آیدی تلگرام <span className="text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -201,8 +201,8 @@ export const ContactSection: React.FC = () => {
                     required
                     value={formData.contactInfo}
                     onChange={(e) => setFormData({ ...formData, contactInfo: e.target.value })}
-                    placeholder="مثال: @my_telegram_id یا 09123456789"
-                    className="w-full px-4 py-3.5 rounded-xl bg-white/[0.03] border border-white/10 focus:border-purple-500 focus:bg-purple-950/20 text-white placeholder:text-gray-500 text-sm focus:outline-none transition-colors"
+                    placeholder="مثال: @Lawat_kar"
+                    className="w-full px-4 py-3.5 rounded-xl bg-white/[0.03] border border-white/10 focus:border-purple-500 focus:bg-purple-950/20 text-white placeholder:text-gray-500 text-sm focus:outline-none transition-colors font-mono"
                   />
                 </div>
 

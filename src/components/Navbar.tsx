@@ -8,7 +8,9 @@ import {
   Bell,
   Video,
   User,
-  Bot
+  Bot,
+  PackageCheck,
+  Search
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteDataContext';
 import { CrystalCubeIcon } from './common/CrystalCubeIcon';
@@ -17,12 +19,14 @@ interface NavbarProps {
   onOpenOrderModal: (serviceId?: string) => void;
   onOpenAdmin: () => void;
   onOpenGoogleAuth?: () => void;
+  onOpenOrderTracking?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenOrderModal,
   onOpenAdmin,
   onOpenGoogleAuth,
+  onOpenOrderTracking,
 }) => {
   const { brandInfo, currentUser, navigateToSection } = useSiteData();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -196,6 +200,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
+          {/* Order Tracking Button */}
+          {onOpenOrderTracking && (
+            <button
+              type="button"
+              id="nav-order-tracking-btn"
+              onClick={onOpenOrderTracking}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-purple-200 hover:text-white bg-purple-950/40 hover:bg-purple-900/60 rounded-xl border border-purple-500/30 hover:border-purple-400 transition-all cursor-pointer shadow-sm"
+              title="پیگیری سفارشات با کد رهگیری یا آیدی تلگرام"
+            >
+              <PackageCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>پیگیری سفارش</span>
+            </button>
+          )}
+
           {/* Direct Telegram Support Button */}
           <a
             href={brandInfo.telegramUrl}
@@ -295,6 +313,20 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           <div className="pt-4 border-t border-white/10 flex flex-col gap-3">
+            {onOpenOrderTracking && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenOrderTracking();
+                }}
+                className="w-full py-2.5 rounded-xl bg-purple-950/60 border border-purple-500/40 hover:bg-purple-900/80 text-purple-200 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <PackageCheck className="w-4 h-4 text-emerald-400" />
+                <span>پیگیری وضعیت سفارشات</span>
+              </button>
+            )}
+
             {onOpenGoogleAuth && (
               <button
                 type="button"

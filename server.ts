@@ -112,6 +112,8 @@ async function startServer() {
         isPromoEvent,
         promoEventName,
         userEmail,
+        botToken,
+        chatId,
       } = req.body;
       if (!fullName || !telegramOrPhone || !serviceId) {
         res.status(400).json({ success: false, error: 'اطلاعات سفارش ناقص است' });
@@ -131,6 +133,48 @@ async function startServer() {
         userEmail,
         status: 'new',
       });
+
+      // Asynchronously trigger Telegram notification to ensure guaranteed delivery
+      const effectiveToken = (botToken || process.env.TELEGRAM_BOT_TOKEN || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus').trim();
+      const targetChatIds = resolveTelegramChatIds(chatId);
+      const orderId = escapeTgHtml(newOrder.id);
+      const safeName = escapeTgHtml(newOrder.fullName);
+      const rawContact = (newOrder.telegramOrPhone || '').trim();
+      const safeContact = escapeTgHtml(rawContact);
+      const safeService = escapeTgHtml(newOrder.serviceTitle);
+      const safeMsg = escapeTgHtml(newOrder.message || 'بدون توضیح');
+      const safePrice = escapeTgHtml(newOrder.priceQuoted || 'استعلامی');
+      const { url: pvUrl } = getClientDirectChatUrl(rawContact);
+
+      const telegramText = `
+🚀 <b>سفارش جدید در تکویکس (Tekvix AI)</b>
+${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰۰٪ رایگان)</i>\n' : ''}
+📌 <b>کد رهگیری:</b> <code>${orderId}</code>
+👤 <b>نام مشتری:</b> <b>${safeName}</b>
+📱 <b>آیدی تلگرام:</b> <a href="${pvUrl}">${safeContact}</a> 👈 <i>(لمس کنید)</i>
+💼 <b>سرویس انتخابی:</b> ${safeService}
+💰 <b>هزینه / برآورد:</b> ${safePrice}
+📝 <b>توضیحات:</b>
+<i>${safeMsg}</i>
+
+⏰ <b>زمان ثبت:</b> ${new Date().toLocaleString('fa-IR')}
+🌐 <b>منبع:</b> وب‌سایت تکویکس
+      `.trim();
+
+      const inlineKeyboard = {
+        inline_keyboard: [
+          [
+            {
+              text: '💬 ورود مستقیم به پی‌وی مشتری (چت تلگرام)',
+              url: pvUrl,
+            },
+          ],
+        ],
+      };
+
+      dispatchTelegramNotification(effectiveToken, targetChatIds, telegramText, inlineKeyboard).catch(
+        (tgErr) => console.warn('Background telegram dispatch error:', tgErr)
+      );
 
       res.status(201).json({ success: true, order: newOrder });
     } catch (error: any) {
@@ -184,6 +228,60 @@ async function startServer() {
       res.json({ success });
     } catch (error: any) {
       res.status(500).json({ success: false, error: 'خطا در حذف سفارش' });
+    }
+  });
+
+  // 5.5. ADMIN PASSWORD AUTHENTICATION & CHANGE API
+  app.get('/api/admin/password-status', (req, res) => {
+    try {
+      res.json({ success: true, isProtected: true });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: 'خطا در بررسی وضعیت رمز عبور' });
+    }
+  });
+
+  app.post('/api/admin/verify-password', (req, res) => {
+    try {
+      const { password } = req.body;
+      if (!password) {
+        res.status(400).json({ success: false, valid: false, message: 'لطفاً رمز عبور را وارد کنید.' });
+        return;
+      }
+      const isValid = db.verifyAdminPassword(password);
+      if (isValid) {
+        res.json({ success: true, valid: true, message: 'ورود موفقیت‌آمیز بود.' });
+      } else {
+        res.status(401).json({ success: false, valid: false, message: 'رمز عبور وارد شده نادرست است.' });
+      }
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: 'خطا در بررسی رمز عبور' });
+    }
+  });
+
+  app.post('/api/admin/change-password', (req, res) => {
+    try {
+      const { oldPassword, newPassword } = req.body;
+      if (!oldPassword || !newPassword) {
+        res.status(400).json({ success: false, message: 'رمز عبور فعلی و جدید الزامی هستند.' });
+        return;
+      }
+      if (newPassword.trim().length < 4) {
+        res.status(400).json({ success: false, message: 'رمز عبور جدید باید حداقل ۴ کاراکتر باشد.' });
+        return;
+      }
+      const isOldValid = db.verifyAdminPassword(oldPassword);
+      if (!isOldValid) {
+        res.status(401).json({ success: false, message: 'رمز عبور فعلی نادرست است.' });
+        return;
+      }
+      const updated = db.setAdminPassword(newPassword.trim());
+      if (updated) {
+        res.json({ success: true, message: 'رمز عبور پنل ادمین با موفقیت تغییر یافت.' });
+      } else {
+        res.status(500).json({ success: false, message: 'خطا در ذخیره رمز عبور جدید.' });
+      }
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: 'خطا در تغییر رمز عبور' });
     }
   });
 
@@ -357,6 +455,103 @@ async function startServer() {
     return { url: `https://t.me/${contact.replace(/\s+/g, '')}`, isPhone: false };
   };
 
+  // Helper to resolve and normalize Telegram Chat IDs (maps usernames to verified chat IDs)
+  function resolveTelegramChatIds(chatIdInput: string | undefined | null): string[] {
+    const defaultChatId = (process.env.TELEGRAM_CHAT_ID || '7460143967').trim();
+    if (!chatIdInput || !chatIdInput.trim()) {
+      return [defaultChatId];
+    }
+
+    const rawParts = chatIdInput
+      .split(/[,;\n]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    if (rawParts.length === 0) {
+      return [defaultChatId];
+    }
+
+    const resolved: string[] = [];
+    for (const part of rawParts) {
+      const lower = part.toLowerCase();
+      if (lower === '@lawat_kar' || lower === 'lawat_kar') {
+        resolved.push('7460143967');
+      } else if (lower === '@tekvix' || lower === 'tekvix') {
+        resolved.push('-1003569018930');
+      } else if (/^-?\d+$/.test(part)) {
+        // Valid numeric chat ID or channel ID
+        resolved.push(part);
+      } else {
+        // Passed some other channel or username - include it and ensure admin default is also present
+        resolved.push(part);
+        if (!resolved.includes(defaultChatId)) {
+          resolved.push(defaultChatId);
+        }
+      }
+    }
+
+    // Always ensure at least defaultChatId if list is empty
+    return resolved.length > 0 ? Array.from(new Set(resolved)) : [defaultChatId];
+  }
+
+  // Robust Dispatcher to one or multiple Telegram targets
+  async function dispatchTelegramNotification(
+    token: string,
+    chatIds: string[],
+    text: string,
+    replyMarkup?: any
+  ): Promise<{ success: boolean; deliveredTo: string[]; errors: string[]; messageIds: number[] }> {
+    const effectiveToken = (token || process.env.TELEGRAM_BOT_TOKEN || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus').trim();
+    const targets = chatIds && chatIds.length > 0 ? chatIds : ['7460143967'];
+
+    const deliveredTo: string[] = [];
+    const errors: string[] = [];
+    const messageIds: number[] = [];
+
+    for (const target of targets) {
+      try {
+        const tgUrl = `https://api.telegram.org/bot${effectiveToken}/sendMessage`;
+        const payload: any = {
+          chat_id: target,
+          text,
+          parse_mode: 'HTML',
+          disable_web_page_preview: true,
+        };
+        if (replyMarkup) {
+          payload.reply_markup = replyMarkup;
+        }
+
+        const tgRes = await fetch(tgUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data: any = await tgRes.json();
+        if (data.ok) {
+          deliveredTo.push(target);
+          if (data.result?.message_id) {
+            messageIds.push(data.result.message_id);
+          }
+        } else {
+          const errMsg = parseTelegramError(data.description || 'Unknown Telegram Error', target);
+          errors.push(`[${target}]: ${errMsg}`);
+          console.warn(`Telegram API failure for target ${target}:`, data);
+        }
+      } catch (err: any) {
+        errors.push(`[${target}]: ${err?.message || 'Network error'}`);
+        console.error(`Network error sending to Telegram target ${target}:`, err);
+      }
+    }
+
+    return {
+      success: deliveredTo.length > 0,
+      deliveredTo,
+      errors,
+      messageIds,
+    };
+  }
+
   // 3. Telegram Bot Order Notification API
   app.post('/api/telegram/send-order', async (req, res) => {
     try {
@@ -368,7 +563,7 @@ async function startServer() {
       }
 
       const effectiveToken = (botToken || process.env.TELEGRAM_BOT_TOKEN || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus').trim();
-      const effectiveChatId = (chatId || process.env.TELEGRAM_CHAT_ID || '7460143967').trim();
+      const targetChatIds = resolveTelegramChatIds(chatId);
 
       const orderId = escapeTgHtml(order.id || 'ORD-' + Math.floor(1000 + Math.random() * 9000));
       const fullName = escapeTgHtml(order.fullName || 'کاربر تکویکس');
@@ -376,17 +571,20 @@ async function startServer() {
       const contactEscaped = escapeTgHtml(rawContact);
       const serviceTitle = escapeTgHtml(order.serviceTitle || 'خدمات هوش مصنوعی');
       const message = escapeTgHtml(order.message || 'بدون توضیح');
+      const priceQuoted = escapeTgHtml(order.priceQuoted || 'استعلامی');
+      const isPromo = Boolean(order.isPromoEvent);
       const dateStr = new Date().toLocaleString('fa-IR');
 
-      const { url: pvUrl, isPhone } = getClientDirectChatUrl(rawContact);
+      const { url: pvUrl } = getClientDirectChatUrl(rawContact);
 
       const telegramMessage = `
 🚀 <b>سفارش جدید در تکویکس (Tekvix AI)</b>
-
+${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰۰٪ رایگان)</i>\n' : ''}
 📌 <b>کد رهگیری:</b> <code>${orderId}</code>
 👤 <b>نام مشتری:</b> <b>${fullName}</b>
-📱 <b>آیدی / شماره تماس:</b> <a href="${pvUrl}">${contactEscaped}</a> 👈 <i>(لمس کنید)</i>
+📱 <b>آیدی تلگرام:</b> <a href="${pvUrl}">${contactEscaped}</a> 👈 <i>(لمس کنید)</i>
 💼 <b>سرویس انتخابی:</b> ${serviceTitle}
+💰 <b>هزینه / برآورد:</b> ${priceQuoted}
 📝 <b>توضیحات و نیازمندی:</b>
 <i>${message}</i>
 
@@ -399,59 +597,38 @@ async function startServer() {
         inline_keyboard: [
           [
             {
-              text: '💬 ورود مستقیم به پی‌وی مشتری (چت)',
+              text: '💬 ورود مستقیم به پی‌وی مشتری (چت تلگرام)',
               url: pvUrl,
             },
           ],
         ],
       };
 
-      // If Bot Token and Chat ID are configured, perform real Telegram Bot API call
-      if (effectiveToken && effectiveChatId) {
-        const tgUrl = `https://api.telegram.org/bot${effectiveToken}/sendMessage`;
-        const tgRes = await fetch(tgUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: effectiveChatId,
-            text: telegramMessage,
-            parse_mode: 'HTML',
-            reply_markup: inlineKeyboard,
-            disable_web_page_preview: true,
-          }),
+      const dispatchResult = await dispatchTelegramNotification(
+        effectiveToken,
+        targetChatIds,
+        telegramMessage,
+        inlineKeyboard
+      );
+
+      if (dispatchResult.success) {
+        res.json({
+          success: true,
+          telegramSent: true,
+          deliveredTo: dispatchResult.deliveredTo,
+          messageId: dispatchResult.messageIds[0],
+          pvUrl,
+          message: 'پیام سفارش فوراً به ربات تلگرام ارسال شد!',
         });
-
-        const tgData = await tgRes.json();
-
-        if (tgData.ok) {
-          res.json({
-            success: true,
-            telegramSent: true,
-            messageId: tgData.result?.message_id,
-            pvUrl,
-            message: 'پیام سفارش فوراً به ربات تلگرام ارسال شد!',
-          });
-          return;
-        } else {
-          const userFriendlyError = parseTelegramError(tgData.description, effectiveChatId);
-          console.warn('Telegram Bot API returned error:', tgData);
-          res.json({
-            success: true,
-            telegramSent: false,
-            telegramError: userFriendlyError,
-            fallbackUrl: `https://t.me/Lawat_kar?text=${encodeURIComponent(`سفارش ${orderId}: ${serviceTitle} - ${rawContact}`)}`,
-          });
-          return;
-        }
+      } else {
+        res.json({
+          success: true,
+          telegramSent: false,
+          telegramError: dispatchResult.errors.join(' | '),
+          pvUrl,
+          fallbackUrl: `https://t.me/Lawat_kar?text=${encodeURIComponent(`سفارش ${orderId}: ${serviceTitle} - ${rawContact}`)}`,
+        });
       }
-
-      // If token not provided
-      res.json({
-        success: true,
-        telegramSent: false,
-        note: 'ربات تلگرام در تنظیمات ادمین تنظیم نشده است.',
-        directLink: `https://t.me/Lawat_kar?text=${encodeURIComponent(`سفارش ${orderId}\nمشتری: ${fullName}\nتماس: ${rawContact}\nسرویس: ${serviceTitle}\nتوضیحات: ${message}`)}`,
-      });
     } catch (err: any) {
       console.error('Error sending order to Telegram:', err);
       res.status(500).json({ error: 'خطا در ارتباط با سرور تلگرام', details: err?.message });
@@ -469,7 +646,7 @@ async function startServer() {
       }
 
       const effectiveToken = (botToken || process.env.TELEGRAM_BOT_TOKEN || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus').trim();
-      const effectiveChatId = (chatId || process.env.TELEGRAM_CHAT_ID || '7460143967').trim();
+      const targetChatIds = resolveTelegramChatIds(chatId);
 
       const fullName = escapeTgHtml(name.trim());
       const rawContact = contactInfo.trim();
@@ -484,7 +661,7 @@ async function startServer() {
 💬 <b>درخواست مشاوره و استعلام جدید در تکویکس</b>
 
 👤 <b>نام کاربر:</b> <b>${fullName}</b>
-📱 <b>آیدی / شماره تماس:</b> <a href="${pvUrl}">${contactEscaped}</a> 👈 <i>(لمس کنید)</i>
+📱 <b>آیدی تلگرام:</b> <a href="${pvUrl}">${contactEscaped}</a> 👈 <i>(لمس کنید)</i>
 🎯 <b>موضوع مشاوره:</b> ${consultationTopic}
 📝 <b>متن پیام و شرح ایده:</b>
 <i>${userMessage}</i>
@@ -505,50 +682,31 @@ async function startServer() {
         ],
       };
 
-      if (effectiveToken && effectiveChatId) {
-        const tgUrl = `https://api.telegram.org/bot${effectiveToken}/sendMessage`;
-        const tgRes = await fetch(tgUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: effectiveChatId,
-            text: telegramMessage,
-            parse_mode: 'HTML',
-            reply_markup: inlineKeyboard,
-            disable_web_page_preview: true,
-          }),
+      const dispatchResult = await dispatchTelegramNotification(
+        effectiveToken,
+        targetChatIds,
+        telegramMessage,
+        inlineKeyboard
+      );
+
+      if (dispatchResult.success) {
+        res.json({
+          success: true,
+          telegramSent: true,
+          deliveredTo: dispatchResult.deliveredTo,
+          messageId: dispatchResult.messageIds[0],
+          pvUrl,
+          message: 'درخواست مشاوره با موفقیت به ربات تلگرام ارسال شد.',
         });
-
-        const tgData = await tgRes.json();
-
-        if (tgData.ok) {
-          res.json({
-            success: true,
-            telegramSent: true,
-            messageId: tgData.result?.message_id,
-            pvUrl,
-            message: 'درخواست مشاوره با موفقیت به ربات تلگرام ارسال شد.',
-          });
-          return;
-        } else {
-          const userFriendlyError = parseTelegramError(tgData.description, effectiveChatId);
-          res.json({
-            success: true,
-            telegramSent: false,
-            telegramError: userFriendlyError,
-            pvUrl,
-            fallbackUrl: `https://t.me/Lawat_kar?text=${encodeURIComponent(`مشاوره تکویکس\nکاربر: ${fullName}\nتماس: ${rawContact}\nموضوع: ${consultationTopic}\nپیام: ${userMessage}`)}`,
-          });
-          return;
-        }
+      } else {
+        res.json({
+          success: true,
+          telegramSent: false,
+          telegramError: dispatchResult.errors.join(' | '),
+          pvUrl,
+          fallbackUrl: `https://t.me/Lawat_kar?text=${encodeURIComponent(`مشاوره تکویکس\nکاربر: ${fullName}\nتماس: ${rawContact}\nموضوع: ${consultationTopic}\nپیام: ${userMessage}`)}`,
+        });
       }
-
-      res.json({
-        success: true,
-        telegramSent: false,
-        pvUrl,
-        directLink: `https://t.me/Lawat_kar?text=${encodeURIComponent(`مشاوره تکویکس\nکاربر: ${fullName}\nتماس: ${rawContact}\nموضوع: ${consultationTopic}\nپیام: ${userMessage}`)}`,
-      });
     } catch (err: any) {
       console.error('Error sending consultation to Telegram:', err);
       res.status(500).json({ error: 'خطا در ارسال پیام مشاوره به تلگرام', details: err?.message });
@@ -560,7 +718,7 @@ async function startServer() {
     try {
       const { botToken, chatId } = req.body;
       const effectiveToken = (botToken || process.env.TELEGRAM_BOT_TOKEN || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus').trim();
-      const effectiveChatId = (chatId || process.env.TELEGRAM_CHAT_ID || '7460143967').trim();
+      const targetChatIds = resolveTelegramChatIds(chatId);
 
       if (!effectiveToken) {
         res.status(400).json({
@@ -570,39 +728,24 @@ async function startServer() {
         return;
       }
 
-      if (!effectiveChatId) {
-        res.status(400).json({
-          success: false,
-          error: 'شناسه چت (Chat ID) وارد نشده است. لطفاً شناسه عددی خود را از @userinfobot دریافت کنید.',
-        });
-        return;
-      }
+      const testMsg = `🔔 <b>پیام تست اتصال تکویکس (Tekvix AI)</b>\n\n✅ ربات تلگرام شما با موفقیت به وب‌سایت متصل شد!\nاز این پس تمامی سفارشات و درخواست‌های مشاوره ثبت‌شده توسط کاربران، بی‌درنگ همراه با دکمه ورود مستقیم به پی‌وی به این چت ارسال می‌شوند.\n\n⏰ <b>زمان تست:</b> ${new Date().toLocaleString('fa-IR')}`;
 
-      const tgUrl = `https://api.telegram.org/bot${effectiveToken}/sendMessage`;
-      const testMsg = `🔔 <b>پیام تست اتصال تکویکس (Tekvix AI)</b>\n\n✅ ربات تلگرام شما با موفقیت به وب‌سایت متصل شد!\nاز این پس تمامی سفارشات ثبت‌شده توسط کاربران، بی‌درنگ همراه با جزئیات کامل به این چت ارسال می‌شوند.\n\n⏰ <b>زمان تست:</b> ${new Date().toLocaleString('fa-IR')}`;
+      const dispatchResult = await dispatchTelegramNotification(
+        effectiveToken,
+        targetChatIds,
+        testMsg
+      );
 
-      const tgRes = await fetch(tgUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: effectiveChatId,
-          text: testMsg,
-          parse_mode: 'HTML',
-        }),
-      });
-
-      const data = await tgRes.json();
-      if (data.ok) {
+      if (dispatchResult.success) {
         res.json({
           success: true,
-          message: 'پیام تست با موفقیت به تلگرام شما ارسال شد! اتصال کاملاً برقرار است.',
+          message: `پیام تست با موفقیت به چت (${dispatchResult.deliveredTo.join(', ')}) ارسال شد! اتصال کاملاً فعال است.`,
+          deliveredTo: dispatchResult.deliveredTo,
         });
       } else {
-        const friendlyError = parseTelegramError(data.description, effectiveChatId);
         res.status(400).json({
           success: false,
-          error: friendlyError,
-          rawError: data.description,
+          error: dispatchResult.errors.join(' | ') || 'خطا در ارسال پیام تست تلگرام',
         });
       }
     } catch (error: any) {

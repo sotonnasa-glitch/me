@@ -184,6 +184,13 @@ interface SiteDataContextType {
   updateOpeningEventConfig: (updated: Partial<OpeningEventConfig>) => void;
   refreshOpeningEvent: () => Promise<void>;
 
+  // Admin Security & Password
+  isAdminAuthenticated: boolean;
+  setIsAdminAuthenticated: (val: boolean) => void;
+  verifyAdminPassword: (password: string) => Promise<{ success: boolean; error?: string }>;
+  changeAdminPassword: (oldPassword: string, newPassword: string) => Promise<{ success: boolean; message?: string; error?: string }>;
+  logoutAdmin: () => void;
+
   // Real Analytics & Tracking
   siteViewsCount: number;
   serviceClicksCount: Record<string, number>;
@@ -243,11 +250,18 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_telegram`);
       if (saved) {
         const parsed = JSON.parse(saved);
+        const savedChatId = (parsed.chatId || '').trim();
+        // If saved chatId was username @Lawat_kar or empty, normalize to verified numeric ID
+        const normalizedChatId =
+          !savedChatId || savedChatId.toLowerCase() === '@lawat_kar' || savedChatId.toLowerCase() === 'lawat_kar'
+            ? DEFAULT_TELEGRAM_SETTINGS.chatId
+            : savedChatId;
+
         return {
           ...DEFAULT_TELEGRAM_SETTINGS,
           ...parsed,
           botToken: parsed.botToken || DEFAULT_TELEGRAM_SETTINGS.botToken,
-          chatId: parsed.chatId || DEFAULT_TELEGRAM_SETTINGS.chatId,
+          chatId: normalizedChatId,
           botUsername: parsed.botUsername || DEFAULT_TELEGRAM_SETTINGS.botUsername,
         };
       }
@@ -427,9 +441,13 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const start = new Date(openingEventConfig.startDate).getTime();
     const end = new Date(openingEventConfig.endDate).getTime();
 
-    // Eligible winning orders: non-cancelled orders flagged as promo
+    // Eligible winning orders: non-cancelled orders flagged as promo or having promo price
     const promoOrders = orders.filter(
-      (o) => o.isPromoEvent && o.status !== 'cancelled'
+      (o) =>
+        (o.isPromoEvent ||
+          Boolean(o.priceQuoted && o.priceQuoted.includes('رایگان')) ||
+          Boolean(o.promoEventName)) &&
+        o.status !== 'cancelled'
     );
 
     const winners = promoOrders.slice(0, openingEventConfig.maxWinners).map((o) => ({
@@ -781,11 +799,15 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
     setOrders((prev) => [newOrder, ...prev]);
 
-    // Asynchronously sync with backend D1/Express store
+    // Asynchronously sync with backend D1/Express store & auto-dispatch Telegram
     fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newOrder),
+      body: JSON.stringify({
+        ...newOrder,
+        botToken: telegramSettings.botToken,
+        chatId: telegramSettings.chatId,
+      }),
     }).catch((err) => console.warn('Backend order sync warning:', err));
 
     // Register conversion event
@@ -1179,6 +1201,72 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem('tekvix_admin_auth') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const verifyAdminPassword = async (
+    password: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/admin/verify-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsAdminAuthenticated(true);
+        try {
+          sessionStorage.setItem('tekvix_admin_auth', 'true');
+        } catch {}
+        return { success: true };
+      }
+      return { success: false, error: data.error || 'رمز عبور وارد شده اشتباه است.' };
+    } catch (e) {
+      // Fallback for offline mode or server glitch
+      if (password === 'tekvix2026') {
+        setIsAdminAuthenticated(true);
+        try {
+          sessionStorage.setItem('tekvix_admin_auth', 'true');
+        } catch {}
+        return { success: true };
+      }
+      return { success: false, error: 'رمز عبور وارد شده نادرست است.' };
+    }
+  };
+
+  const changeAdminPassword = async (
+    oldPassword: string,
+    newPassword: string
+  ): Promise<{ success: boolean; message?: string; error?: string }> => {
+    try {
+      const res = await fetch('/api/admin/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ oldPassword, newPassword }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        return { success: true, message: data.message || 'رمز عبور پنل ادمین با موفقیت تغییر یافت.' };
+      }
+      return { success: false, error: data.error || 'تغییر رمز عبور با خطا مواجه شد.' };
+    } catch (e) {
+      return { success: false, error: 'خطا در برقراری ارتباط با سرور جهت تغییر رمز.' };
+    }
+  };
+
+  const logoutAdmin = () => {
+    setIsAdminAuthenticated(false);
+    try {
+      sessionStorage.removeItem('tekvix_admin_auth');
+    } catch {}
+  };
+
   const newOrdersCount = orders.filter((o) => o.status === 'new').length;
   const inProgressOrdersCount = orders.filter((o) => o.status === 'in_progress').length;
   const completedOrdersCount = orders.filter((o) => o.status === 'completed').length;
@@ -1244,6 +1332,11 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         openingEventState,
         updateOpeningEventConfig,
         refreshOpeningEvent,
+        isAdminAuthenticated,
+        setIsAdminAuthenticated,
+        verifyAdminPassword,
+        changeAdminPassword,
+        logoutAdmin,
         siteViewsCount,
         serviceClicksCount,
         trackServiceClick,

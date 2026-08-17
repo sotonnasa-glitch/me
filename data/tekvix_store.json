@@ -1,0 +1,287 @@
+{
+  "users": [
+    {
+      "id": "usr_admin_01",
+      "name": "مدیر ارشد تکویکس",
+      "email": "admin@tekvix.ai",
+      "phone": "09120000000",
+      "telegram": "@Lawat_kar",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
+      "role": "admin",
+      "lastLoginAt": "2026-08-17T14:47:27.395Z",
+      "createdAt": "2026-07-18T14:47:27.395Z",
+      "updatedAt": "2026-08-17T14:47:27.395Z"
+    },
+    {
+      "id": "usr_client_02",
+      "name": "امیرحسین رضایی",
+      "email": "amir.rezaei@example.com",
+      "phone": "09351234567",
+      "telegram": "@amir_rezaei",
+      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+      "role": "client",
+      "lastLoginAt": "2026-08-17T13:47:27.395Z",
+      "createdAt": "2026-08-05T14:47:27.395Z",
+      "updatedAt": "2026-08-17T14:47:27.395Z"
+    },
+    {
+      "id": "usr_client_03",
+      "name": "سارا کاظمی",
+      "email": "sara.kazemi@startup.io",
+      "phone": "09198765432",
+      "telegram": "@sara_kazemi",
+      "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
+      "role": "client",
+      "lastLoginAt": "2026-08-17T14:17:27.395Z",
+      "createdAt": "2026-08-12T14:47:27.395Z",
+      "updatedAt": "2026-08-17T14:47:27.395Z"
+    },
+    {
+      "id": "usr_client_04",
+      "name": "نیما مهدوی",
+      "email": "nima@agency.co",
+      "phone": "09012345678",
+      "telegram": "@nima_tech",
+      "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150",
+      "role": "user",
+      "lastLoginAt": "2026-08-16T14:47:27.395Z",
+      "createdAt": "2026-07-28T14:47:27.395Z",
+      "updatedAt": "2026-08-17T14:47:27.395Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": "ORD-7821",
+      "createdAt": "2026-08-17T14:12:27.395Z",
+      "fullName": "امیرحسین رضایی",
+      "telegramOrPhone": "@amir_rezaei",
+      "serviceId": "ai-website",
+      "serviceTitle": "ساخت وب‌سایت با هوش مصنوعی",
+      "message": "طراحی لندینگ‌پیج شرکتی برای استارتاپ فناوری هوش مصنوعی با قابلیت فرم ثبت‌نام و پنل ادمین",
+      "status": "new",
+      "priceQuoted": "۸,۵۰۰,۰۰۰ تومان",
+      "adminNotes": "نیاز به هماهنگی برای ارسال رفرنس‌های گرافیکی در تلگرام.",
+      "updatedAt": "2026-08-17T14:47:27.395Z"
+    },
+    {
+      "id": "ORD-7820",
+      "createdAt": "2026-08-17T11:47:27.395Z",
+      "fullName": "سارا کاظمی",
+      "telegramOrPhone": "@sara_kazemi",
+      "serviceId": "ai-video",
+      "serviceTitle": "تولید ویدیو با هوش مصنوعی",
+      "message": "تیزر ۳۰ ثانیه‌ای برای کمپین معرفی محصول جدید در اینستاگرام و آپارات",
+      "status": "in_progress",
+      "priceQuoted": "۴,۲۰۰,۰۰۰ تومان",
+      "adminNotes": "سناریوی ویدیویی تایید شد، خروجی آزمایشی تا فردا عصر تحویل می‌شود.",
+      "updatedAt": "2026-08-17T14:47:27.395Z"
+    },
+    {
+      "id": "ORD-7819",
+      "createdAt": "2026-08-17T05:47:27.395Z",
+      "fullName": "مهندس حسینی (آژانس دیجیتال)",
+      "telegramOrPhone": "09121112233",
+      "serviceId": "telegram-bot",
+      "serviceTitle": "ساخت ربات تلگرام پیشرفته",
+      "message": "ربات فروشگاهی متصل به درگاه پرداخت با قابلیت ثبت سفارش و ارسال فاکتور",
+      "status": "in_progress",
+      "priceQuoted": "۵,۸۰۰,۰۰۰ تومان",
+      "adminNotes": "اتصال وب‌هوک و دیتابیس در مرحله تست قرار دارد.",
+      "updatedAt": "2026-08-17T14:47:27.395Z"
+    },
+    {
+      "id": "ORD-7818",
+      "createdAt": "2026-08-16T12:47:27.395Z",
+      "fullName": "کیانوش راد",
+      "telegramOrPhone": "@kian_rad",
+      "serviceId": "image-creation",
+      "serviceTitle": "خلق تصاویر و طراحی گرافیکی",
+      "message": "طراحی ۱۰ تصویر مفهومی ۴K برای پست‌های لینکدین و هدر وب‌سایت",
+      "status": "completed",
+      "priceQuoted": "۲,۵۰۰,۰۰۰ تومان",
+      "adminNotes": "فایل‌های نهایی از طریق تلگرام با کیفیت اورجینال ارسال شدند.",
+      "updatedAt": "2026-08-17T14:47:27.395Z"
+    },
+    {
+      "id": "ORD-7817",
+      "createdAt": "2026-08-15T14:47:27.395Z",
+      "fullName": "پریسا نامدار",
+      "telegramOrPhone": "09367778899",
+      "serviceId": "ai-music",
+      "serviceTitle": "ساخت موزیک و ترانه با AI",
+      "message": "موزیک پس‌زمینه اختصاصی سبک سینماتیک برای تیزر سالانه شرکت",
+      "status": "completed",
+      "priceQuoted": "۱,۹۰۰,۰۰۰ تومان",
+      "adminNotes": "پروژه تحویل داده شد و رضایت کامل ثبت گردید.",
+      "updatedAt": "2026-08-17T14:47:27.395Z"
+    },
+    {
+      "id": "ORD-7816",
+      "createdAt": "2026-08-14T14:47:27.395Z",
+      "fullName": "نوید پیروز",
+      "telegramOrPhone": "@navid_p",
+      "serviceId": "custom-ai",
+      "serviceTitle": "توسعه راهکارهای سفارشی هوش مصنوعی",
+      "message": "چت‌بات هوشمند پشتیبانی مشتریان برای پاسخگویی ۲۴ ساعته",
+      "status": "completed",
+      "priceQuoted": "۱۲,۰۰۰,۰۰۰ تومان",
+      "adminNotes": "مبتنی بر مدل Gemini با پایگاه دانش داخلی شرکت.",
+      "updatedAt": "2026-08-17T14:47:27.395Z"
+    },
+    {
+      "fullName": "کاربر بررسی نهایی",
+      "telegramOrPhone": "@Lawat_kar",
+      "serviceId": "s1",
+      "serviceTitle": "پیاده‌سازی چت‌بات هوش مصنوعی",
+      "message": "درخواست ثبت و تست نهایی سفارش",
+      "priceQuoted": "۰ تومان (رایگان - جایزه افتتاحیه)",
+      "isPromoEvent": true,
+      "promoEventName": "جشن افتتاحیه TEKVIX | اولین سفارش‌ها رایگان",
+      "status": "new",
+      "id": "ORD-4388",
+      "createdAt": "2026-08-17T14:50:53.112Z",
+      "updatedAt": "2026-08-17T14:50:53.112Z"
+    }
+  ],
+  "events": [
+    {
+      "eventType": "order_created",
+      "path": "/order",
+      "serviceId": "s1",
+      "device": "mobile",
+      "value": 0,
+      "metadata": {
+        "orderId": "ORD-4388",
+        "customer": "کاربر بررسی نهایی",
+        "isPromo": true
+      },
+      "id": "ev_1786978253113_3th6h",
+      "createdAt": "2026-08-17T14:50:53.113Z"
+    },
+    {
+      "id": "ev_01",
+      "eventType": "order_created",
+      "path": "/order",
+      "serviceId": "ai-website",
+      "device": "mobile",
+      "value": 8500000,
+      "createdAt": "2026-08-17T14:12:27.395Z"
+    },
+    {
+      "id": "ev_02",
+      "eventType": "service_click",
+      "path": "/services/ai-video",
+      "serviceId": "ai-video",
+      "device": "mobile",
+      "createdAt": "2026-08-17T14:05:27.395Z"
+    },
+    {
+      "id": "ev_03",
+      "eventType": "chat_message",
+      "path": "/ai-assistant",
+      "device": "desktop",
+      "createdAt": "2026-08-17T13:52:27.395Z"
+    },
+    {
+      "id": "ev_04",
+      "eventType": "page_view",
+      "path": "/blog",
+      "device": "mobile",
+      "createdAt": "2026-08-17T13:37:27.395Z"
+    },
+    {
+      "id": "ev_05",
+      "eventType": "video_play",
+      "path": "/blog/video-showcase",
+      "serviceId": "ai-video",
+      "device": "desktop",
+      "createdAt": "2026-08-17T13:12:27.395Z"
+    }
+  ],
+  "dailyStats": [
+    {
+      "stat_date": "2026-08-11",
+      "day_fa": "سه‌شنبه",
+      "views_count": 342,
+      "mobile_views": 233,
+      "desktop_views": 92,
+      "tablet_views": 17,
+      "orders_count": 6,
+      "revenue": 23470212
+    },
+    {
+      "stat_date": "2026-08-12",
+      "day_fa": "چهارشنبه",
+      "views_count": 302,
+      "mobile_views": 205,
+      "desktop_views": 82,
+      "tablet_views": 15,
+      "orders_count": 8,
+      "revenue": 42854536
+    },
+    {
+      "stat_date": "2026-08-13",
+      "day_fa": "پنج‌شنبه",
+      "views_count": 346,
+      "mobile_views": 235,
+      "desktop_views": 93,
+      "tablet_views": 18,
+      "orders_count": 6,
+      "revenue": 32831502
+    },
+    {
+      "stat_date": "2026-08-14",
+      "day_fa": "جمعه",
+      "views_count": 330,
+      "mobile_views": 224,
+      "desktop_views": 89,
+      "tablet_views": 17,
+      "orders_count": 8,
+      "revenue": 34315992
+    },
+    {
+      "stat_date": "2026-08-15",
+      "day_fa": "شنبه",
+      "views_count": 382,
+      "mobile_views": 260,
+      "desktop_views": 103,
+      "tablet_views": 19,
+      "orders_count": 9,
+      "revenue": 32354235
+    },
+    {
+      "stat_date": "2026-08-16",
+      "day_fa": "یکشنبه",
+      "views_count": 364,
+      "mobile_views": 248,
+      "desktop_views": 98,
+      "tablet_views": 18,
+      "orders_count": 7,
+      "revenue": 26136033
+    },
+    {
+      "stat_date": "2026-08-17",
+      "day_fa": "امروز",
+      "views_count": 440,
+      "mobile_views": 299,
+      "desktop_views": 119,
+      "tablet_views": 22,
+      "orders_count": 9,
+      "revenue": 45874953
+    }
+  ],
+  "totalViewsCount": 2840,
+  "openingEventConfig": {
+    "isActive": true,
+    "title": "جشن افتتاحیه TEKVIX | اولین سفارش‌ها رایگان",
+    "subtitle": "فرصت استثنایی برای ۲ سفارش اول با ۱۰۰٪ تخفیف و هزینه کاملاً رایگان",
+    "badgeText": "🎉 کمپین افتتاحیه ویژه",
+    "highlightText": "🔥 فقط ۲ سفارش اول رایگان!",
+    "description": "هر خدمتی که از TEKVIX انتخاب کنی، برای ۲ نفر اول کاملاً رایگان انجام می‌شود. 🤖✨",
+    "startDate": "2026-08-16T14:47:27.394Z",
+    "endDate": "2026-08-24T14:47:27.395Z",
+    "maxWinners": 2,
+    "termsNote": "هر کاربر فقط یک‌بار امکان استفاده از جایزه را دارد. سفارش‌های لغوشده محاسبه نمی‌شوند."
+  },
+  "savedAt": "2026-08-17T14:50:53.113Z"
+}

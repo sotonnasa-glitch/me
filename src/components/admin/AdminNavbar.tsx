@@ -15,7 +15,8 @@ import {
   Moon,
   Sun,
   ArrowRight,
-  Video
+  Video,
+  Lock
 } from 'lucide-react';
 import { useSiteData } from '../../context/SiteDataContext';
 
@@ -34,13 +35,18 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({
   onToggleMobileSidebar,
   isMobileSidebarOpen,
 }) => {
-  const { brandInfo, newOrdersCount, navigateToSection } = useSiteData();
+  const { brandInfo, newOrdersCount, navigateToSection, logoutAdmin } = useSiteData();
 
   const handleReturnToVideoPage = () => {
     onSwitchToSite();
     setTimeout(() => {
       navigateToSection('blog');
     }, 150);
+  };
+
+  const handleLockAndExit = () => {
+    logoutAdmin();
+    onSwitchToSite();
   };
 
   return (
@@ -114,6 +120,16 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({
             <span className="font-bold font-mono">{newOrdersCount}</span>
           </div>
         </div>
+
+        {/* Lock and Logout Button */}
+        <button
+          type="button"
+          onClick={handleLockAndExit}
+          className="p-2 rounded-xl bg-zinc-900 hover:bg-rose-950/40 border border-zinc-800 hover:border-rose-500/40 text-zinc-400 hover:text-rose-300 transition-all cursor-pointer"
+          title="قفل و خروج از پنل ادمین"
+        >
+          <Lock className="w-4 h-4" />
+        </button>
 
         {/* Universal Return / Back to Live Site Button */}
         <button

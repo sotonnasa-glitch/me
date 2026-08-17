@@ -745,15 +745,15 @@ export const OrdersManager: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-zinc-300 mb-1">
-                  آیدی تلگرام یا شماره تماس <span className="text-rose-400">*</span>
+                  آیدی تلگرام <span className="text-rose-400">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={manualForm.telegramOrPhone}
                   onChange={(e) => setManualForm({ ...manualForm, telegramOrPhone: e.target.value })}
-                  placeholder="مثال: @client_username یا 09123456789"
-                  className="w-full px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-xs text-white focus:border-purple-500 focus:outline-none"
+                  placeholder="مثال: @client_username"
+                  className="w-full px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-xs text-white focus:border-purple-500 focus:outline-none font-mono"
                 />
               </div>
 
