@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   X,
   CheckCircle2,
@@ -52,14 +52,18 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   } = useSiteData();
 
   // Filter out inactive/unavailable services completely from order menu
-  const availableServices = services.filter(
-    (s) => s.active !== false && s.availabilityStatus !== 'unavailable'
+  const availableServices = useMemo(
+    () => services.filter((s) => s.active !== false && s.availabilityStatus !== 'unavailable'),
+    [services]
   );
 
-  const defaultServiceId =
-    (initialServiceId && availableServices.some((s) => s.id === initialServiceId))
-      ? initialServiceId
-      : availableServices[0]?.id || 'ai-website';
+  const defaultServiceId = useMemo(
+    () =>
+      initialServiceId && availableServices.some((s) => s.id === initialServiceId)
+        ? initialServiceId
+        : availableServices[0]?.id || 'ai-website',
+    [initialServiceId, availableServices]
+  );
 
   const [formData, setFormData] = useState<OrderFormData>({
     fullName: '',
@@ -75,33 +79,46 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   const [countdown, setCountdown] = useState(10);
   const [copiedCode, setCopiedCode] = useState(false);
 
+  const lastTrackedServiceRef = useRef<string | null>(null);
+
   // Quick service categories pills (only available ones)
-  const quickCategories = [
-    { id: 'ai-website', label: 'طراحی وب‌سایت', icon: Globe },
-    { id: 'ai-video', label: 'ویدیو سینمایی', icon: Clapperboard },
-    { id: 'telegram-bot', label: 'ربات تلگرام', icon: Bot },
-    { id: 'image-creation', label: 'تصویر و گرافیک', icon: Palette },
-    { id: 'ai-music', label: 'موزیک و صدا', icon: Music },
-    { id: 'text-content', label: 'تولید محتوا', icon: FileText },
-  ].filter((cat) => availableServices.some((s) => s.id === cat.id));
+  const quickCategories = useMemo(
+    () =>
+      [
+        { id: 'ai-website', label: 'طراحی وب‌سایت', icon: Globe },
+        { id: 'ai-video', label: 'ویدیو سینمایی', icon: Clapperboard },
+        { id: 'telegram-bot', label: 'ربات تلگرام', icon: Bot },
+        { id: 'image-creation', label: 'تصویر و گرافیک', icon: Palette },
+        { id: 'ai-music', label: 'موزیک و صدا', icon: Music },
+        { id: 'text-content', label: 'تولید محتوا', icon: FileText },
+      ].filter((cat) => availableServices.some((s) => s.id === cat.id)),
+    [availableServices]
+  );
 
   useEffect(() => {
-    if (currentUser) {
-      setFormData((prev) => ({
-        ...prev,
-        fullName: prev.fullName || currentUser.name,
-      }));
+    if (currentUser?.name) {
+      setFormData((prev) => (prev.fullName ? prev : { ...prev, fullName: currentUser.name }));
     }
-  }, [currentUser]);
+  }, [currentUser?.name]);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     if (initialServiceId && availableServices.some((s) => s.id === initialServiceId)) {
-      setFormData((prev) => ({ ...prev, serviceId: initialServiceId }));
-      trackServiceClick(initialServiceId);
-    } else if (availableServices.length > 0 && !availableServices.some((s) => s.id === formData.serviceId)) {
-      setFormData((prev) => ({ ...prev, serviceId: availableServices[0].id }));
+      setFormData((prev) => (prev.serviceId === initialServiceId ? prev : { ...prev, serviceId: initialServiceId }));
+      if (lastTrackedServiceRef.current !== initialServiceId) {
+        lastTrackedServiceRef.current = initialServiceId;
+        trackServiceClick(initialServiceId);
+      }
+    } else if (availableServices.length > 0) {
+      setFormData((prev) => {
+        if (!availableServices.some((s) => s.id === prev.serviceId)) {
+          return { ...prev, serviceId: availableServices[0].id };
+        }
+        return prev;
+      });
     }
-  }, [initialServiceId, availableServices]);
+  }, [isOpen, initialServiceId, availableServices, trackServiceClick]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
@@ -5,6 +6,19 @@ import { GoogleGenAI } from '@google/genai';
 import { db } from './src/server/db';
 
 const PORT = 3000;
+
+// Helper to mask sensitive tokens for safe debug logs
+function maskToken(token: string): string {
+  if (!token || token.length < 8) return '***';
+  return `${token.slice(0, 4)}...${token.slice(-4)}`;
+}
+
+// Log initial Telegram environment configuration on startup
+console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+console.log('🤖 [TELEGRAM_STARTUP_CONFIG]');
+console.log(`• TELEGRAM_BOT_TOKEN env set: ${Boolean(process.env.TELEGRAM_BOT_TOKEN)} (${maskToken(process.env.TELEGRAM_BOT_TOKEN || '')})`);
+console.log(`• TELEGRAM_CHAT_ID env set:   ${Boolean(process.env.TELEGRAM_CHAT_ID)} (${process.env.TELEGRAM_CHAT_ID || 'not set, using default: 7460143967'})`);
+console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
 async function startServer() {
   const app = express();
@@ -116,6 +130,7 @@ async function startServer() {
         chatId,
       } = req.body;
       if (!fullName || !telegramOrPhone || !serviceId) {
+        console.warn('⚠️ [ORDER_SUBMIT_REJECTED] Incomplete order payload:', { fullName, telegramOrPhone, serviceId });
         res.status(400).json({ success: false, error: 'اطلاعات سفارش ناقص است' });
         return;
       }
@@ -134,8 +149,15 @@ async function startServer() {
         status: 'new',
       });
 
+      console.log('\n📥 [ORDER_SUBMIT_RECEIVED]');
+      console.log(`• Order ID: ${newOrder.id}`);
+      console.log(`• Customer: ${newOrder.fullName} | Contact: ${newOrder.telegramOrPhone}`);
+      console.log(`• Service: ${newOrder.serviceTitle} | Price: ${newOrder.priceQuoted}`);
+      console.log(`• Is Promo Event: ${newOrder.isPromoEvent}`);
+
       // Asynchronously trigger Telegram notification to ensure guaranteed delivery
-      const effectiveToken = (botToken || process.env.TELEGRAM_BOT_TOKEN || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus').trim();
+      const envToken = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
+      const effectiveToken = envToken || (botToken && botToken.trim()) || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus';
       const targetChatIds = resolveTelegramChatIds(chatId);
       const orderId = escapeTgHtml(newOrder.id);
       const safeName = escapeTgHtml(newOrder.fullName);
@@ -173,12 +195,12 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
       };
 
       dispatchTelegramNotification(effectiveToken, targetChatIds, telegramText, inlineKeyboard).catch(
-        (tgErr) => console.warn('Background telegram dispatch error:', tgErr)
+        (tgErr) => console.error('❌ [BACKGROUND_TELEGRAM_ERROR]:', tgErr)
       );
 
       res.status(201).json({ success: true, order: newOrder });
     } catch (error: any) {
-      console.error('Error creating order:', error);
+      console.error('❌ [ORDER_CREATE_ERROR]:', error);
       res.status(500).json({ success: false, error: 'خطا در ثبت سفارش' });
     }
   });
@@ -457,12 +479,15 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
 
   // Helper to resolve and normalize Telegram Chat IDs (maps usernames to verified chat IDs)
   function resolveTelegramChatIds(chatIdInput: string | undefined | null): string[] {
-    const defaultChatId = (process.env.TELEGRAM_CHAT_ID || '7460143967').trim();
-    if (!chatIdInput || !chatIdInput.trim()) {
+    const envChatId = (process.env.TELEGRAM_CHAT_ID || '').trim();
+    const defaultChatId = '7460143967';
+
+    const sourceString = [envChatId, chatIdInput].filter(Boolean).join(',');
+    if (!sourceString.trim()) {
       return [defaultChatId];
     }
 
-    const rawParts = chatIdInput
+    const rawParts = sourceString
       .split(/[,;\n]+/)
       .map((s) => s.trim())
       .filter(Boolean);
@@ -482,27 +507,39 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
         // Valid numeric chat ID or channel ID
         resolved.push(part);
       } else {
-        // Passed some other channel or username - include it and ensure admin default is also present
+        // Passed some other channel or username - include it
         resolved.push(part);
-        if (!resolved.includes(defaultChatId)) {
-          resolved.push(defaultChatId);
-        }
       }
     }
 
     // Always ensure at least defaultChatId if list is empty
-    return resolved.length > 0 ? Array.from(new Set(resolved)) : [defaultChatId];
+    if (resolved.length === 0) {
+      resolved.push(defaultChatId);
+    }
+
+    return Array.from(new Set(resolved));
   }
 
-  // Robust Dispatcher to one or multiple Telegram targets
+  // Robust Dispatcher to one or multiple Telegram targets with comprehensive debug logging
   async function dispatchTelegramNotification(
-    token: string,
+    token: string | undefined,
     chatIds: string[],
     text: string,
     replyMarkup?: any
   ): Promise<{ success: boolean; deliveredTo: string[]; errors: string[]; messageIds: number[] }> {
-    const effectiveToken = (token || process.env.TELEGRAM_BOT_TOKEN || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus').trim();
-    const targets = chatIds && chatIds.length > 0 ? chatIds : ['7460143967'];
+    const envToken = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
+    const fallbackToken = '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus';
+    const effectiveToken = envToken || (token && token.trim()) || fallbackToken;
+    const tokenSource = envToken ? 'process.env.TELEGRAM_BOT_TOKEN' : token ? 'client_request' : 'hardcoded_fallback';
+
+    const targets = chatIds && chatIds.length > 0 ? chatIds : resolveTelegramChatIds(undefined);
+
+    console.log('\n────────────────────────────────────────────────────────────');
+    console.log('🚀 [TELEGRAM_DISPATCH_TRIGGERED]');
+    console.log(`• Token Source: ${tokenSource} (Token: ${maskToken(effectiveToken)})`);
+    console.log(`• Targets: [${targets.join(', ')}]`);
+    console.log(`• Text Length: ${text.length} chars`);
+    console.log(`• Has Reply Markup: ${Boolean(replyMarkup)}`);
 
     const deliveredTo: string[] = [];
     const errors: string[] = [];
@@ -521,28 +558,41 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
           payload.reply_markup = replyMarkup;
         }
 
+        console.log(`📡 [TELEGRAM_SENDING] Requesting sendMessage to chat_id: "${target}"...`);
+        const startTime = Date.now();
+
         const tgRes = await fetch(tgUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
 
-        const data: any = await tgRes.json();
-        if (data.ok) {
+        const elapsed = Date.now() - startTime;
+        const data: any = await tgRes.json().catch(() => null);
+
+        if (data && data.ok) {
           deliveredTo.push(target);
-          if (data.result?.message_id) {
-            messageIds.push(data.result.message_id);
+          const msgId = data.result?.message_id;
+          if (msgId) {
+            messageIds.push(msgId);
           }
+          console.log(`✅ [TELEGRAM_DISPATCH_SUCCESS] Chat ID: ${target} | Message ID: ${msgId} | Latency: ${elapsed}ms`);
         } else {
-          const errMsg = parseTelegramError(data.description || 'Unknown Telegram Error', target);
-          errors.push(`[${target}]: ${errMsg}`);
-          console.warn(`Telegram API failure for target ${target}:`, data);
+          const desc = data?.description || `HTTP ${tgRes.status} ${tgRes.statusText}`;
+          const errCode = data?.error_code || tgRes.status;
+          const userFriendlyErr = parseTelegramError(desc, target);
+          errors.push(`[${target}]: ${userFriendlyErr}`);
+          console.error(`❌ [TELEGRAM_DISPATCH_ERROR] Chat ID: ${target} | Code: ${errCode} | Description: ${desc}`);
+          console.error(`💡 [TELEGRAM_TROUBLESHOOTING]: Ensure the bot token is active, and if chat_id is a user account, the user must have clicked /start on the bot.`);
         }
       } catch (err: any) {
         errors.push(`[${target}]: ${err?.message || 'Network error'}`);
-        console.error(`Network error sending to Telegram target ${target}:`, err);
+        console.error(`❌ [TELEGRAM_NETWORK_ERROR] Failed sending to target ${target}:`, err);
       }
     }
+
+    console.log(`🏁 [TELEGRAM_DISPATCH_COMPLETED] Delivered: ${deliveredTo.length}/${targets.length} targets. Success: ${deliveredTo.length > 0}`);
+    console.log('────────────────────────────────────────────────────────────\n');
 
     return {
       success: deliveredTo.length > 0,
@@ -558,11 +608,18 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
       const { order, botToken, chatId } = req.body;
 
       if (!order) {
+        console.warn('⚠️ [TELEGRAM_SEND_ORDER_REJECTED] Missing order payload');
         res.status(400).json({ error: 'اطلاعات سفارش ارسال نشده است.' });
         return;
       }
 
-      const effectiveToken = (botToken || process.env.TELEGRAM_BOT_TOKEN || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus').trim();
+      console.log('\n📤 [TELEGRAM_SEND_ORDER_CALLED]');
+      console.log(`• Order ID: ${order.id || 'N/A'}`);
+      console.log(`• Customer: ${order.fullName || 'N/A'} (${order.telegramOrPhone || 'N/A'})`);
+      console.log(`• Service: ${order.serviceTitle || 'N/A'}`);
+
+      const envToken = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
+      const effectiveToken = envToken || (botToken && botToken.trim()) || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus';
       const targetChatIds = resolveTelegramChatIds(chatId);
 
       const orderId = escapeTgHtml(order.id || 'ORD-' + Math.floor(1000 + Math.random() * 9000));
@@ -630,7 +687,7 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
         });
       }
     } catch (err: any) {
-      console.error('Error sending order to Telegram:', err);
+      console.error('❌ [TELEGRAM_SEND_ORDER_ERROR]:', err);
       res.status(500).json({ error: 'خطا در ارتباط با سرور تلگرام', details: err?.message });
     }
   });
@@ -641,11 +698,18 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
       const { name, contactInfo, topic, message, botToken, chatId } = req.body;
 
       if (!name || !contactInfo) {
+        console.warn('⚠️ [TELEGRAM_SEND_CONSULTATION_REJECTED] Missing name or contact info');
         res.status(400).json({ error: 'نام و اطلاعات تماس الزامی است.' });
         return;
       }
 
-      const effectiveToken = (botToken || process.env.TELEGRAM_BOT_TOKEN || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus').trim();
+      console.log('\n💬 [TELEGRAM_SEND_CONSULTATION_CALLED]');
+      console.log(`• Lead Name: ${name}`);
+      console.log(`• Contact Info: ${contactInfo}`);
+      console.log(`• Consultation Topic: ${topic || 'Default'}`);
+
+      const envToken = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
+      const effectiveToken = envToken || (botToken && botToken.trim()) || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus';
       const targetChatIds = resolveTelegramChatIds(chatId);
 
       const fullName = escapeTgHtml(name.trim());
@@ -708,7 +772,7 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
         });
       }
     } catch (err: any) {
-      console.error('Error sending consultation to Telegram:', err);
+      console.error('❌ [TELEGRAM_SEND_CONSULTATION_ERROR]:', err);
       res.status(500).json({ error: 'خطا در ارسال پیام مشاوره به تلگرام', details: err?.message });
     }
   });
@@ -717,7 +781,8 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
   app.post('/api/telegram/test-bot', async (req, res) => {
     try {
       const { botToken, chatId } = req.body;
-      const effectiveToken = (botToken || process.env.TELEGRAM_BOT_TOKEN || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus').trim();
+      const envToken = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
+      const effectiveToken = envToken || (botToken && botToken.trim()) || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus';
       const targetChatIds = resolveTelegramChatIds(chatId);
 
       if (!effectiveToken) {
