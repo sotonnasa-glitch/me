@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteDataContext';
 import { OrderFormData } from '../types';
+import { NeuralSubmitButton } from './common/NeuralSubmitButton';
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -626,24 +627,14 @@ export const OrderModal: React.FC<OrderModalProps> = ({
 
             {/* Submit CTA Button */}
             <div className="pt-2">
-              <button
-                type="submit"
+              <NeuralSubmitButton
                 id="modal-submit-btn"
+                type="submit"
                 disabled={isSubmitting}
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-sm sm:text-base shadow-[0_0_35px_rgba(147,51,234,0.6)] hover:shadow-[0_0_45px_rgba(147,51,234,0.9)] transition-all flex items-center justify-center gap-2.5 focus:outline-none disabled:opacity-50 cursor-pointer hover:scale-[1.01] active:scale-[0.98]"
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>در حال ثبت و ارسال به ربات تلگرام...</span>
-                  </div>
-                ) : (
-                  <>
-                    <span>ثبت نهایی سفارش و ارسال به ربات تلگرام</span>
-                    <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:-translate-x-1" />
-                  </>
-                )}
-              </button>
+                label="Submit Request — ثبت سفارش"
+                successLabel="Submitted — درخواست ثبت شد ✓"
+                className="w-full"
+              />
             </div>
           </form>
         )}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, Sparkles, Send } from 'lucide-react';
 import { useSiteData } from '../context/SiteDataContext';
+import { NeuralSubmitButton } from './common/NeuralSubmitButton';
 
 interface CTASectionProps {
   onOpenOrderModal: () => void;
@@ -41,22 +42,20 @@ export const CTASection: React.FC<CTASectionProps> = ({ onOpenOrderModal }) => {
           </p>
 
           {/* Action Buttons */}
-          <div className="relative z-10 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
-            <button
-              type="button"
+          <div className="relative z-10 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-lg mx-auto">
+            <NeuralSubmitButton
               id="cta-place-order-btn"
-              onClick={onOpenOrderModal}
-              className="w-full sm:w-auto px-9 py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-base shadow-[0_0_35px_rgba(147,51,234,0.6)] hover:shadow-[0_0_45px_rgba(147,51,234,0.9)] transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3 focus:outline-none"
-            >
-              <span>ثبت سفارش پروژه</span>
-              <ArrowLeft className="w-5 h-5" />
-            </button>
+              label="Submit Request"
+              successLabel="Submitted ✓"
+              onSubmitSuccess={onOpenOrderModal}
+              className="w-full sm:w-auto"
+            />
 
             <a
               href={brandInfo.telegramUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-gray-200 hover:text-white font-medium text-base transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-gray-200 hover:text-white font-medium text-sm sm:text-base transition-all flex items-center justify-center gap-2"
             >
               <Send className="w-4 h-4 rotate-180 text-purple-300" />
               <span>گفتگو در تلگرام</span>

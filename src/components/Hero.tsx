@@ -2,6 +2,7 @@ import React from 'react';
 import { Sparkles, ArrowLeft, ArrowDown, ChevronDown } from 'lucide-react';
 import { useSiteData } from '../context/SiteDataContext';
 import { TRUSTED_COMPANIES } from '../data/mockData';
+import { NeuralSubmitButton } from './common/NeuralSubmitButton';
 
 interface HeroProps {
   onOpenOrderModal: () => void;
@@ -83,23 +84,21 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
         </p>
 
         {/* Call To Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md mx-auto">
-          {/* Primary Button */}
-          <button
-            type="button"
-            id="hero-primary-cta"
-            onClick={onOpenOrderModal}
-            className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-base shadow-[0_0_30px_rgba(147,51,234,0.55)] hover:shadow-[0_0_40px_rgba(147,51,234,0.8)] transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3 group focus:outline-none"
-          >
-            <span>ثبت سفارش آنلاین</span>
-            <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1.5" />
-          </button>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-lg mx-auto">
+          {/* Primary Neural Submit Request Button */}
+          <NeuralSubmitButton
+            id="hero-neural-submit-btn"
+            label="Submit Request"
+            successLabel="Submitted ✓"
+            onSubmitSuccess={onOpenOrderModal}
+            className="w-full sm:w-auto"
+          />
 
           {/* Secondary Button */}
           <a
             href="#services"
             id="hero-secondary-cta"
-            className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 hover:border-purple-500/40 text-gray-200 hover:text-white font-medium text-base transition-all duration-300 backdrop-blur-sm flex items-center justify-center gap-2 group"
+            className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 hover:border-purple-500/40 text-gray-200 hover:text-white font-medium text-sm sm:text-base transition-all duration-300 backdrop-blur-sm flex items-center justify-center gap-2 group"
           >
             <span>مشاهده خدمات</span>
             <ChevronDown className="w-4 h-4 text-purple-400 group-hover:translate-y-0.5 transition-transform" />

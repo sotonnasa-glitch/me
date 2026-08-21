@@ -72,7 +72,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { label: 'خدمات', href: '#services' },
     { label: '🎬 فیلم‌ها و مقالات', href: '#blog', isHighlight: true },
     { label: '💬 نظرات کاربران', href: '#reviews' },
-    { label: 'ویژگی‌ها', href: '#features' },
+    { label: 'محاسبه‌گر هزینه', href: '#features' },
     { label: 'نحوه کار', href: '#how-it-works' },
     { label: 'نمونه‌کارها', href: '#portfolio' },
     { label: 'درباره ما', href: '#about' },

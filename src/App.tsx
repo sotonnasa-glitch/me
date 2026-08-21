@@ -111,8 +111,10 @@ function MainWebsite() {
         {/* 1.5. Special Opening Promotional Event Banner (Free First Orders) */}
         <OpeningEventBanner onOpenOrderModal={handleOpenOrderModal} />
 
-        {/* 2. Interactive Features & Live Dashboard */}
-        {isEnabled('features') && <InteractiveFeatures />}
+        {/* 2. Interactive Project Cost & Delivery Estimator + Guarantees */}
+        {isEnabled('features') && (
+          <InteractiveFeatures onOpenOrderModal={(serviceId) => handleOpenOrderModal(serviceId)} />
+        )}
 
         {/* 3. Services Section (Dynamic Services Grid) */}
         {isEnabled('services') && (
