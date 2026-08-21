@@ -345,4 +345,18 @@ export interface SitePublicStats {
   lastUpdated: string;
 }
 
+export interface SocialMediaLink {
+  id: string;
+  platform: 'telegram' | 'instagram' | 'youtube' | 'github' | 'linkedin' | 'x' | 'aparat' | 'custom';
+  title: string;
+  url: string;
+  handle: string;
+  description?: string;
+  badge?: string;
+  followersCount?: string;
+  gradient?: string;
+  enabled: boolean;
+  orderIndex?: number;
+}
+
 

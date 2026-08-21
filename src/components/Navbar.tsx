@@ -6,14 +6,114 @@ import {
   ArrowLeft,
   Send,
   Bell,
-  Video,
   User,
   Bot,
   PackageCheck,
-  Search
+  Cpu,
+  Clapperboard,
+  MessageSquare,
+  Calculator,
+  Workflow,
+  Layers,
+  ShieldCheck,
+  HelpCircle,
+  Radio,
+  Zap
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteDataContext';
 import { CrystalCubeIcon } from './common/CrystalCubeIcon';
+
+const RenderNavAiIcon: React.FC<{ href: string }> = ({ href }) => {
+  switch (href) {
+    case '#services':
+      return (
+        <div className="relative w-8 h-8 rounded-xl bg-purple-950/90 border border-purple-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(168,85,247,0.35)]">
+          <div className="absolute inset-0 bg-gradient-to-tr from-purple-600/30 to-cyan-500/20" />
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-gleam pointer-events-none" />
+          <Cpu className="w-4 h-4 text-purple-300 relative z-10 animate-pulse" />
+          <span className="absolute -top-1 -start-1 w-2 h-2 rounded-full bg-cyan-400 animate-ping opacity-75" />
+        </div>
+      );
+    case '#blog':
+      return (
+        <div className="relative w-8 h-8 rounded-xl bg-pink-950/90 border border-pink-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(244,63,94,0.35)]">
+          <div className="absolute inset-0 bg-gradient-to-tr from-rose-600/30 to-amber-500/20" />
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-gleam pointer-events-none" />
+          <Clapperboard className="w-4 h-4 text-rose-300 relative z-10 animate-lens-sparkle" />
+          <span className="absolute top-1 end-1 w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+        </div>
+      );
+    case '#reviews':
+      return (
+        <div className="relative w-8 h-8 rounded-xl bg-amber-950/90 border border-amber-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.35)]">
+          <div className="absolute inset-0 bg-gradient-to-tr from-amber-600/30 to-yellow-500/20" />
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-gleam pointer-events-none" />
+          <MessageSquare className="w-4 h-4 text-amber-300 relative z-10 animate-float" />
+          <Sparkles className="w-2.5 h-2.5 text-yellow-300 absolute top-1 start-1 animate-pulse" />
+        </div>
+      );
+    case '#features':
+      return (
+        <div className="relative w-8 h-8 rounded-xl bg-cyan-950/90 border border-cyan-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(6,182,212,0.35)]">
+          <div className="absolute inset-0 bg-gradient-to-tr from-cyan-600/30 to-blue-500/20" />
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-gleam pointer-events-none" />
+          <Calculator className="w-4 h-4 text-cyan-300 relative z-10 animate-pulse-slow" />
+          <Zap className="w-2.5 h-2.5 text-cyan-200 absolute -top-0.5 -end-0.5 animate-pulse" />
+        </div>
+      );
+    case '#how-it-works':
+      return (
+        <div className="relative w-8 h-8 rounded-xl bg-emerald-950/90 border border-emerald-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.35)]">
+          <div className="absolute inset-0 bg-gradient-to-tr from-emerald-600/30 to-teal-500/20" />
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-gleam pointer-events-none" />
+          <Workflow className="w-4 h-4 text-emerald-300 relative z-10 animate-orbit" />
+          <span className="absolute top-1 start-1 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping opacity-75" />
+        </div>
+      );
+    case '#portfolio':
+      return (
+        <div className="relative w-8 h-8 rounded-xl bg-indigo-950/90 border border-indigo-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(99,102,241,0.35)]">
+          <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600/30 to-purple-500/20" />
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-gleam pointer-events-none" />
+          <Layers className="w-4 h-4 text-indigo-300 relative z-10 animate-float" />
+          <Sparkles className="w-2.5 h-2.5 text-purple-300 absolute -bottom-0.5 -start-0.5 animate-lens-sparkle" />
+        </div>
+      );
+    case '#about':
+      return (
+        <div className="relative w-8 h-8 rounded-xl bg-violet-950/90 border border-violet-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(139,92,246,0.35)]">
+          <div className="absolute inset-0 bg-gradient-to-tr from-violet-600/30 to-fuchsia-500/20" />
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-gleam pointer-events-none" />
+          <ShieldCheck className="w-4 h-4 text-violet-300 relative z-10 animate-pulse-slow" />
+          <span className="absolute inset-0.5 border border-violet-400/30 rounded-lg animate-neon-radar opacity-40" />
+        </div>
+      );
+    case '#faq':
+      return (
+        <div className="relative w-8 h-8 rounded-xl bg-teal-950/90 border border-teal-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(20,184,166,0.35)]">
+          <div className="absolute inset-0 bg-gradient-to-tr from-teal-600/30 to-emerald-500/20" />
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-gleam pointer-events-none" />
+          <HelpCircle className="w-4 h-4 text-teal-300 relative z-10 animate-pulse" />
+          <span className="absolute top-1 end-1 w-1.5 h-1.5 rounded-full bg-teal-300 animate-ping opacity-80" />
+        </div>
+      );
+    case '#contact':
+      return (
+        <div className="relative w-8 h-8 rounded-xl bg-sky-950/90 border border-sky-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(14,165,233,0.35)]">
+          <div className="absolute inset-0 bg-gradient-to-tr from-sky-600/30 to-blue-500/20" />
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-gleam pointer-events-none" />
+          <Radio className="w-4 h-4 text-sky-300 relative z-10 animate-pulse" />
+          <span className="absolute top-1.5 start-1.5 w-2 h-2 rounded-full bg-sky-400 animate-neon-radar opacity-80" />
+        </div>
+      );
+    default:
+      return (
+        <div className="relative w-8 h-8 rounded-xl bg-purple-950/90 border border-purple-500/50 flex items-center justify-center overflow-hidden shrink-0">
+          <Sparkles className="w-4 h-4 text-purple-300" />
+        </div>
+      );
+  }
+};
 
 interface NavbarProps {
   onOpenOrderModal: (serviceId?: string) => void;
@@ -70,9 +170,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navLinks = [
     { label: 'خدمات', href: '#services' },
-    { label: '🎬 فیلم‌ها و مقالات', href: '#blog', isHighlight: true },
-    { label: '💬 نظرات کاربران', href: '#reviews' },
-    { label: 'محاسبه‌گر هزینه', href: '#features' },
+    { label: 'فیلم‌ها و مقالات', href: '#blog', isHighlight: true },
+    { label: 'نظرات کاربران', href: '#reviews' },
     { label: 'نحوه کار', href: '#how-it-works' },
     { label: 'نمونه‌کارها', href: '#portfolio' },
     { label: 'درباره ما', href: '#about' },
@@ -103,20 +202,26 @@ export const Navbar: React.FC<NavbarProps> = ({
       )}
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex items-center justify-between">
-        {/* Right Corner (Start in RTL): Custom Purple Frame + Tekvix AI Logo (Secret 5-tap area) */}
+        {/* Right Corner (Start in RTL): Custom Purple Shiny Frame + Tekvix AI Logo (Secret 5-tap area) */}
         <div
           id="nav-brand-container"
           onClick={handleSecretLogoTap}
-          className="flex items-center gap-2.5 sm:gap-3.5 cursor-pointer select-none"
+          className="flex items-center gap-2.5 sm:gap-3.5 cursor-pointer select-none group"
         >
-          {/* Purple Bordered Square Frame with Embedded Reference 3D Crystal Asset */}
+          {/* Purple Bordered Shiny Frame with Embedded Reference 3D Crystal Asset */}
           <div
             id="nav-crystal-frame"
-            className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#090517] border border-purple-500/50 hover:border-purple-400 p-0.5 flex items-center justify-center shadow-[0_0_16px_rgba(168,85,247,0.4)] hover:shadow-[0_0_24px_rgba(168,85,247,0.7)] transition-all group"
+            className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#090517] border border-purple-400/60 hover:border-purple-300 p-0.5 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:shadow-[0_0_30px_rgba(168,85,247,0.8)] transition-all overflow-hidden"
           >
-            <CrystalCubeIcon size={36} className="transition-transform group-hover:scale-105" />
-            <span className="absolute -top-1 -start-1 w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping opacity-75" />
-            <span className="absolute -top-1 -start-1 w-2.5 h-2.5 rounded-full bg-cyan-400" />
+            {/* Shimmering sweeping gleam over logo frame */}
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine-gleam pointer-events-none" />
+            
+            <CrystalCubeIcon size={38} className="transition-transform group-hover:scale-110" />
+            
+            {/* Dazzling shiny beacon in corner */}
+            <span className="absolute -top-1 -start-1 w-3 h-3 rounded-full bg-cyan-400 animate-ping opacity-80" />
+            <span className="absolute -top-1 -start-1 w-2.5 h-2.5 rounded-full bg-cyan-300 shadow-[0_0_10px_#38bdf8]" />
+            <span className="absolute -bottom-1 -end-1 w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse shadow-[0_0_10px_#e879f9]" />
           </div>
 
           {/* Tekvix AI Brand Logo */}
@@ -283,11 +388,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
+      {/* Mobile Drawer Menu with Animated AI Icons for every item */}
       {mobileMenuOpen && (
         <div
           id="mobile-drawer"
-          className="lg:hidden fixed inset-x-0 top-[60px] bg-[#070614]/95 backdrop-blur-2xl border-b border-purple-900/30 px-6 py-6 shadow-2xl flex flex-col gap-4 animate-in fade-in slide-in-from-top-4 duration-200"
+          className="lg:hidden fixed inset-x-0 top-[60px] bg-[#070614]/98 backdrop-blur-2xl border-b border-purple-900/40 px-5 py-6 shadow-2xl flex flex-col gap-4 animate-in fade-in slide-in-from-top-4 duration-200 max-h-[calc(100vh-70px)] overflow-y-auto"
         >
           <div className="flex flex-col gap-2">
             {navLinks.map((link) => (
@@ -300,14 +405,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                     handleVideoLinkClick(e);
                   }
                 }}
-                className={`text-sm py-2.5 px-3 rounded-xl transition-colors flex items-center justify-between ${
+                className={`text-sm py-2.5 px-3.5 rounded-2xl transition-all flex items-center justify-between group ${
                   link.isHighlight
-                    ? 'bg-purple-600/30 text-purple-200 font-bold border border-purple-500/30'
-                    : 'text-gray-200 hover:text-purple-300 hover:bg-white/[0.04]'
+                    ? 'bg-purple-600/25 text-purple-200 font-bold border border-purple-500/40 shadow-sm'
+                    : 'text-gray-200 hover:text-purple-200 hover:bg-white/[0.06] border border-transparent hover:border-white/10'
                 }`}
               >
-                <span>{link.label}</span>
-                <ArrowLeft className="w-4 h-4 text-gray-500" />
+                <div className="flex items-center gap-3">
+                  <RenderNavAiIcon href={link.href} />
+                  <span className="font-bold">{link.label}</span>
+                </div>
+                <ArrowLeft className="w-4 h-4 text-gray-400 group-hover:text-purple-300 transition-transform group-hover:-translate-x-1" />
               </a>
             ))}
           </div>

@@ -16,6 +16,7 @@ import {
   Newspaper,
   BarChart3,
   Gift,
+  Radio,
 } from 'lucide-react';
 import { useSiteData } from '../../context/SiteDataContext';
 
@@ -28,6 +29,7 @@ export type AdminTab =
   | 'analytics'
   | 'portfolio'
   | 'testimonials'
+  | 'social'
   | 'faqs'
   | 'settings'
   | 'backup';
@@ -128,6 +130,13 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       icon: MessageSquareHeart,
       badge: null,
       colorClass: 'text-rose-400'
+    },
+    {
+      id: 'social' as AdminTab,
+      label: 'شبکه‌های اجتماعی و کانال‌ها',
+      icon: Radio,
+      badge: null,
+      colorClass: 'text-sky-400'
     },
     {
       id: 'faqs' as AdminTab,

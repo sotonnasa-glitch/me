@@ -141,9 +141,62 @@
       "id": "ORD-4388",
       "createdAt": "2026-08-17T14:50:53.112Z",
       "updatedAt": "2026-08-17T14:50:53.112Z"
+    },
+    {
+      "fullName": "تست نهایی سیستم",
+      "telegramOrPhone": "@Lawat_kar",
+      "serviceId": "ai-website",
+      "serviceTitle": "خدمت اختصاصی",
+      "message": "تست کامل اتصال ربات تلگرام و ثبت سفارش سایت تکویکس",
+      "isPromoEvent": false,
+      "status": "new",
+      "id": "ORD-4777",
+      "createdAt": "2026-08-21T11:44:34.149Z",
+      "updatedAt": "2026-08-21T11:44:34.149Z"
     }
   ],
   "events": [
+    {
+      "eventType": "order_created",
+      "path": "/order",
+      "serviceId": "ai-website",
+      "device": "mobile",
+      "value": 4500000,
+      "metadata": {
+        "orderId": "ORD-4777",
+        "customer": "تست نهایی سیستم",
+        "isPromo": false
+      },
+      "id": "ev_1787312674150_c69is",
+      "createdAt": "2026-08-21T11:44:34.150Z"
+    },
+    {
+      "eventType": "service_click",
+      "path": "/",
+      "serviceId": "text-content",
+      "device": "mobile",
+      "value": 0,
+      "id": "ev_1787310086151_kbwhk",
+      "createdAt": "2026-08-21T11:01:26.151Z"
+    },
+    {
+      "eventType": "service_click",
+      "path": "/",
+      "serviceId": "image-creation",
+      "device": "mobile",
+      "value": 0,
+      "id": "ev_1787310083514_v0a66",
+      "createdAt": "2026-08-21T11:01:23.514Z"
+    },
+    {
+      "eventType": "service_click",
+      "path": "/",
+      "serviceId": "ai-video",
+      "device": "mobile",
+      "value": 0,
+      "id": "ev_1787308853997_xm85j",
+      "createdAt": "2026-08-21T10:40:53.997Z"
+    },
     {
       "eventType": "order_created",
       "path": "/order",
@@ -271,6 +324,7 @@
     }
   ],
   "totalViewsCount": 2840,
+  "adminPassword": "admin123",
   "openingEventConfig": {
     "isActive": true,
     "title": "جشن افتتاحیه TEKVIX | اولین سفارش‌ها رایگان",
@@ -283,5 +337,5 @@
     "maxWinners": 2,
     "termsNote": "هر کاربر فقط یک‌بار امکان استفاده از جایزه را دارد. سفارش‌های لغوشده محاسبه نمی‌شوند."
   },
-  "savedAt": "2026-08-17T14:50:53.113Z"
+  "savedAt": "2026-08-21T11:44:34.150Z"
 }

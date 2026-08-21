@@ -1,12 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  Calculator,
   Sparkles,
   Zap,
   ShieldCheck,
-  Clock,
-  Send,
-  CheckCircle2,
   Globe,
   Clapperboard,
   Bot,
@@ -14,14 +10,12 @@ import {
   Music,
   FileText,
   ArrowLeft,
-  Flame,
   BadgeCheck,
   Headphones,
   Code,
-  Gift
+  Clock
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteDataContext';
-import { NeuralSubmitButton } from './common/NeuralSubmitButton';
 
 interface InteractiveFeaturesProps {
   onOpenOrderModal?: (serviceId?: string) => void;
@@ -313,34 +307,85 @@ const ESTIMATOR_SERVICES: ServiceOption[] = [
   }
 ];
 
+// Specialized Animated AI Digital Graphics for each service
+const RenderAnimatedAiGraphic: React.FC<{ serviceId: string; isSelected: boolean }> = ({
+  serviceId,
+  isSelected,
+}) => {
+  switch (serviceId) {
+    case 'ai-website':
+      return (
+        <div className="relative w-10 h-10 rounded-xl bg-[#120a28] border border-cyan-500/30 flex items-center justify-center overflow-hidden shadow-inner group-hover:border-cyan-400">
+          {/* Moving Scan Beam */}
+          <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-pulse" />
+          <Globe className={`w-5 h-5 transition-transform duration-300 ${isSelected ? 'text-cyan-300 scale-110' : 'text-cyan-400'}`} />
+          {/* Cyber Corner Node */}
+          <span className="absolute top-1 end-1 w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+        </div>
+      );
+    case 'ai-video':
+      return (
+        <div className="relative w-10 h-10 rounded-xl bg-[#1d0a1b] border border-rose-500/30 flex items-center justify-center overflow-hidden shadow-inner group-hover:border-rose-400">
+          {/* Rotating Photon Ring */}
+          <div className="absolute inset-1 rounded-lg border border-dashed border-rose-500/40 animate-spin" style={{ animationDuration: '6s' }} />
+          <Clapperboard className={`w-5 h-5 transition-transform duration-300 ${isSelected ? 'text-rose-300 scale-110' : 'text-rose-400'}`} />
+          <span className="absolute top-1 end-1 w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping" />
+        </div>
+      );
+    case 'telegram-bot':
+      return (
+        <div className="relative w-10 h-10 rounded-xl bg-[#09152b] border border-sky-500/30 flex items-center justify-center overflow-hidden shadow-inner group-hover:border-sky-400">
+          {/* Radiating radar wave */}
+          <span className="absolute inset-0 rounded-xl border border-sky-400/30 animate-ping opacity-60 pointer-events-none" />
+          <Bot className={`w-5 h-5 transition-transform duration-300 ${isSelected ? 'text-sky-300 scale-110' : 'text-sky-400'}`} />
+          <span className="absolute top-1 end-1 w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+        </div>
+      );
+    case 'image-creation':
+      return (
+        <div className="relative w-10 h-10 rounded-xl bg-[#1c0926] border border-pink-500/30 flex items-center justify-center overflow-hidden shadow-inner group-hover:border-pink-400">
+          <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/20 via-pink-500/20 to-transparent animate-pulse" />
+          <Palette className={`w-5 h-5 transition-transform duration-300 ${isSelected ? 'text-pink-300 scale-110' : 'text-pink-400'}`} />
+          <span className="absolute top-1 end-1 w-1.5 h-1.5 rounded-full bg-pink-400 animate-ping" />
+        </div>
+      );
+    case 'ai-music':
+      return (
+        <div className="relative w-10 h-10 rounded-xl bg-[#211804] border border-amber-500/30 flex items-center justify-center overflow-hidden shadow-inner group-hover:border-amber-400">
+          {/* Animated Equalizer Bars */}
+          <div className="absolute bottom-1.5 inset-x-2 flex items-end justify-between h-3 opacity-60">
+            <span className="w-1 bg-amber-400 rounded-full animate-pulse h-2" />
+            <span className="w-1 bg-amber-300 rounded-full animate-pulse h-3" style={{ animationDelay: '0.2s' }} />
+            <span className="w-1 bg-amber-400 rounded-full animate-pulse h-1.5" style={{ animationDelay: '0.4s' }} />
+            <span className="w-1 bg-amber-300 rounded-full animate-pulse h-2.5" style={{ animationDelay: '0.1s' }} />
+          </div>
+          <Music className={`w-5 h-5 transition-transform duration-300 ${isSelected ? 'text-amber-300 scale-110' : 'text-amber-400'}`} />
+          <span className="absolute top-1 end-1 w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+        </div>
+      );
+    case 'text-content':
+    default:
+      return (
+        <div className="relative w-10 h-10 rounded-xl bg-[#0e181e] border border-emerald-500/30 flex items-center justify-center overflow-hidden shadow-inner group-hover:border-emerald-400">
+          <FileText className={`w-5 h-5 transition-transform duration-300 ${isSelected ? 'text-emerald-300 scale-110' : 'text-emerald-400'}`} />
+          {/* Blinking prompt */}
+          <span className="absolute bottom-1.5 end-2 text-[8px] font-mono text-emerald-400 animate-pulse font-bold">&gt;_</span>
+          <span className="absolute top-1 end-1 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+        </div>
+      );
+  }
+};
+
 export const InteractiveFeatures: React.FC<InteractiveFeaturesProps> = ({ onOpenOrderModal }) => {
-  const { brandInfo, openingEventState } = useSiteData();
-
-  const [selectedServiceId, setSelectedServiceId] = useState<string>('ai-website');
-  const [selectedTier, setSelectedTier] = useState<'standard' | 'pro' | 'enterprise'>('pro');
-  const [isExpress, setIsExpress] = useState<boolean>(false);
-
-  const currentService =
-    ESTIMATOR_SERVICES.find((s) => s.id === selectedServiceId) || ESTIMATOR_SERVICES[0];
-
-  const currentTierData = currentService.tiers[selectedTier];
-
-  // Price Calculation
-  const rawPrice = Math.round(currentService.basePrice * currentTierData.priceMultiplier);
-  const expressPrice = isExpress ? Math.round(rawPrice * 0.15) : 0;
-  const totalPrice = rawPrice + expressPrice;
-
-  const deliveryText = isExpress
-    ? 'فوری (تحویل تضمینی در کمتر از ۲۴ ساعت ⚡)'
-    : currentTierData.deliveryDays;
+  const { brandInfo } = useSiteData();
 
   const formatPrice = (price: number) => {
     return price.toLocaleString('fa-IR') + ' تومان';
   };
 
-  const handleOrderClick = () => {
+  const handleOrderClick = (serviceId: string) => {
     if (onOpenOrderModal) {
-      onOpenOrderModal(selectedServiceId);
+      onOpenOrderModal(serviceId);
     }
   };
 
@@ -348,6 +393,7 @@ export const InteractiveFeatures: React.FC<InteractiveFeaturesProps> = ({ onOpen
     <section
       id="features"
       className="relative py-20 sm:py-28 bg-[#05050d] overflow-hidden border-t border-purple-900/20"
+      dir="rtl"
     >
       {/* Background glow accents */}
       <div className="absolute top-1/3 start-1/4 w-96 h-96 bg-purple-900/10 rounded-full blur-3xl pointer-events-none" />
@@ -356,303 +402,71 @@ export const InteractiveFeatures: React.FC<InteractiveFeaturesProps> = ({ onOpen
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-14">
+        <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-950/60 border border-purple-800/50 text-purple-300 text-xs font-semibold mb-4 shadow-sm">
-            <Calculator className="w-3.5 h-3.5 text-purple-400" />
-            <span>محاسبه‌گر آنلاین هزینه و زمان تحویل</span>
+            <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+            <span>خدمات و سرویس‌های تخصصی هوش مصنوعی</span>
           </div>
 
           <h2
             id="estimator-title"
             className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight mb-4"
           >
-            تخمین هوشمند قیمت و زمان اجرای پروژه
+            سفارش خدمات هوشمند {brandInfo.name || 'تکویکس'}
           </h2>
 
           <p className="text-base sm:text-lg text-gray-300 leading-relaxed">
-            نوع خدمت و سطح امکانات مدنظرتان را انتخاب کنید تا هزینه و زمان‌بندی دقیق تحویل را در لحظه مشاهده کنید.
+            از میان حوزه‌های مختلف هوش مصنوعی، سرویس مورد نیاز خود را انتخاب کرده و سفارش پروژه خود را به صورت آنلاین ثبت کنید.
           </p>
         </div>
 
-        {/* Main Estimator Box */}
-        <div className="bg-[#0a0818]/90 border border-purple-500/25 rounded-3xl p-5 sm:p-8 lg:p-10 shadow-[0_0_50px_rgba(147,51,234,0.15)] backdrop-blur-xl mb-16">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
-            {/* Step 1 & 2 Controls (Right on RTL, Left on LTR) */}
-            <div className="lg:col-span-7 flex flex-col gap-6">
-              
-              {/* Step 1: Select Service */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <label className="text-sm font-bold text-white flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-purple-600/30 text-purple-300 border border-purple-500/40 text-xs font-mono flex items-center justify-center">
-                      ۱
-                    </span>
-                    <span>انتخاب نوع خدمت:</span>
-                  </label>
-                  <span className="text-xs text-purple-400 font-medium">
-                    {currentService.name}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {ESTIMATOR_SERVICES.map((srv) => {
-                    const isSelected = srv.id === selectedServiceId;
-                    const IconComp = srv.icon;
-                    return (
-                      <button
-                        key={srv.id}
-                        type="button"
-                        id={`estimator-srv-${srv.id}`}
-                        onClick={() => setSelectedServiceId(srv.id)}
-                        className={`p-3.5 rounded-2xl border text-start flex flex-col items-start gap-2.5 transition-all duration-200 cursor-pointer focus:outline-none ${
-                          isSelected
-                            ? 'bg-purple-950/70 border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.3)] scale-[1.02]'
-                            : 'bg-white/[0.02] border-white/10 hover:bg-white/[0.05] hover:border-white/20'
-                        }`}
-                      >
-                        <div
-                          className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                            isSelected
-                              ? 'bg-purple-600 text-white shadow-md shadow-purple-600/50'
-                              : 'bg-white/5 text-gray-400'
-                          }`}
-                        >
-                          <IconComp className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <span
-                            className={`text-xs font-bold block line-clamp-1 ${
-                              isSelected ? 'text-white' : 'text-gray-300'
-                            }`}
-                          >
-                            {srv.name}
-                          </span>
-                          <span className="text-[10px] text-gray-400 block mt-0.5">
-                            از {formatPrice(srv.basePrice)}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Step 2: Select Tier Level */}
-              <div>
-                <label className="text-sm font-bold text-white flex items-center gap-2 mb-3">
-                  <span className="w-6 h-6 rounded-full bg-purple-600/30 text-purple-300 border border-purple-500/40 text-xs font-mono flex items-center justify-center">
-                    ۲
-                  </span>
-                  <span>انتخاب سطح و امکانات پروژه:</span>
-                </label>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Standard Tier */}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedTier('standard')}
-                    className={`p-4 rounded-2xl border text-start flex flex-col justify-between gap-2 transition-all cursor-pointer ${
-                      selectedTier === 'standard'
-                        ? 'bg-purple-950/60 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.25)]'
-                        : 'bg-white/[0.02] border-white/10 hover:bg-white/[0.05]'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-gray-200">پایه / اقتصادی</span>
-                        {selectedTier === 'standard' && (
-                          <CheckCircle2 className="w-4 h-4 text-purple-400" />
-                        )}
-                      </div>
-                      <span className="text-[11px] text-gray-400 block mt-1">
-                        مناسب شروع سریع و پروژه‌های جمع‌وجور
+        {/* 6 AI Services Cards Grid - Clean & Direct */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 mb-16">
+          {ESTIMATOR_SERVICES.map((srv) => {
+            return (
+              <div
+                key={srv.id}
+                id={`estimator-srv-${srv.id}`}
+                className="p-6 rounded-3xl bg-gradient-to-b from-[#0e0a24]/90 via-[#0a071a]/90 to-[#060410]/95 border border-purple-500/20 hover:border-purple-500/50 transition-all duration-300 hover:-translate-y-1 shadow-[0_0_30px_rgba(147,51,234,0.08)] hover:shadow-[0_0_35px_rgba(147,51,234,0.25)] flex flex-col justify-between group"
+              >
+                <div>
+                  {/* Top Row: Animated AI Graphic & Price */}
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <RenderAnimatedAiGraphic serviceId={srv.id} isSelected={true} />
+                    <div className="text-end">
+                      <span className="text-[10px] text-gray-400 block font-medium">شروع تعرفه از</span>
+                      <span className="text-sm font-black text-purple-300 font-sans">
+                        {formatPrice(srv.basePrice)}
                       </span>
                     </div>
-                    <span className="text-xs font-bold text-purple-300 mt-2">
-                      {formatPrice(currentService.basePrice)}
-                    </span>
-                  </button>
-
-                  {/* Pro Tier (Popular) */}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedTier('pro')}
-                    className={`p-4 rounded-2xl border text-start flex flex-col justify-between gap-2 transition-all cursor-pointer relative overflow-hidden ${
-                      selectedTier === 'pro'
-                        ? 'bg-gradient-to-b from-purple-950/90 to-[#12082b] border-purple-400 shadow-[0_0_25px_rgba(168,85,247,0.35)] ring-1 ring-purple-400'
-                        : 'bg-white/[0.02] border-white/10 hover:bg-white/[0.05]'
-                    }`}
-                  >
-                    <div className="absolute top-0 end-0 bg-gradient-to-l from-purple-500 to-indigo-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-es-lg">
-                      محبوب‌ترین ⭐
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-white">حرفه‌ای و ویژه</span>
-                        {selectedTier === 'pro' && (
-                          <CheckCircle2 className="w-4 h-4 text-purple-400" />
-                        )}
-                      </div>
-                      <span className="text-[11px] text-purple-200/70 block mt-1">
-                        امکانات کامل، انیمیشن و خروجی باکیفیت
-                      </span>
-                    </div>
-                    <span className="text-xs font-bold text-emerald-400 mt-2">
-                      {formatPrice(Math.round(currentService.basePrice * currentService.tiers.pro.priceMultiplier))}
-                    </span>
-                  </button>
-
-                  {/* Enterprise Tier */}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedTier('enterprise')}
-                    className={`p-4 rounded-2xl border text-start flex flex-col justify-between gap-2 transition-all cursor-pointer ${
-                      selectedTier === 'enterprise'
-                        ? 'bg-purple-950/60 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.25)]'
-                        : 'bg-white/[0.02] border-white/10 hover:bg-white/[0.05]'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-gray-200">سازمانی / VIP</span>
-                        {selectedTier === 'enterprise' && (
-                          <CheckCircle2 className="w-4 h-4 text-purple-400" />
-                        )}
-                      </div>
-                      <span className="text-[11px] text-gray-400 block mt-1">
-                        بالاترین سطح اختصاصی‌سازی و پشتیبانی
-                      </span>
-                    </div>
-                    <span className="text-xs font-bold text-purple-300 mt-2">
-                      {formatPrice(Math.round(currentService.basePrice * currentService.tiers.enterprise.priceMultiplier))}
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Step 3: Fast Track / Delivery Speed Toggle */}
-              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                    <Zap className="w-5 h-5" />
                   </div>
-                  <div>
-                    <span className="text-xs sm:text-sm font-bold text-white block">
-                      تحویل اکسپرس و فوق‌سریع (زیر ۲۴ ساعت)
-                    </span>
-                    <span className="text-[11px] text-gray-400">
-                      پروژه در اولویت فوری و بدون نوبت قرار می‌گیرد
-                    </span>
-                  </div>
+
+                  {/* Title */}
+                  <h3 className="text-lg font-black text-white mb-2 group-hover:text-purple-200 transition-colors">
+                    {srv.name}
+                  </h3>
+
+                  {/* Short Description */}
+                  <p className="text-xs text-gray-300 leading-relaxed mb-6 font-normal">
+                    {srv.shortDesc}
+                  </p>
                 </div>
 
+                {/* Bottom CTA Button */}
                 <button
                   type="button"
-                  onClick={() => setIsExpress(!isExpress)}
-                  className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer focus:outline-none ${
-                    isExpress ? 'bg-purple-600' : 'bg-white/10'
-                  }`}
+                  onClick={() => handleOrderClick(srv.id)}
+                  className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-purple-600/80 to-indigo-600/80 hover:from-purple-600 hover:to-indigo-600 text-white text-xs font-bold transition-all shadow-md shadow-purple-600/20 hover:shadow-purple-600/40 flex items-center justify-center gap-2 cursor-pointer group-hover:scale-[1.02]"
                 >
-                  <span
-                    className={`block w-4 h-4 rounded-full bg-white transition-transform absolute top-1 ${
-                      isExpress ? 'start-7' : 'start-1'
-                    }`}
-                  />
+                  <span>ثبت سفارش {srv.name.split(' ')[0]}</span>
+                  <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
                 </button>
               </div>
-
-            </div>
-
-            {/* Live Result Summary Card (Left on RTL, Right on LTR) */}
-            <div className="lg:col-span-5 rounded-2xl bg-gradient-to-b from-[#130d2e] via-[#0e0922] to-[#070512] border border-purple-500/40 p-6 shadow-2xl flex flex-col justify-between gap-6 relative overflow-hidden">
-              
-              {/* Decorative Corner Glow */}
-              <div className="absolute -top-10 -end-10 w-36 h-36 bg-purple-500/20 rounded-full blur-2xl pointer-events-none" />
-
-              <div>
-                {/* Result Header */}
-                <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
-                  <div>
-                    <span className="text-[11px] text-purple-300 font-semibold block uppercase">
-                      برآورد نهایی پروژه
-                    </span>
-                    <h3 className="text-base font-bold text-white mt-0.5">
-                      {currentService.name}
-                    </h3>
-                  </div>
-                  <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-200 border border-purple-500/30">
-                    {currentTierData.name.split(' ')[0]}
-                  </span>
-                </div>
-
-                {/* Price Display */}
-                <div className="p-4 rounded-xl bg-black/40 border border-purple-500/20 mb-4">
-                  <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
-                    <span>برآورد هزینه تمام‌شده:</span>
-                    {openingEventState.freeOrdersRemaining > 0 && (
-                      <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
-                        <Gift className="w-3 h-3" />
-                        <span>شامل کمپین افتتاحیه</span>
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl sm:text-3xl font-black font-sans text-white">
-                      {totalPrice.toLocaleString('fa-IR')}
-                    </span>
-                    <span className="text-xs text-purple-300 font-medium">تومان</span>
-                  </div>
-                </div>
-
-                {/* Delivery Time Badge */}
-                <div className="flex items-center gap-2 text-xs text-gray-300 bg-white/[0.04] p-3 rounded-xl border border-white/5 mb-5">
-                  <Clock className="w-4 h-4 text-purple-400 shrink-0" />
-                  <span>زمان تحویل:</span>
-                  <span className="font-bold text-emerald-400">{deliveryText}</span>
-                </div>
-
-                {/* Features Included List */}
-                <div className="space-y-2.5 mb-2">
-                  <span className="text-xs font-bold text-gray-300 block">
-                    امکانات و خروجی‌های شامل پکیج:
-                  </span>
-                  {currentTierData.features.map((feat, idx) => (
-                    <div key={idx} className="flex items-start gap-2 text-xs text-gray-300">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 mt-0.5 shrink-0" />
-                      <span>{feat}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-2.5 pt-4 border-t border-white/10">
-                <NeuralSubmitButton
-                  id="estimator-order-btn"
-                  label="Submit Request — ثبت سفارش"
-                  successLabel="Submitted — درخواست ثبت شد ✓"
-                  onSubmitSuccess={handleOrderClick}
-                  className="w-full"
-                />
-
-                <a
-                  href={brandInfo.telegramUrl || 'https://t.me/Lawat_kar'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-2.5 px-4 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-gray-300 hover:text-white text-xs font-medium transition-colors flex items-center justify-center gap-2 text-center"
-                >
-                  <Send className="w-3.5 h-3.5 text-purple-400 rotate-180" />
-                  <span>استعلام و مشاوره اختصاصی در تلگرام (@{brandInfo.telegramHandle})</span>
-                </a>
-              </div>
-
-            </div>
-
-          </div>
+            );
+          })}
         </div>
 
-        {/* 4 Golden Guarantees & Why Us Highlights (Fresh & High Value) */}
+        {/* 4 Golden Guarantees & Why Us Highlights */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           
           <div className="p-6 rounded-2xl bg-[#090717]/80 border border-purple-500/15 hover:border-purple-500/40 transition-all flex flex-col gap-3 group">

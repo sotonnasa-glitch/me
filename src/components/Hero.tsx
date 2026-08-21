@@ -27,29 +27,29 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
       <div className="relative w-full max-w-5xl mx-auto px-4 flex flex-col items-center justify-center my-auto z-10">
         
         {/* The Cosmic Celestial Planet Orb & Orbit System */}
-        <div className="relative flex items-center justify-center w-full my-4 sm:my-8">
+        <div className="relative flex items-center justify-center w-full my-4 sm:my-8 overflow-visible">
           
           {/* Outer Orbital Ring with rotating node */}
-          <div className="absolute w-[360px] h-[360px] sm:w-[620px] sm:h-[620px] rounded-full border border-purple-500/15 pointer-events-none animate-orbit">
-            <div className="absolute top-0 start-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-purple-400 shadow-[0_0_12px_#a855f7]" />
-            <div className="absolute bottom-12 start-10 w-2 h-2 rounded-full bg-indigo-300/80 shadow-[0_0_8px_#818cf8]" />
+          <div className="absolute w-[280px] h-[280px] sm:w-[500px] sm:h-[500px] md:w-[620px] md:h-[620px] rounded-full border border-purple-500/15 pointer-events-none animate-orbit">
+            <div className="absolute top-0 start-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-purple-400 shadow-[0_0_12px_#a855f7]" />
+            <div className="absolute bottom-8 sm:bottom-12 start-8 sm:start-10 w-2 h-2 rounded-full bg-indigo-300/80 shadow-[0_0_8px_#818cf8]" />
           </div>
 
           {/* Inner Orbital Ring with reverse rotation */}
-          <div className="absolute w-[290px] h-[290px] sm:w-[480px] sm:h-[480px] rounded-full border border-violet-400/20 pointer-events-none animate-orbit-reverse">
-            <div className="absolute bottom-4 end-16 w-3 h-3 rounded-full bg-violet-300 shadow-[0_0_10px_#c084fc]" />
-            <div className="absolute top-16 start-12 w-2 h-2 rounded-full bg-purple-200/90" />
+          <div className="absolute w-[230px] h-[230px] sm:w-[380px] sm:h-[380px] md:w-[480px] md:h-[480px] rounded-full border border-violet-400/20 pointer-events-none animate-orbit-reverse">
+            <div className="absolute bottom-3 sm:bottom-4 end-10 sm:end-16 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-violet-300 shadow-[0_0_10px_#c084fc]" />
+            <div className="absolute top-10 sm:top-16 start-8 sm:start-12 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-purple-200/90" />
           </div>
 
           {/* Glowing Planetary Core Sphere */}
-          <div className="relative w-[240px] h-[240px] sm:w-[380px] sm:h-[380px] rounded-full bg-gradient-to-b from-[#2b1754] via-[#1a0c36] to-[#0d071c] border border-purple-400/30 shadow-[0_0_90px_rgba(168,85,247,0.45),inset_0_0_60px_rgba(192,132,252,0.35)] flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden">
+          <div className="relative w-[190px] h-[190px] sm:w-[300px] sm:h-[300px] md:w-[380px] md:h-[380px] rounded-full bg-gradient-to-b from-[#2b1754] via-[#1a0c36] to-[#0d071c] border border-purple-400/30 shadow-[0_0_60px_rgba(168,85,247,0.4),inset_0_0_40px_rgba(192,132,252,0.3)] sm:shadow-[0_0_90px_rgba(168,85,247,0.45),inset_0_0_60px_rgba(192,132,252,0.35)] flex flex-col items-center justify-center p-3 sm:p-6 overflow-hidden">
             
             {/* Top Atmospheric Highlight / Shimmer */}
             <div className="absolute -top-12 inset-x-0 h-40 bg-gradient-to-b from-purple-300/35 via-violet-500/10 to-transparent blur-xl pointer-events-none" />
 
             {/* Central Glow Core */}
             <div className="relative z-10 flex flex-col items-center justify-center">
-              <span className="text-4xl sm:text-6xl md:text-7xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-white via-purple-100 to-purple-400 font-sans drop-shadow-[0_0_40px_rgba(192,132,252,0.65)] select-none">
+              <span className="text-3xl sm:text-5xl md:text-7xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-white via-purple-100 to-purple-400 font-sans drop-shadow-[0_0_30px_rgba(192,132,252,0.65)] select-none">
                 TEKVIX Ai
               </span>
             </div>
@@ -88,8 +88,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
           {/* Primary Neural Submit Request Button */}
           <NeuralSubmitButton
             id="hero-neural-submit-btn"
-            label="Submit Request"
-            successLabel="Submitted ✓"
+            label="ثبت سفارش آنلاین"
+            successLabel="درخواست ثبت شد ✓"
             onSubmitSuccess={onOpenOrderModal}
             className="w-full sm:w-auto"
           />

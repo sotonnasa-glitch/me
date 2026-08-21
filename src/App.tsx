@@ -3,7 +3,6 @@ import { SiteDataProvider, useSiteData } from './context/SiteDataContext';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { OpeningEventBanner } from './components/OpeningEventBanner';
-import { InteractiveFeatures } from './components/InteractiveFeatures';
 import { ServicesSection } from './components/ServicesSection';
 import { HowItWorks } from './components/HowItWorks';
 import { PortfolioSection } from './components/PortfolioSection';
@@ -12,6 +11,7 @@ import { CustomerReviewsSection } from './components/CustomerReviewsSection';
 import { BlogSection } from './components/BlogSection';
 import { AboutSection } from './components/AboutSection';
 import { FAQSection } from './components/FAQSection';
+import { SocialMediaSection } from './components/SocialMediaSection';
 import { CTASection } from './components/CTASection';
 import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
@@ -111,12 +111,7 @@ function MainWebsite() {
         {/* 1.5. Special Opening Promotional Event Banner (Free First Orders) */}
         <OpeningEventBanner onOpenOrderModal={handleOpenOrderModal} />
 
-        {/* 2. Interactive Project Cost & Delivery Estimator + Guarantees */}
-        {isEnabled('features') && (
-          <InteractiveFeatures onOpenOrderModal={(serviceId) => handleOpenOrderModal(serviceId)} />
-        )}
-
-        {/* 3. Services Section (Dynamic Services Grid) */}
+        {/* 2. Main Services Section (Dynamic High-Tech Services Grid without pricing) */}
         {isEnabled('services') && (
           <ServicesSection onSelectServiceForQuote={(serviceId) => handleOpenOrderModal(serviceId)} />
         )}
@@ -125,7 +120,9 @@ function MainWebsite() {
         {isEnabled('how_it_works') && <HowItWorks onOpenOrderModal={() => handleOpenOrderModal()} />}
 
         {/* 5. Portfolio Section */}
-        {isEnabled('portfolio') && <PortfolioSection />}
+        {isEnabled('portfolio') && (
+          <PortfolioSection onOpenOrderModal={(serviceId) => handleOpenOrderModal(serviceId)} />
+        )}
 
         {/* 6. Blog & Cinema Video Player Section */}
         {isEnabled('blog') && (
@@ -143,6 +140,9 @@ function MainWebsite() {
 
         {/* 8. About Brand Story Section */}
         {isEnabled('about') && <AboutSection />}
+
+        {/* 8.5. Social Media & Channels (Telegram, Instagram, YouTube, etc.) */}
+        <SocialMediaSection />
 
         {/* 9. FAQ Section */}
         {isEnabled('faq') && <FAQSection />}

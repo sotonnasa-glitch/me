@@ -631,8 +631,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                 id="modal-submit-btn"
                 type="submit"
                 disabled={isSubmitting}
-                label="Submit Request — ثبت سفارش"
-                successLabel="Submitted — درخواست ثبت شد ✓"
+                onValidate={validate}
+                label="ثبت سفارش هوشمند"
+                successLabel="درخواست شما با موفقیت ثبت شد ✓"
                 className="w-full"
               />
             </div>

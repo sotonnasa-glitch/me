@@ -249,30 +249,17 @@ export const PORTFOLIO_ITEMS: PortfolioItem[] = [
     tags: ['Next.js', 'Tailwind', 'Motion', 'Dark UI']
   },
   {
-    id: 'project-cinematic',
-    title: 'تیزر تبلیغاتی سینمایی شرکت ویستا',
-    description: 'تولید کلیپ ویدیویی علمی-تخیلی با پرامپت‌های اختصاصی و صداگذاری هوشمند برای معرفی محصول جدید.',
-    serviceCategory: 'ویدیو و انیمیشن',
-    badge: 'ویدیو 4K',
-    gradientTheme: 'from-blue-900/60 via-purple-900/40 to-black',
+    id: 'project-saas-web',
+    title: 'وب‌اپلیکیشن و داشبورد پنل هوشمند کاربری',
+    description: 'طراحی رابط کاربری شیشه‌ای (Glassmorphic) مدرن همراه با گزارش‌گیری زنده و احراز هویت پیشرفته.',
+    serviceCategory: 'وب‌سایت و کدنویسی',
+    badge: 'وب‌اپلیکیشن SPA',
+    gradientTheme: 'from-violet-900/60 via-fuchsia-900/40 to-black',
     stats: [
-      { label: 'کیفیت تصویر', value: '4K Ultra HD' },
-      { label: 'نرخ بازدید', value: '+۲۵۰K' }
+      { label: 'نرخ رضایت', value: '۹۹.۴٪' },
+      { label: 'امتیاز لایت‌هاوس', value: '۱۰۰/۱۰۰' }
     ],
-    tags: ['AI Video', 'Sound Design', 'Color Grade', 'Reels']
-  },
-  {
-    id: 'project-cyberart',
-    title: 'مجموعه کاراکتر و آرت‌ورک سایبرپانک',
-    description: 'طراحی ۱۰ کاراکتر اختصاصی و فضاسازی سه‌بعدی برای کمپین دیجیتال گیمینگ بدون کپی‌رایت.',
-    serviceCategory: 'تصویر و گرافیک',
-    badge: 'طراحی مفهومی',
-    gradientTheme: 'from-fuchsia-900/60 via-pink-900/40 to-black',
-    stats: [
-      { label: 'تعداد طرح', value: '۱۰ کاراکتر' },
-      { label: 'رزولوشن', value: '۶۰۰۰×۴۰۰۰' }
-    ],
-    tags: ['Midjourney', 'Concept Art', 'Photoshop', 'Branding']
+    tags: ['React', 'TypeScript', 'Tailwind', 'Realtime']
   },
   {
     id: 'project-telebot',
@@ -286,6 +273,58 @@ export const PORTFOLIO_ITEMS: PortfolioItem[] = [
       { label: 'کاهش تیکت‌ها', value: '۷۰٪' }
     ],
     tags: ['Telegram Bot', 'Python', 'AI NLP', 'Webhooks']
+  },
+  {
+    id: 'project-telebot-vip',
+    title: 'ربات هوشمند مدیریت کانال و ثبت سفارش اختصاصی',
+    description: 'ارسال خودکار محتوا، اعتبارسنجی رسیدهای بانکی با هوش مصنوعی و اتصال به دیتابیس اختصاصی.',
+    serviceCategory: 'ربات تلگرام',
+    badge: 'ربات اختصاصی تلگرام',
+    gradientTheme: 'from-sky-900/60 via-indigo-950 to-black',
+    stats: [
+      { label: 'پردازش همزمان', value: '+۱۰,۰۰۰ کاربر' },
+      { label: 'آپ‌تایم سرور', value: '۹۹.۹۹٪' }
+    ],
+    tags: ['Telegram Bot', 'Node.js', 'PostgreSQL', 'AI OCR']
+  },
+  {
+    id: 'project-cinematic',
+    title: 'تیزر تبلیغاتی سینمایی شرکت ویستا',
+    description: 'تولید کلیپ ویدیویی علمی-تخیلی با پرامپت‌های اختصاصی و صداگذاری هوشمند برای معرفی محصول جدید.',
+    serviceCategory: 'ویدیو و انیمیشن',
+    badge: 'ویدیو 4K',
+    gradientTheme: 'from-blue-900/60 via-purple-900/40 to-black',
+    stats: [
+      { label: 'کیفیت تصویر', value: '4K Ultra HD' },
+      { label: 'نرخ بازدید', value: '+۲۵۰K' }
+    ],
+    tags: ['AI Video', 'Sound Design', 'Color Grade', 'Reels']
+  },
+  {
+    id: 'project-motion-teaser',
+    title: 'موشن‌گرافیک و تیزر معرفی استارتاپ',
+    description: 'ساخت تیزر ریلز اینستاگرامی با ترکیب تصاویر هوش مصنوعی، ترنزیشن‌های سینمایی و نریشن فارسی.',
+    serviceCategory: 'ویدیو و انیمیشن',
+    badge: 'تیزر اینستاگرام',
+    gradientTheme: 'from-rose-900/60 via-purple-900/40 to-black',
+    stats: [
+      { label: 'مدت زمان', value: '۴۵ ثانیه' },
+      { label: 'نرخ تعامل', value: '+۴۲۰٪' }
+    ],
+    tags: ['Runway Gen-3', 'CapCut Pro', 'Voiceover', 'Reels']
+  },
+  {
+    id: 'project-cyberart',
+    title: 'مجموعه کاراکتر و آرت‌ورک سایبرپانک',
+    description: 'طراحی ۱۰ کاراکتر اختصاصی و فضاسازی سه‌بعدی برای کمپین دیجیتال گیمینگ بدون کپی‌رایت.',
+    serviceCategory: 'تصویر و گرافیک',
+    badge: 'طراحی مفهومی',
+    gradientTheme: 'from-fuchsia-900/60 via-pink-900/40 to-black',
+    stats: [
+      { label: 'تعداد طرح', value: '۱۰ کاراکتر' },
+      { label: 'رزولوشن', value: '۶۰۰۰×۴۰۰۰' }
+    ],
+    tags: ['Midjourney', 'Concept Art', 'Photoshop', 'Branding']
   },
   {
     id: 'project-audio',
@@ -312,6 +351,48 @@ export const PORTFOLIO_ITEMS: PortfolioItem[] = [
       { label: 'تعداد محتوا', value: '۳۰ پست و ریلز' }
     ],
     tags: ['Instagram', 'Viral Reels', 'Copywriting', 'Canva Pro']
+  }
+];
+
+export const DEFAULT_SOCIAL_LINKS = [
+  {
+    id: 'soc-telegram',
+    platform: 'telegram' as const,
+    title: 'کانال رسمی و پشتیبانی تلگرام',
+    url: 'https://t.me/Lawat_kar',
+    handle: '@Lawat_kar',
+    description: 'اطلاع‌رسانی سریع پروژه‌ها، نمونه‌کارها، تخفیف‌های ویژه و پشتیبانی آنلاین ۲۴ ساعته',
+    badge: 'کانال و پشتیبانی ۲۴/۷',
+    followersCount: '',
+    gradient: 'from-sky-500 via-blue-600 to-indigo-700',
+    enabled: true,
+    orderIndex: 1
+  },
+  {
+    id: 'soc-instagram',
+    platform: 'instagram' as const,
+    title: 'صفحه رسمی اینستاگرام Tekvix',
+    url: 'https://instagram.com/tekvix.ir',
+    handle: '@tekvix.ir',
+    description: 'ویدیوهای ریلز، آموزش‌های کوتاه کاربردی هوش مصنوعی و پشت‌صحنه ساخت پروژه‌ها',
+    badge: 'ریلز و محتوای روزانه',
+    followersCount: '',
+    gradient: 'from-pink-500 via-rose-600 to-purple-700',
+    enabled: true,
+    orderIndex: 2
+  },
+  {
+    id: 'soc-youtube',
+    platform: 'youtube' as const,
+    title: 'کانال ویدیو و یوتیوب Tekvix',
+    url: 'https://youtube.com/@tekvix',
+    handle: 'youtube.com/@tekvix',
+    description: 'پخش فیلم‌ها و تیزرهای باکیفیت 4K و تحلیل ابزارهای نسل جدید هوش مصنوعی',
+    badge: 'ویدیوهای 4K Ultra HD',
+    followersCount: '',
+    gradient: 'from-red-500 via-rose-600 to-amber-600',
+    enabled: true,
+    orderIndex: 3
   }
 ];
 

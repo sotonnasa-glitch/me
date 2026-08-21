@@ -45,8 +45,8 @@ export const CTASection: React.FC<CTASectionProps> = ({ onOpenOrderModal }) => {
           <div className="relative z-10 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-lg mx-auto">
             <NeuralSubmitButton
               id="cta-place-order-btn"
-              label="Submit Request"
-              successLabel="Submitted ✓"
+              label="ثبت سفارش هوشمند"
+              successLabel="درخواست ثبت شد ✓"
               onSubmitSuccess={onOpenOrderModal}
               className="w-full sm:w-auto"
             />

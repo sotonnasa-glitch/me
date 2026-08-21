@@ -10,13 +10,23 @@
     font-family: var(--font-vazirmatn);
     scroll-behavior: smooth;
     color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
   }
 
   body {
     background-color: #05050d;
     color: #e5e7eb;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
+}
+
+/* Rendering performance optimization for large sections: renders only when near viewport */
+main > section {
+  content-visibility: auto;
+  contain-intrinsic-size: 800px;
 }
 
 /* User's Gradient & Background Classes from snippet */
@@ -215,3 +225,387 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #3b3562;
 }
+
+/* Telegram Paper Plane Flying Motion */
+@keyframes paper-plane-fly {
+  0% {
+    transform: translate(0px, 0px) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translate(-3px, -4px) rotate(-6deg) scale(1.06);
+  }
+  50% {
+    transform: translate(3px, -7px) rotate(4deg) scale(1.1);
+  }
+  75% {
+    transform: translate(-2px, -3px) rotate(-3deg) scale(1.04);
+  }
+  100% {
+    transform: translate(0px, 0px) rotate(0deg) scale(1);
+  }
+}
+
+.animate-paper-plane {
+  animation: paper-plane-fly 3.2s ease-in-out infinite;
+}
+
+/* Shining Gleam Reflection Sweep across element */
+@keyframes shine-gleam {
+  0% {
+    transform: translateX(-150%) skewX(-25deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateX(200%) skewX(-25deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(200%) skewX(-25deg);
+    opacity: 0;
+  }
+}
+
+.animate-shine-gleam {
+  animation: shine-gleam 3.5s ease-in-out infinite;
+}
+
+/* Sparkling Lens Flash */
+@keyframes lens-sparkle {
+  0%, 100% {
+    transform: scale(0.85) rotate(0deg);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.25) rotate(180deg);
+    opacity: 1;
+  }
+}
+
+.animate-lens-sparkle {
+  animation: lens-sparkle 2.2s ease-in-out infinite;
+}
+
+/* Neon Pulse Wave */
+@keyframes neon-radar {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+.animate-neon-radar {
+  animation: neon-radar 2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+
+/* Instagram Story Ring Rotation */
+@keyframes instagram-ring-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-instagram-ring {
+  animation: instagram-ring-spin 6s linear infinite;
+}
+
+/* Instagram Camera Float & Pulse */
+@keyframes instagram-float-pulse {
+  0%, 100% {
+    transform: translateY(0px) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.06) rotate(3deg);
+  }
+}
+
+.animate-instagram-float {
+  animation: instagram-float-pulse 3s ease-in-out infinite;
+}
+
+/* YouTube Play Button Dynamic Beat */
+@keyframes youtube-beat {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.6));
+  }
+  50% {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.95)) brightness(1.15);
+  }
+}
+
+.animate-youtube-beat {
+  animation: youtube-beat 2.4s ease-in-out infinite;
+}
+
+/* Equalizer audio bar dance */
+@keyframes equalizer-bounce {
+  0%, 100% {
+    height: 4px;
+  }
+  50% {
+    height: 16px;
+  }
+}
+
+.animate-eq-1 {
+  animation: equalizer-bounce 1.2s ease-in-out infinite;
+}
+
+.animate-eq-2 {
+  animation: equalizer-bounce 0.8s ease-in-out infinite 0.2s;
+}
+
+.animate-eq-3 {
+  animation: equalizer-bounce 1.4s ease-in-out infinite 0.4s;
+}
+
+/* Cyber Globe & Orbit Rotation */
+@keyframes orbit-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-orbit-spin {
+  animation: orbit-spin 8s linear infinite;
+}
+
+@keyframes globe-pulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(6,182,212,0.6)); }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 20px rgba(6,182,212,0.95)); }
+}
+
+.animate-globe-pulse {
+  animation: globe-pulse 3s ease-in-out infinite;
+}
+
+/* Sound Wave Ripple for Voice & Music */
+@keyframes soundwave-ripple {
+  0% { transform: scale(0.8); opacity: 0.9; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.animate-soundwave-ripple {
+  animation: soundwave-ripple 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+/* Music Floating Note */
+@keyframes note-float {
+  0%, 100% { transform: translateY(0px) rotate(-6deg) scale(1); }
+  50% { transform: translateY(-5px) rotate(6deg) scale(1.12); }
+}
+
+.animate-note-float {
+  animation: note-float 2.5s ease-in-out infinite;
+}
+
+/* Palette / Image Color Aura Swirl */
+@keyframes color-swirl {
+  0% { filter: hue-rotate(0deg) drop-shadow(0 0 10px rgba(244,63,94,0.6)); }
+  50% { filter: hue-rotate(60deg) drop-shadow(0 0 18px rgba(168,85,247,0.9)); }
+  100% { filter: hue-rotate(0deg) drop-shadow(0 0 10px rgba(244,63,94,0.6)); }
+}
+
+.animate-color-swirl {
+  animation: color-swirl 4s ease-in-out infinite;
+}
+
+/* Clapperboard / Video Action */
+@keyframes clapper-action {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  35% { transform: rotate(-8deg) scale(1.05); }
+  50% { transform: rotate(0deg) scale(1.08); }
+}
+
+.animate-clapper-action {
+  animation: clapper-action 3s ease-in-out infinite;
+}
+
+/* CPU / Bot Neural Pulse */
+@keyframes cpu-pulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(147,51,234,0.6)); }
+  50% { transform: scale(1.1); filter: drop-shadow(0 0 20px rgba(147,51,234,1)); }
+}
+
+.animate-cpu-pulse {
+  animation: cpu-pulse 2.2s ease-in-out infinite;
+}
+
+/* Scanning Laser Line */
+@keyframes laser-scan {
+  0% { transform: translateY(-100%); opacity: 0; }
+  50% { opacity: 0.8; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+
+.animate-laser-scan {
+  animation: laser-scan 2.5s ease-in-out infinite;
+}
+
+/* Code Line Typing Pulse */
+@keyframes code-typing {
+  0%, 100% { width: 35%; opacity: 0.7; }
+  50% { width: 85%; opacity: 1; }
+}
+
+.animate-code-typing {
+  animation: code-typing 2.2s ease-in-out infinite;
+}
+
+/* Radar Target Sweep */
+@keyframes radar-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-radar-sweep {
+  animation: radar-sweep 3.5s linear infinite;
+}
+
+/* Social Media Floating Heart */
+@keyframes heart-rise {
+  0% { transform: translateY(6px) scale(0.7); opacity: 0; }
+  50% { transform: translateY(-2px) scale(1.1); opacity: 1; }
+  100% { transform: translateY(-10px) scale(0.9); opacity: 0; }
+}
+
+.animate-heart-rise {
+  animation: heart-rise 2s ease-in-out infinite;
+}
+
+/* Reel Progress Bar */
+@keyframes reel-progress {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+.animate-reel-progress {
+  animation: reel-progress 3s linear infinite;
+}
+
+/* Film Reel Spinning */
+@keyframes reel-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-reel-spin {
+  animation: reel-spin 6s linear infinite;
+}
+
+/* Pen Writing Spark */
+@keyframes pen-write {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(2px, -3px) rotate(4deg); }
+  50% { transform: translate(-2px, -1px) rotate(-3deg); }
+  75% { transform: translate(3px, -2px) rotate(2deg); }
+}
+
+.animate-pen-write {
+  animation: pen-write 2.5s ease-in-out infinite;
+}
+
+/* Blinking Cursor */
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-blink-cursor {
+  animation: blink-cursor 0.9s infinite;
+}
+
+/* Quantum Circuit Pulse */
+@keyframes circuit-energy {
+  0% { transform: scale(0.95); filter: drop-shadow(0 0 4px rgba(168,85,247,0.5)); }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 16px rgba(168,85,247,1)); }
+  100% { transform: scale(0.95); filter: drop-shadow(0 0 4px rgba(168,85,247,0.5)); }
+}
+
+.animate-circuit-energy {
+  animation: circuit-energy 2s ease-in-out infinite;
+}
+
+/* Canvas Diffusion Sparkle */
+@keyframes canvas-diffusion {
+  0% { transform: scale(0.9) rotate(0deg); opacity: 0.6; }
+  50% { transform: scale(1.15) rotate(180deg); opacity: 1; }
+  100% { transform: scale(0.9) rotate(360deg); opacity: 0.6; }
+}
+
+.animate-orbit,
+.animate-orbit-reverse,
+.animate-pulse-slow,
+.animate-float,
+.animate-marquee,
+.animate-lens-sparkle,
+.animate-neon-radar,
+.animate-shine-gleam,
+.animate-paper-plane,
+.animate-orbit-spin,
+.animate-globe-pulse,
+.animate-soundwave-ripple,
+.animate-note-float,
+.animate-color-swirl,
+.animate-clapper-action,
+.animate-cpu-pulse,
+.animate-laser-scan,
+.animate-code-typing,
+.animate-radar-sweep,
+.animate-heart-rise,
+.animate-reel-spin,
+.animate-pen-write,
+.animate-circuit-energy,
+.animate-canvas-diffusion {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Optimize rendering and reduce heavy GPU raster costs on mobile devices */
+@media (max-width: 640px) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Simplify intense multi-layer drop-shadows on small screens for silky 60fps scrolling */
+  .animate-color-swirl,
+  .animate-cpu-pulse,
+  .animate-circuit-energy,
+  .animate-lens-sparkle {
+    filter: none !important;
+  }
+
+  /* Tone down infinite orbit calculation on lower-end mobile CPUs */
+  .animate-orbit {
+    animation-duration: 60s;
+  }
+  .animate-orbit-reverse {
+    animation-duration: 80s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+

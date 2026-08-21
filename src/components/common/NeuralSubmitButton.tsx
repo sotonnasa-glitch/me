@@ -7,8 +7,10 @@ export interface NeuralSubmitButtonProps {
   successLabel?: string;
   /** Subtitle or secondary badge if desired */
   subLabel?: string;
-  /** Optional click handler before or alongside animation */
-  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void | Promise<void>;
+  /** Optional click handler or validator before animation. If returns false or e.defaultPrevented, submission stops */
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => boolean | void | Promise<boolean | void>;
+  /** Optional validation check before starting neural wave */
+  onValidate?: () => boolean;
   /** Optional callback fired when submission payoff finishes */
   onSubmitSuccess?: () => void;
   /** Whether the button automatically resets to idle after success (default: true for demo) */
@@ -28,10 +30,11 @@ export interface NeuralSubmitButtonProps {
 }
 
 export const NeuralSubmitButton: React.FC<NeuralSubmitButtonProps> = ({
-  label = 'Submit Request',
-  successLabel = 'Submitted',
+  label = 'ثبت سفارش و مشاوره هوشمند',
+  successLabel = 'درخواست با موفقیت ثبت شد ✓',
   subLabel,
   onClick,
+  onValidate,
   onSubmitSuccess,
   autoReset = true,
   autoResetDelay = 2200,
@@ -60,8 +63,16 @@ export const NeuralSubmitButton: React.FC<NeuralSubmitButtonProps> = ({
   const handleClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     if (disabled || currentState !== 'idle') return;
 
+    if (onValidate && !onValidate()) {
+      e.preventDefault();
+      return;
+    }
+
     if (onClick) {
-      onClick(e);
+      const res = await onClick(e);
+      if (res === false || e.defaultPrevented) {
+        return;
+      }
     }
 
     // Step 1 & 2: Start Loading (~1s neural activity wave)

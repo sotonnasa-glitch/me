@@ -12,6 +12,7 @@ import { BackupManager } from './views/BackupManager';
 import { BlogManager } from './views/BlogManager';
 import { AnalyticsView } from './views/AnalyticsView';
 import { OpeningEventManager } from './views/OpeningEventManager';
+import { SocialLinksManager } from './views/SocialLinksManager';
 import { CustomizerDrawer, AdminThemePreset, AdminRadius, AdminMode } from './CustomizerDrawer';
 import { Menu, Sparkles, Layers } from 'lucide-react';
 
@@ -157,6 +158,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onSwitchToSite }) => {
           {activeTab === 'portfolio' && <PortfolioManager />}
 
           {activeTab === 'testimonials' && <TestimonialsManager />}
+
+          {activeTab === 'social' && <SocialLinksManager />}
 
           {activeTab === 'faqs' && <FAQManager />}
 
