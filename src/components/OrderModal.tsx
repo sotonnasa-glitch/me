@@ -26,6 +26,7 @@ import {
 import { useSiteData } from '../context/SiteDataContext';
 import { OrderFormData } from '../types';
 import { NeuralSubmitButton } from './common/NeuralSubmitButton';
+import { AICloseButton } from './common/AICloseButton';
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -253,15 +254,13 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               </button>
             )}
 
-            <button
-              type="button"
+            <AICloseButton
               id="order-modal-close-btn"
               onClick={handleModalClose}
-              className="w-10 h-10 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 text-gray-300 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-sm"
-              aria-label="بستن پنجره"
-            >
-              <X className="w-5 h-5" />
-            </button>
+              title="بستن و بازگشت به صفحه قبل"
+              ariaLabel="بستن پنجره سفارش"
+              variant="cyber"
+            />
           </div>
         </div>
 

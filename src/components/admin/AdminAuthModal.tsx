@@ -11,6 +11,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useSiteData } from '../../context/SiteDataContext';
+import { AICloseButton } from '../common/AICloseButton';
 
 interface AdminAuthModalProps {
   isOpen: boolean;
@@ -70,6 +71,17 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
       >
         {/* Glow */}
         <div className="absolute top-0 start-1/2 -translate-x-1/2 w-48 h-24 bg-purple-600/30 rounded-full blur-2xl pointer-events-none" />
+
+        {/* Close / Return Button */}
+        <div className="absolute top-4 start-4 z-20">
+          <AICloseButton
+            onClick={onCancel}
+            title="انصراف و بازگشت به سایت"
+            ariaLabel="بستن پنجره ورود مدیریت"
+            variant="cyber"
+            size="sm"
+          />
+        </div>
 
         {/* Icon & Title */}
         <div className="relative z-10 text-center mb-6">

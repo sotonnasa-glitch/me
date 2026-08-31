@@ -18,6 +18,7 @@ import {
 import { useSiteData } from '../context/SiteDataContext';
 import { BlogPost } from '../types';
 import { UniversalBackButton } from './common/UniversalBackButton';
+import { AICloseButton } from './common/AICloseButton';
 import { BlogComments } from './blog/BlogComments';
 
 interface BlogSectionProps {
@@ -238,13 +239,13 @@ export const BlogSection: React.FC<BlogSectionProps> = ({ onOpenOrderModal, onOp
                   )}
                 </button>
 
-                <button
-                  type="button"
+                <AICloseButton
                   onClick={() => setActiveArticle(null)}
-                  className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                  title="بستن و بازگشت به مقالات"
+                  ariaLabel="بستن مقاله"
+                  variant="cyber"
+                  size="sm"
+                />
               </div>
             </div>
 

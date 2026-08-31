@@ -36,9 +36,15 @@ function MainWebsite() {
   const [isAdminAuthOpen, setIsAdminAuthOpen] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isOrderTrackingOpen, setIsOrderTrackingOpen] = useState(false);
+  const [trackingInitialQuery, setTrackingInitialQuery] = useState('');
   const [isGoogleAuthOpen, setIsGoogleAuthOpen] = useState(false);
   const [selectedServiceForOrder, setSelectedServiceForOrder] = useState<string | undefined>(undefined);
   const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const handleOpenOrderTracking = (query?: string) => {
+    setTrackingInitialQuery(query || '');
+    setIsOrderTrackingOpen(true);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -96,7 +102,7 @@ function MainWebsite() {
         onOpenOrderModal={handleOpenOrderModal}
         onOpenAdmin={handleOpenAdmin}
         onOpenGoogleAuth={() => setIsGoogleAuthOpen(true)}
-        onOpenOrderTracking={() => setIsOrderTrackingOpen(true)}
+        onOpenOrderTracking={handleOpenOrderTracking}
       />
 
       <main>
@@ -138,7 +144,7 @@ function MainWebsite() {
         {/* 8. Testimonials Section */}
         {isEnabled('testimonials') && <TestimonialsSection />}
 
-        {/* 8. About Brand Story Section */}
+        {/* 8. About Brand Story & AI Powered Tools Showcase Section */}
         {isEnabled('about') && <AboutSection />}
 
         {/* 8.5. Social Media & Channels (Telegram, Instagram, YouTube, etc.) */}
@@ -187,7 +193,7 @@ function MainWebsite() {
       {/* Footer */}
       <Footer
         onOpenAdmin={handleOpenAdmin}
-        onOpenOrderTracking={() => setIsOrderTrackingOpen(true)}
+        onOpenOrderTracking={handleOpenOrderTracking}
       />
 
       {/* Unified Place Order / Get Quote Modal */}
@@ -198,7 +204,7 @@ function MainWebsite() {
         onOpenGoogleAuth={() => setIsGoogleAuthOpen(true)}
         onOpenOrderTracking={(orderId) => {
           setIsOrderModalOpen(false);
-          setIsOrderTrackingOpen(true);
+          handleOpenOrderTracking(orderId);
         }}
       />
 
@@ -207,6 +213,7 @@ function MainWebsite() {
         isOpen={isOrderTrackingOpen}
         onClose={() => setIsOrderTrackingOpen(false)}
         onOpenOrderModal={() => handleOpenOrderModal()}
+        initialQuery={trackingInitialQuery}
       />
 
       {/* Admin Password Authentication Gate Modal */}
@@ -224,6 +231,7 @@ function MainWebsite() {
         isOpen={isGoogleAuthOpen}
         onClose={() => setIsGoogleAuthOpen(false)}
         onOpenOrderModal={() => handleOpenOrderModal()}
+        onOpenOrderTracking={handleOpenOrderTracking}
       />
     </div>
   );

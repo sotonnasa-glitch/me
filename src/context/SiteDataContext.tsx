@@ -17,6 +17,7 @@ import {
   OpeningEventConfig,
   OpeningEventState,
   SocialMediaLink,
+  CustomEventCampaign,
 } from '../types';
 import {
   BRAND_INFO as DEFAULT_BRAND_INFO,
@@ -29,6 +30,7 @@ import {
   DEFAULT_BLOG_COMMENTS,
   DEFAULT_SITE_REVIEWS,
   DEFAULT_SOCIAL_LINKS,
+  DEFAULT_CUSTOM_EVENTS,
 } from '../data/mockData';
 
 const INITIAL_ORDERS: OrderItem[] = [
@@ -181,7 +183,18 @@ interface SiteDataContextType {
   updateFAQ: (id: string, updated: Partial<FAQItem>) => void;
   deleteFAQ: (id: string) => void;
 
-  // Opening Promotional Event
+  // Custom Events & Promotional Campaigns
+  events: CustomEventCampaign[];
+  activeCampaign: CustomEventCampaign | null;
+  addEvent: (event: Omit<CustomEventCampaign, 'id' | 'createdAt'>) => CustomEventCampaign;
+  updateEvent: (id: string, updated: Partial<CustomEventCampaign>) => void;
+  deleteEvent: (id: string) => void;
+  toggleEventActive: (id: string) => void;
+  setFeaturedEvent: (id: string) => void;
+  duplicateEvent: (id: string) => CustomEventCampaign;
+  resetEventsToDefault: () => void;
+
+  // Opening Promotional Event (Legacy / Backward Compatibility)
   openingEventState: OpeningEventState;
   updateOpeningEventConfig: (updated: Partial<OpeningEventConfig>) => void;
   refreshOpeningEvent: () => Promise<void>;
@@ -453,6 +466,23 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   });
 
+  // Custom Events Campaign System
+  const [events, setEvents] = useState<CustomEventCampaign[]>(() => {
+    try {
+      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_events`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return DEFAULT_CUSTOM_EVENTS;
+  });
+
+  const activeCampaign: CustomEventCampaign | null =
+    events.find((e) => e.isFeatured && e.isActive) ||
+    events.find((e) => e.isActive) ||
+    null;
+
   // Calculate real-time state for Opening Event
   const calculateOpeningEventState = (): OpeningEventState => {
     const now = Date.now();
@@ -572,6 +602,7 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       localStorage.setItem(`${LOCAL_STORAGE_KEY}_testimonials`, JSON.stringify(testimonials));
       localStorage.setItem(`${LOCAL_STORAGE_KEY}_faqs`, JSON.stringify(faqs));
       localStorage.setItem(`${LOCAL_STORAGE_KEY}_srv_clicks`, JSON.stringify(serviceClicksCount));
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_events`, JSON.stringify(events));
     } catch (e) {
       console.error('Failed to sync to localStorage', e);
     }
@@ -589,6 +620,7 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     testimonials,
     faqs,
     serviceClicksCount,
+    events,
   ]);
 
   // Brand updates
@@ -598,16 +630,19 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Google User Login, Update & Logout
   const loginWithGoogle = (userData?: Partial<UserProfile>): UserProfile => {
+    const defaultEmail = userData?.email || '';
+    const derivedName = userData?.name || (defaultEmail ? defaultEmail.split('@')[0].replace(/[._]/g, ' ') : 'کاربر تکویکس');
     const user: UserProfile = {
       id: userData?.id || currentUser?.id || `usr-${Date.now()}`,
-      name: userData?.name || 'مهدی حاتمی',
-      email: userData?.email || 'mahdihatami2024@gmail.com',
+      name: derivedName,
+      email: defaultEmail,
       avatar:
         userData?.avatar ||
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
-      phone: userData?.phone || currentUser?.phone || '09123456789',
-      telegram: userData?.telegram || currentUser?.telegram || '@Lawat_kar',
-      bio: userData?.bio || currentUser?.bio || 'علاقه‌مند به تکنولوژی و خدمات هوش مصنوعی',
+        currentUser?.avatar ||
+        `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80`,
+      phone: userData?.phone || currentUser?.phone || '',
+      telegram: userData?.telegram || currentUser?.telegram || '',
+      bio: userData?.bio || currentUser?.bio || 'کاربر پلتفرم خدمات هوش مصنوعی تکویکس',
       provider: 'google',
       joinedAt: currentUser?.joinedAt || new Date().toISOString(),
     };
@@ -807,8 +842,9 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       ? '۰ تومان (رایگان - جایزه افتتاحیه)'
       : targetService?.estimatedPrice || 'استعلامی';
 
+    const generatedOrderId = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
     const newOrder: OrderItem = {
-      id: `ord-${Date.now().toString().slice(-5)}`,
+      id: generatedOrderId,
       createdAt: new Date().toISOString(),
       fullName: orderData.fullName.trim(),
       telegramOrPhone: orderData.telegramOrPhone.trim(),
@@ -819,6 +855,7 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       priceQuoted: calculatedPrice,
       isPromoEvent: isPromo,
       promoEventName: isPromo ? openingEventConfig.title : undefined,
+      userEmail: currentUser?.email,
     };
     setOrders((prev) => [newOrder, ...prev]);
 
@@ -1268,6 +1305,109 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch {}
   };
 
+  // Custom Events Campaign Management Methods
+  const addEvent = (event: Omit<CustomEventCampaign, 'id' | 'createdAt'>): CustomEventCampaign => {
+    const newEvent: CustomEventCampaign = {
+      ...event,
+      id: `evt-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      usedCapacity: event.usedCapacity || 0,
+    };
+    setEvents((prev) => {
+      const updatedList = event.isFeatured
+        ? prev.map((e) => ({ ...e, isFeatured: false }))
+        : prev;
+      const result = [newEvent, ...updatedList];
+      try {
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_events`, JSON.stringify(result));
+      } catch {}
+      return result;
+    });
+    return newEvent;
+  };
+
+  const updateEvent = (id: string, updated: Partial<CustomEventCampaign>) => {
+    setEvents((prev) => {
+      let nextList = prev.map((e) => {
+        if (e.id === id) {
+          return { ...e, ...updated, updatedAt: new Date().toISOString() };
+        }
+        return e;
+      });
+      if (updated.isFeatured) {
+        nextList = nextList.map((e) => (e.id === id ? e : { ...e, isFeatured: false }));
+      }
+      try {
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_events`, JSON.stringify(nextList));
+      } catch {}
+      return nextList;
+    });
+  };
+
+  const deleteEvent = (id: string) => {
+    setEvents((prev) => {
+      const filtered = prev.filter((e) => e.id !== id);
+      if (!filtered.some((e) => e.isFeatured) && filtered.length > 0) {
+        filtered[0].isFeatured = true;
+      }
+      try {
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_events`, JSON.stringify(filtered));
+      } catch {}
+      return filtered;
+    });
+  };
+
+  const toggleEventActive = (id: string) => {
+    setEvents((prev) => {
+      const nextList = prev.map((e) => (e.id === id ? { ...e, isActive: !e.isActive } : e));
+      try {
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_events`, JSON.stringify(nextList));
+      } catch {}
+      return nextList;
+    });
+  };
+
+  const setFeaturedEvent = (id: string) => {
+    setEvents((prev) => {
+      const nextList = prev.map((e) => ({
+        ...e,
+        isFeatured: e.id === id,
+        isActive: e.id === id ? true : e.isActive,
+      }));
+      try {
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_events`, JSON.stringify(nextList));
+      } catch {}
+      return nextList;
+    });
+  };
+
+  const duplicateEvent = (id: string): CustomEventCampaign => {
+    const target = events.find((e) => e.id === id) || events[0];
+    const duplicated: CustomEventCampaign = {
+      ...target,
+      id: `evt-${Date.now()}`,
+      title: `${target.title} (کپی)`,
+      isFeatured: false,
+      createdAt: new Date().toISOString(),
+      usedCapacity: 0,
+    };
+    setEvents((prev) => {
+      const nextList = [duplicated, ...prev];
+      try {
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_events`, JSON.stringify(nextList));
+      } catch {}
+      return nextList;
+    });
+    return duplicated;
+  };
+
+  const resetEventsToDefault = () => {
+    setEvents(DEFAULT_CUSTOM_EVENTS);
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_events`, JSON.stringify(DEFAULT_CUSTOM_EVENTS));
+    } catch {}
+  };
+
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
     try {
       return sessionStorage.getItem('tekvix_admin_auth') === 'true';
@@ -1417,6 +1557,15 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         addFAQ,
         updateFAQ,
         deleteFAQ,
+        events,
+        activeCampaign,
+        addEvent,
+        updateEvent,
+        deleteEvent,
+        toggleEventActive,
+        setFeaturedEvent,
+        duplicateEvent,
+        resetEventsToDefault,
         openingEventState,
         updateOpeningEventConfig,
         refreshOpeningEvent,

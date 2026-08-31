@@ -4,7 +4,7 @@ import { useSiteData } from '../context/SiteDataContext';
 
 interface FooterProps {
   onOpenAdmin?: () => void;
-  onOpenOrderTracking?: () => void;
+  onOpenOrderTracking?: (query?: string) => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ onOpenAdmin, onOpenOrderTracking }) => {

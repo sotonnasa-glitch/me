@@ -1,15 +1,10 @@
 import React from 'react';
 import { ShieldCheck, Target, Zap, Sparkles } from 'lucide-react';
 import { useSiteData } from '../context/SiteDataContext';
-import { useLiveStats } from '../hooks/useLiveStats';
+import { AIPoweredToolsShowcase } from './AIPoweredToolsShowcase';
 
 export const AboutSection: React.FC = () => {
-  const { brandInfo, orders } = useSiteData();
-  const { siteStats } = useLiveStats({ pollingInterval: 20000, enabled: true });
-
-  const totalDelivered = siteStats?.totalProjectsDelivered ?? 150 + orders.filter(o => o.status === 'completed').length;
-  const satisfactionRate = siteStats?.satisfactionRate ?? 99.8;
-  const activeOnline = siteStats?.activeOnlineUsers ?? 24;
+  const { brandInfo } = useSiteData();
 
   return (
     <section id="about" className="relative py-24 sm:py-32 bg-[#05050d] overflow-hidden">
@@ -21,7 +16,7 @@ export const AboutSection: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
           {/* Text Content */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="lg:col-span-6 space-y-6">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-950/40 border border-purple-800/40 text-purple-300 text-xs font-medium">
               <Sparkles className="w-3.5 h-3.5" />
               <span>داستان برند تکویکس</span>
@@ -64,55 +59,9 @@ export const AboutSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Stats Box */}
-          <div className="lg:col-span-5">
-            <div className="p-8 rounded-3xl bg-gradient-to-br from-[#130d2a] to-[#0a0717] border border-purple-500/30 shadow-[0_0_40px_rgba(147,51,234,0.18)] relative overflow-hidden">
-              <div className="absolute top-0 end-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
-
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center justify-between">
-                <span>تکویکس در یک نگاه</span>
-                <span className="text-xs px-2.5 py-1 rounded-full bg-purple-600/30 text-purple-300 border border-purple-500/30 font-sans flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  <span>داده‌های زنده</span>
-                </span>
-              </h3>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                  <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-white font-sans font-mono">
-                    +{totalDelivered}
-                  </div>
-                  <div className="text-xs text-gray-400 mt-1">پروژه موفق تحویل‌شده</div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                  <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-white font-sans font-mono">
-                    {satisfactionRate}٪
-                  </div>
-                  <div className="text-xs text-gray-400 mt-1">نرخ رضایت کارفرمایان</div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                  <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-white font-sans font-mono">
-                    {activeOnline}
-                  </div>
-                  <div className="text-xs text-gray-400 mt-1">کاربر آنلاین فعال هم‌اکنون</div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                  <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-white font-sans font-mono">
-                    ۲۴/۷
-                  </div>
-                  <div className="text-xs text-gray-400 mt-1">پشتیبانی در تلگرام</div>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-white/5 text-center">
-                <p className="text-xs text-purple-300">
-                  ارتباط مستقیم با مدیریت فنی تکویکس: <span className="font-sans font-bold text-white">{brandInfo.telegramHandle}</span>
-                </p>
-              </div>
-            </div>
+          {/* AI Tools Showcase */}
+          <div className="lg:col-span-6">
+            <AIPoweredToolsShowcase />
           </div>
 
         </div>

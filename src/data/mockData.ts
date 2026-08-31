@@ -1,4 +1,4 @@
-import { Service, PortfolioItem, FeatureTab, FAQItem, TestimonialItem, BlogPost, SiteSectionConfig } from '../types';
+import { Service, PortfolioItem, FeatureTab, FAQItem, TestimonialItem, BlogPost, SiteSectionConfig, CustomEventCampaign } from '../types';
 
 export const BRAND_INFO = {
   name: 'تکویکس',
@@ -833,5 +833,81 @@ export const DEFAULT_SITE_REVIEWS: import('../types').SiteReview[] = [
     likesCount: 34
   }
 ];
+
+export const DEFAULT_CUSTOM_EVENTS: CustomEventCampaign[] = [
+  {
+    id: 'event-opening-giveaway',
+    title: 'جشن افتتاحیه TEKVIX | ۲ سفارش اول کاملاً رایگان',
+    subtitle: 'فرصت استثنایی برای ثبت پروژه هوش مصنوعی با ۱۰۰٪ تخفیف بدون پرداخت هیچ هزینه‌ای',
+    badgeText: '🎉 کمپین افتتاحیه ویژه',
+    highlightText: '🔥 ۱۰۰٪ تخفیف برای ۲ برنده اول',
+    description: 'هر خدمتی که از لیست هوش مصنوعی TEKVIX انتخاب کنید، برای ۲ نفر اول کاملاً رایگان انجام و تحویل داده می‌شود.',
+    eventType: 'giveaway',
+    discountOrOffer: '۱۰۰٪ رایگان',
+    promoCode: 'FREEOPENING',
+    theme: 'purple-gold',
+    isActive: true,
+    isFeatured: true,
+    startDate: new Date(Date.now() - 24 * 3600000).toISOString(),
+    endDate: new Date(Date.now() + 7 * 86400000).toISOString(),
+    hasCountdown: true,
+    hasCapacityLimit: true,
+    maxCapacity: 2,
+    usedCapacity: 0,
+    ctaButtonText: 'ثبت سفارش و دریافت رایگان',
+    ctaActionType: 'order_modal',
+    termsNote: 'هر کاربر یک‌بار امکان استفاده از هدیه را دارد. سفارش‌های لغو شده در محاسبه سقف لحاظ نمی‌شوند.',
+    createdAt: new Date(Date.now() - 24 * 3600000).toISOString(),
+  },
+  {
+    id: 'event-flash-bot-sale',
+    title: 'تخفیف شگفت‌انگیز راه‌اندازی ربات‌های پیشرفته تلگرام',
+    subtitle: '۳۰٪ تخفیف ویژه برای ساخت انواع ربات فروشگاهی، خودکارسازی، هوش مصنوعی و متصل به درگاه پرداخت',
+    badgeText: '⚡ تخفیف شگفت‌انگیز ۳۰٪',
+    highlightText: 'کد تخفیف: BOT30',
+    description: 'کسب‌وکار خود را با ربات‌های تمام‌اتوماتیک تلگرام مجهز کنید. مشاوره فنی و راه‌اندازی با پشتیبانی ۶ ماهه رایگان.',
+    eventType: 'flash_sale',
+    discountOrOffer: '۳۰٪ تخفیف',
+    promoCode: 'BOT30',
+    theme: 'cyber-cyan',
+    isActive: false,
+    isFeatured: false,
+    startDate: new Date(Date.now() - 12 * 3600000).toISOString(),
+    endDate: new Date(Date.now() + 3 * 86400000).toISOString(),
+    hasCountdown: true,
+    hasCapacityLimit: true,
+    maxCapacity: 10,
+    usedCapacity: 3,
+    ctaButtonText: 'سفارش ربات با ۳۰٪ تخفیف',
+    ctaActionType: 'order_modal',
+    targetServices: ['telegram-bot'],
+    termsNote: 'مخصوص ۱۰ سفارش اول در دسته‌بندی توسعه ربات‌های تلگرامی.',
+    createdAt: new Date(Date.now() - 12 * 3600000).toISOString(),
+  },
+  {
+    id: 'event-ai-video-drop',
+    title: 'جشنواره تولید ویدیو و تیزرهای سینمایی با هوش مصنوعی',
+    subtitle: 'به ازای هر سفارش تیزر تبلیغاتی، سناریونویسی و کاور 4K اینستاگرام به عنوان هدیه تقدیم می‌شود',
+    badgeText: '🎬 پکیج ویژه ویدیویی',
+    highlightText: 'هدیه ویژه: کاور 4K + سناریو',
+    description: 'تولید محتوای ویدیویی فوق‌واقع‌گرایانه با بالاترین کیفیت رندر هوش مصنوعی متناسب با الگوریتم‌های اینستاگرام و یوتیوب.',
+    eventType: 'launch',
+    discountOrOffer: 'پکیج هدیه سناریو + کاور',
+    promoCode: 'AIVIDEO2025',
+    theme: 'fiery-orange',
+    isActive: false,
+    isFeatured: false,
+    startDate: new Date(Date.now() - 48 * 3600000).toISOString(),
+    endDate: new Date(Date.now() + 14 * 86400000).toISOString(),
+    hasCountdown: false,
+    hasCapacityLimit: false,
+    ctaButtonText: 'مشاهده نمونه‌ها و استعلام قیمت',
+    ctaActionType: 'order_modal',
+    targetServices: ['ai-video'],
+    termsNote: 'شامل ویدیوهای عمودی و افقی با رزولوشن فول اچ‌دی و 4K.',
+    createdAt: new Date(Date.now() - 48 * 3600000).toISOString(),
+  }
+];
+
 
 

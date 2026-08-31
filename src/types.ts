@@ -95,6 +95,51 @@ export interface OrderFormData {
   promoEventName?: string;
 }
 
+export type EventType =
+  | 'giveaway' // سفارش رایگان / قرعه‌کشی و هدیه
+  | 'discount' // تخفیف درصدی یا نقدی
+  | 'launch' // رونمایی از خدمت یا قابلیت جدید
+  | 'flash_sale' // تخفیف شگفت‌انگیز و زمان‌دار
+  | 'contest' // مسابقه و چالش
+  | 'announcement' // اطلاعیه و رویداد عمومی
+  | 'custom'; // رویداد و کمپین سفارشی
+
+export type EventTheme =
+  | 'purple-gold' // طلایی و بنفش کیهانی
+  | 'cyber-cyan' // سایبرپانک نئونی
+  | 'emerald-gold' // سبز زمردی و طلایی
+  | 'fiery-orange' // آتشی و نارنجی پرانرژی
+  | 'rose-pink' // صورتی و یاقوتی
+  | 'midnight-blue'; // آبی نیمه‌شب
+
+export interface CustomEventCampaign {
+  id: string;
+  title: string;
+  subtitle: string;
+  badgeText: string;
+  highlightText?: string;
+  description: string;
+  eventType: EventType;
+  discountOrOffer?: string; // e.g. "۱۰۰٪ رایگان", "۳۰٪ تخفیف", "مشاوره رایگان"
+  promoCode?: string; // e.g. "TEKVIX2025"
+  theme: EventTheme;
+  isActive: boolean;
+  isFeatured: boolean; // آیا رویداد شاخص و اصلی بنر سایت است
+  startDate: string; // ISO format
+  endDate: string; // ISO format
+  hasCountdown: boolean;
+  hasCapacityLimit: boolean;
+  maxCapacity?: number;
+  usedCapacity?: number;
+  ctaButtonText?: string;
+  ctaActionType?: 'order_modal' | 'telegram_contact' | 'custom_url' | 'scroll_services';
+  ctaCustomUrl?: string;
+  targetServices?: string[]; // IDs of services or empty for all
+  termsNote?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface OpeningEventConfig {
   isActive: boolean;
   title: string;

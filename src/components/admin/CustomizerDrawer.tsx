@@ -1,5 +1,6 @@
 import React from 'react';
-import { X, RotateCcw, Check, Sparkles, Palette, Layout, Moon, Sun, Dices } from 'lucide-react';
+import { RotateCcw, Check, Sparkles, Palette, Layout, Moon, Sun, Dices } from 'lucide-react';
+import { AICloseButton } from '../common/AICloseButton';
 
 export type AdminThemePreset = 'tekvix-purple' | 'cosmic-dark' | 'cyberpunk-cyan' | 'emerald-ai' | 'monochrome-zinc';
 export type AdminRadius = '0' | '0.3' | '0.5' | '0.75' | '1.0';
@@ -86,13 +87,13 @@ export const CustomizerDrawer: React.FC<CustomizerDrawerProps> = ({
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
-              <button
-                type="button"
+              <AICloseButton
                 onClick={onClose}
-                className="p-2 rounded-lg bg-zinc-800/60 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
+                title="بستن و بازگشت"
+                ariaLabel="بستن سفارشی‌ساز"
+                variant="cyber"
+                size="sm"
+              />
             </div>
           </div>
 

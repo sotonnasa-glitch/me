@@ -119,7 +119,7 @@ interface NavbarProps {
   onOpenOrderModal: (serviceId?: string) => void;
   onOpenAdmin: () => void;
   onOpenGoogleAuth?: () => void;
-  onOpenOrderTracking?: () => void;
+  onOpenOrderTracking?: (query?: string) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -375,15 +375,33 @@ export const Navbar: React.FC<NavbarProps> = ({
             سفارش
           </button>
 
-          {/* Mobile Menu Hamburger Toggle */}
+          {/* Mobile Menu Hamburger / Close Toggle with Modern AI Animation */}
           <button
             type="button"
             id="mobile-menu-toggle-btn"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="w-9 h-9 rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center text-gray-200 hover:text-white cursor-pointer"
-            aria-label="منوی سایت"
+            className={`relative w-10 h-10 rounded-2xl flex items-center justify-center cursor-pointer transition-all duration-300 overflow-hidden active:scale-90 ${
+              mobileMenuOpen
+                ? 'bg-[#1a0f3c] text-cyan-300 border border-cyan-400/60 shadow-[0_0_20px_rgba(34,211,238,0.5)]'
+                : 'bg-[#0f0a24]/90 hover:bg-[#180e3d] text-purple-200 hover:text-white border border-purple-500/40 shadow-[0_0_12px_rgba(168,85,247,0.25)]'
+            }`}
+            aria-label={mobileMenuOpen ? 'بستن منوی سایت' : 'باز کردن منوی سایت'}
+            title={mobileMenuOpen ? 'بستن و بازگشت به صفحه قبل' : 'منوی ناوبری'}
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {/* Horizontal Light Stream on Toggle */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-500 pointer-events-none" />
+
+            <div
+              className={`relative z-10 transition-transform duration-300 ease-out ${
+                mobileMenuOpen ? 'rotate-90 scale-110' : 'rotate-0 scale-100'
+              }`}
+            >
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5 text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]" />
+              ) : (
+                <Menu className="w-5 h-5 text-purple-200 group-hover:text-white" />
+              )}
+            </div>
           </button>
         </div>
       </div>

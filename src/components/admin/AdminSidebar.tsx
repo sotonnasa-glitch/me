@@ -55,6 +55,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     services,
     orders,
     blogPosts,
+    events,
+    activeCampaign,
     openingEventState,
     navigateToSection,
   } = useSiteData();
@@ -69,6 +71,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     }, 150);
   };
 
+  const activeEventsCount = events.filter((e) => e.isActive).length;
+
   const menuItems = [
     {
       id: 'overview' as AdminTab,
@@ -79,12 +83,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     },
     {
       id: 'opening_event' as AdminTab,
-      label: 'ایونت افتتاحیه و سفارش رایگان',
+      label: 'ایونت‌ها و کمپین‌های اختصاصی',
       icon: Gift,
-      badge: openingEventState.isCurrentlyOpen
-        ? `🔥 ${openingEventState.remainingCapacity} ظرفیت`
-        : 'افتتاحیه',
-      badgeHighlight: openingEventState.isCurrentlyOpen,
+      badge: activeEventsCount > 0 ? `${activeEventsCount} فعال` : `${events.length}`,
+      badgeHighlight: activeEventsCount > 0,
       colorClass: 'text-amber-400'
     },
     {
@@ -213,8 +215,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   }}
                   className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all ${
                     isActive
-                      ? 'bg-zinc-800 text-white font-bold shadow-sm'
-                      : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
+                      ? 'bg-purple-950/60 text-white font-bold border border-purple-500/40 shadow-sm shadow-purple-950/50'
+                      : 'text-zinc-400 hover:bg-zinc-900/80 hover:text-zinc-200 border border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -240,29 +242,35 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         </div>
 
         {/* Sidebar Footer Info */}
-        <div className="p-4 border-t border-zinc-800 bg-zinc-950/40 space-y-3">
-          {/* Direct Return to Video & Film Showcase */}
+        <div className="p-4 border-t border-zinc-800 bg-zinc-950/60 space-y-3">
+          {/* Direct Return to Live Website */}
           <button
             type="button"
-            onClick={handleReturnToVideoPage}
-            className="w-full py-2.5 px-3 rounded-xl bg-purple-950/60 hover:bg-purple-900/80 border border-purple-500/40 text-purple-200 hover:text-white text-xs font-bold transition-all flex items-center justify-between group shadow-sm"
+            onClick={() => {
+              onCloseMobile();
+              if (onSwitchToSite) onSwitchToSite();
+            }}
+            className="w-full py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all flex items-center justify-between group shadow-md shadow-purple-600/20 cursor-pointer"
           >
-            <span>🎬 بازگشت به صفحه فیلم</span>
-            <span className="text-[10px] text-purple-400 group-hover:-translate-x-0.5 transition-transform">
+            <div className="flex items-center gap-2">
+              <ExternalLink className="w-4 h-4" />
+              <span>مشاهده و بازگشت به وب‌سایت</span>
+            </div>
+            <span className="text-xs text-purple-200 group-hover:-translate-x-1 transition-transform">
               ←
             </span>
           </button>
 
-          <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+          <div className="p-3 rounded-xl bg-zinc-900/90 border border-zinc-800/80">
             <div className="flex items-center justify-between text-xs text-zinc-200 font-semibold mb-1">
-              <span>وضعیت اتصال</span>
-              <span className="text-[10px] text-emerald-400 flex items-center gap-1.5 font-medium">
+              <span>وضعیت اتصال دیتابیس</span>
+              <span className="text-[10px] text-emerald-400 flex items-center gap-1.5 font-medium font-mono">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                متصل به سایت
+                Live Sync
               </span>
             </div>
             <p className="text-[11px] text-zinc-400 leading-relaxed">
-              تغییرات ذخیره شده بلادرنگ در ویترین لندینگ پیج و سبد درخواست‌ها همگام می‌شود.
+              آمارها و سفارشات بلادرنگ با سرور و دیتابیس همگام هستند.
             </p>
           </div>
         </div>

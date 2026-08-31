@@ -11,7 +11,7 @@ import { SettingsManager } from './views/SettingsManager';
 import { BackupManager } from './views/BackupManager';
 import { BlogManager } from './views/BlogManager';
 import { AnalyticsView } from './views/AnalyticsView';
-import { OpeningEventManager } from './views/OpeningEventManager';
+import { EventsCampaignManager } from './views/EventsCampaignManager';
 import { SocialLinksManager } from './views/SocialLinksManager';
 import { CustomizerDrawer, AdminThemePreset, AdminRadius, AdminMode } from './CustomizerDrawer';
 import { Menu, Sparkles, Layers } from 'lucide-react';
@@ -140,7 +140,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onSwitchToSite }) => {
             />
           )}
 
-          {activeTab === 'opening_event' && <OpeningEventManager />}
+          {activeTab === 'opening_event' && <EventsCampaignManager />}
 
           {activeTab === 'services' && (
             <ServicesManager
