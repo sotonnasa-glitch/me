@@ -9,6 +9,7 @@ import {
   OpeningEventConfig,
   OpeningEventState,
 } from '../types';
+import { hashPassword, verifyPassword, validatePasswordStrength } from './authUtils';
 
 export interface DailyStatRecord {
   stat_date: string;
@@ -29,7 +30,7 @@ class TekvixDatabase {
   private events: AnalyticsEvent[] = [];
   private dailyStats: Map<string, DailyStatRecord> = new Map();
   private totalViewsCount: number = 2840;
-  private adminPassword: string = 'admin123';
+  private adminPasswordHash: string = '';
   private openingEventConfig: OpeningEventConfig = {
     isActive: true,
     title: 'جشن افتتاحیه TEKVIX | اولین سفارش‌ها رایگان',
@@ -79,8 +80,11 @@ class TekvixDatabase {
         if (typeof data.totalViewsCount === 'number') {
           this.totalViewsCount = data.totalViewsCount;
         }
-        if (typeof data.adminPassword === 'string' && data.adminPassword.trim()) {
-          this.adminPassword = data.adminPassword.trim();
+        if (typeof data.adminPasswordHash === 'string' && data.adminPasswordHash.startsWith('scrypt:')) {
+          this.adminPasswordHash = data.adminPasswordHash.trim();
+        } else if (typeof data.adminPassword === 'string' && data.adminPassword.trim()) {
+          // Transparently upgrade legacy plaintext password to secure scrypt hash
+          this.adminPasswordHash = hashPassword(data.adminPassword.trim());
         }
         if (data.openingEventConfig) {
           this.openingEventConfig = {
@@ -92,6 +96,16 @@ class TekvixDatabase {
       } catch (err) {
         console.warn('Could not read existing store file, initializing seed data:', err);
       }
+    }
+
+    // Ensure admin password hash is set
+    const envHash = process.env.ADMIN_PASSWORD_HASH?.trim();
+    if (envHash && envHash.startsWith('scrypt:')) {
+      this.adminPasswordHash = envHash;
+    } else if (!this.adminPasswordHash) {
+      const initialPassword = process.env.ADMIN_INITIAL_PASSWORD?.trim() || 'mahdi2020';
+      this.adminPasswordHash = hashPassword(initialPassword);
+      this.saveToFile();
     }
 
     if (!loaded) {
@@ -320,7 +334,7 @@ class TekvixDatabase {
         events: this.events.slice(-500),
         dailyStats: Array.from(this.dailyStats.values()),
         totalViewsCount: this.totalViewsCount,
-        adminPassword: this.adminPassword,
+        adminPasswordHash: this.adminPasswordHash,
         openingEventConfig: this.openingEventConfig,
         savedAt: new Date().toISOString(),
       };
@@ -332,8 +346,8 @@ class TekvixDatabase {
 
   // --- PUBLIC API METHODS ---
 
-  public getAdminPassword(): string {
-    return this.adminPassword || 'admin123';
+  public isPasswordSet(): boolean {
+    return Boolean(this.adminPasswordHash);
   }
 
   public getOpeningEventState(): OpeningEventState {
@@ -662,27 +676,28 @@ class TekvixDatabase {
   }
 
   public setAdminPassword(newPass: string): boolean {
-    if (!newPass || !newPass.trim()) return false;
-    this.adminPassword = newPass.trim();
+    const val = validatePasswordStrength(newPass);
+    if (!val.isValid) return false;
+    this.adminPasswordHash = hashPassword(newPass.trim());
     this.saveToFile();
     return true;
   }
 
   public verifyAdminPassword(password: string): boolean {
-    if (!password) return false;
+    if (!password || !this.adminPasswordHash) return false;
     const trimmed = String(password).trim();
-    const validDefaults = ['admin123', 'admin', 'tekvix2026', 'tekvix', '123456', 'Lawat_kar', 'mahdi', '12345678'];
-    return trimmed === this.adminPassword || validDefaults.includes(trimmed);
+    return verifyPassword(trimmed, this.adminPasswordHash);
   }
 
   public changeAdminPassword(oldPassword: string, newPassword: string): { success: boolean; error?: string } {
     if (!this.verifyAdminPassword(oldPassword)) {
       return { success: false, error: 'رمز عبور فعلی نادرست است.' };
     }
-    if (!newPassword || newPassword.trim().length < 3) {
-      return { success: false, error: 'رمز عبور جدید باید حداقل ۳ کاراکتر باشد.' };
+    const val = validatePasswordStrength(newPassword);
+    if (!val.isValid) {
+      return { success: false, error: val.message || 'رمز عبور جدید باید حداقل ۸ کاراکتر باشد.' };
     }
-    this.adminPassword = newPassword.trim();
+    this.adminPasswordHash = hashPassword(newPassword.trim());
     this.saveToFile();
     return { success: true };
   }

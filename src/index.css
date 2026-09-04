@@ -193,6 +193,21 @@ main > section {
   animation: float-gentle 5s ease-in-out infinite;
 }
 
+@keyframes orb-breathe {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    box-shadow: 0 0 50px rgba(168, 85, 247, 0.4), inset 0 0 35px rgba(192, 132, 252, 0.28);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.018);
+    box-shadow: 0 0 85px rgba(192, 132, 252, 0.6), inset 0 0 55px rgba(216, 180, 254, 0.42);
+  }
+}
+
+.animate-orb-breathe {
+  animation: orb-breathe 6s ease-in-out infinite;
+}
+
 .animate-marquee {
   display: flex;
   width: 200%;

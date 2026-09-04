@@ -153,9 +153,35 @@
       "id": "ORD-4777",
       "createdAt": "2026-08-21T11:44:34.149Z",
       "updatedAt": "2026-08-21T11:44:34.149Z"
+    },
+    {
+      "fullName": "تست کاربر",
+      "telegramOrPhone": "09121234567",
+      "serviceId": "ai-website",
+      "serviceTitle": "خدمت اختصاصی",
+      "message": "طراحی سایت",
+      "isPromoEvent": false,
+      "status": "new",
+      "id": "ORD-7612",
+      "createdAt": "2026-09-04T13:26:11.829Z",
+      "updatedAt": "2026-09-04T13:26:11.829Z"
     }
   ],
   "events": [
+    {
+      "eventType": "order_created",
+      "path": "/order",
+      "serviceId": "ai-website",
+      "device": "mobile",
+      "value": 4500000,
+      "metadata": {
+        "orderId": "ORD-7612",
+        "customer": "تست کاربر",
+        "isPromo": false
+      },
+      "id": "ev_1788528371829_j05mh",
+      "createdAt": "2026-09-04T13:26:11.829Z"
+    },
     {
       "eventType": "order_created",
       "path": "/order",
@@ -324,7 +350,7 @@
     }
   ],
   "totalViewsCount": 2840,
-  "adminPassword": "admin123",
+  "adminPasswordHash": "scrypt:394822479789b168c404a79877e2a137:275ae1f1dade11ba6d1af852a1193c64ce7a2e8596489965c8374d60abcf593510402033b8186d91f44608ae1472f5f4ca565b8da1eb37dc0e906ba70fff8dea",
   "openingEventConfig": {
     "isActive": true,
     "title": "جشن افتتاحیه TEKVIX | اولین سفارش‌ها رایگان",
@@ -337,5 +363,5 @@
     "maxWinners": 2,
     "termsNote": "هر کاربر فقط یک‌بار امکان استفاده از جایزه را دارد. سفارش‌های لغوشده محاسبه نمی‌شوند."
   },
-  "savedAt": "2026-08-21T11:44:34.150Z"
+  "savedAt": "2026-09-04T13:26:11.830Z"
 }

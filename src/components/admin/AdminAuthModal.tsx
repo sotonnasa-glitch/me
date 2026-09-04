@@ -148,10 +148,10 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
             )}
           </div>
 
-          {/* Hint */}
+          {/* Security Note */}
           <div className="p-3 rounded-xl bg-purple-950/40 border border-purple-500/20 text-[11px] text-purple-200/90 leading-relaxed">
-            <span className="font-bold text-amber-300">نکته: </span>
-            <span>رمز پیش‌فرض سیستم <code className="font-mono bg-black/40 px-1.5 py-0.5 rounded text-amber-300">tekvix2026</code> است که می‌توانید داخل پنل در بخش تنظیمات آن را به هر رمزی تغییر دهید.</span>
+            <span className="font-bold text-amber-300">نکته امنیتی: </span>
+            <span>دسترسی به پنل مدیریت با نشست رمزگذاری‌شده سرور محافظت می‌شود. رمز عبور از طریق متغیر محیطی سرور یا تنظیمات پنل قابل مدیریت است.</span>
           </div>
 
           {/* Actions */}

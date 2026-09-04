@@ -1,6 +1,9 @@
 import 'dotenv/config';
 import express from 'express';
 import path from 'path';
+import session from 'express-session';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import { db } from './src/server/db';
@@ -23,8 +26,86 @@ console.log('━━━━━━━━━━━━━━━━━━━━━━�
 async function startServer() {
   const app = express();
 
-  app.use(express.json());
+  // Trust proxy for reverse proxy and Cloud Run ingress
+  app.set('trust proxy', 1);
+
+  // Security headers via Helmet (configured to allow iframe preview in AI Studio)
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      frameguard: false,
+      crossOriginEmbedderPolicy: false,
+    })
+  );
+
+  app.use(express.json({ limit: '1mb' }));
   app.use('/logos', express.static(path.join(process.cwd(), 'public/logos')));
+
+  // Server-side session configuration with HttpOnly and SameSite cookies
+  app.use(
+    session({
+      name: 'tekvix_session',
+      secret: process.env.SESSION_SECRET || 'tekvix_sec_session_83jf02kf9481hx',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 8 * 60 * 60 * 1000, // 8 hours session
+      },
+    })
+  );
+
+  // Admin authentication guard middleware
+  const requireAdminAuth: express.RequestHandler = (req, res, next) => {
+    if (req.session && (req.session as any).isAdmin) {
+      return next();
+    }
+    res.status(401).json({
+      success: false,
+      error: 'دسترسی غیرمجاز: لطفاً ابتدا با رمز عبور مدیریت وارد پنل شوید.',
+      requireLogin: true,
+    });
+  };
+
+  // Rate limiter for admin password verification (Brute-force protection with friendly threshold)
+  const adminAuthLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 25,
+    skipSuccessfulRequests: true,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      success: false,
+      valid: false,
+      error: 'تعداد تلاش‌های ناموفق بیش از حد مجاز است. لطفاً پس از چند دقیقه مجدداً تلاش نمایید.',
+    },
+  });
+
+  // Rate limiter for order submissions (Spam protection: max 15 per 15 min)
+  const orderSubmissionLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 15,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      success: false,
+      error: 'تعداد درخواست‌های ثبت سفارش بیش از حد مجاز است. لطفاً چند دقیقه بعد تلاش کنید.',
+    },
+  });
+
+  // Rate limiter for public Telegram notifications (e.g. consultation)
+  const telegramPublicLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      success: false,
+      error: 'تعداد درخواست‌ها بیش از حد مجاز است.',
+    },
+  });
 
   // Helper for lazy Gemini client
   function getGeminiClient(): GoogleGenAI | null {
@@ -47,8 +128,17 @@ async function startServer() {
     res.json({ status: 'ok', serverTime: new Date().toISOString() });
   });
 
-  // 2. LIVE ADMIN STATS (GET /api/admin/stats)
-  app.get('/api/admin/stats', (req, res) => {
+  // 1.1 Admin Session Status Check (GET /api/admin/check-session)
+  app.get('/api/admin/check-session', (req, res) => {
+    const isAuthenticated = Boolean(req.session && (req.session as any).isAdmin);
+    res.json({
+      success: true,
+      authenticated: isAuthenticated,
+    });
+  });
+
+  // 2. LIVE ADMIN STATS (GET /api/admin/stats) - Strictly Protected
+  app.get('/api/admin/stats', requireAdminAuth, (req, res) => {
     try {
       const stats = db.getAdminStats();
       res.json({
@@ -103,8 +193,8 @@ async function startServer() {
     }
   });
 
-  // 5. ORDERS REST API (GET, POST, PATCH, DELETE)
-  app.get('/api/orders', (req, res) => {
+  // 5. ORDERS REST API (GET, POST, PATCH, DELETE) - Protected Admin Endpoints
+  app.get('/api/orders', requireAdminAuth, (req, res) => {
     try {
       const orders = db.getOrders();
       res.json({ success: true, orders, count: orders.length });
@@ -113,7 +203,7 @@ async function startServer() {
     }
   });
 
-  // 5.0. TRACK SPECIFIC ORDER (BY ID, TELEGRAM HANDLE, OR CONTACT)
+  // 5.0. TRACK SPECIFIC ORDER (BY ID, TELEGRAM HANDLE, OR CONTACT) - Public Privacy-Safe Endpoint
   app.get('/api/orders/track/:query', (req, res) => {
     try {
       const { query } = req.params;
@@ -123,13 +213,28 @@ async function startServer() {
         return;
       }
       const allOrders = db.getOrders();
-      const matches = allOrders.filter((o) => {
-        const matchId = o.id.toLowerCase().includes(clean);
-        const contactClean = (o.telegramOrPhone || '').toLowerCase().replace('@', '');
-        const matchContact = contactClean.includes(clean);
-        const matchName = (o.fullName || '').toLowerCase().includes(clean);
-        return matchId || matchContact || matchName;
-      });
+      const matches = allOrders
+        .filter((o) => {
+          const matchId = o.id.toLowerCase() === clean;
+          const contactClean = (o.telegramOrPhone || '').toLowerCase().replace('@', '');
+          const matchContact = contactClean === clean;
+          return matchId || matchContact;
+        })
+        .map((o) => ({
+          id: o.id,
+          serviceTitle: o.serviceTitle,
+          status: o.status,
+          createdAt: o.createdAt,
+          priceQuoted: o.priceQuoted,
+          isPromoEvent: o.isPromoEvent,
+          // Mask contact details to protect client privacy in public tracking
+          contactMasked: o.telegramOrPhone
+            ? o.telegramOrPhone.startsWith('@')
+              ? `@${o.telegramOrPhone.slice(1, 3)}***`
+              : `${o.telegramOrPhone.slice(0, 4)}***${o.telegramOrPhone.slice(-2)}`
+            : '',
+        }));
+
       res.json({ success: true, count: matches.length, orders: matches });
     } catch (error: any) {
       console.error('Error tracking order:', error);
@@ -137,7 +242,7 @@ async function startServer() {
     }
   });
 
-  app.get('/api/orders/:id', (req, res) => {
+  app.get('/api/orders/:id', requireAdminAuth, (req, res) => {
     try {
       const { id } = req.params;
       const order = db.getOrderById(id);
@@ -151,40 +256,46 @@ async function startServer() {
     }
   });
 
-  app.post('/api/orders', async (req, res) => {
+  app.post('/api/orders', orderSubmissionLimiter, async (req, res) => {
     try {
+      // Whitelist allowed fields to prevent mass assignment
       const {
         fullName,
         telegramOrPhone,
         serviceId,
         serviceTitle,
-        budget,
         message,
         priceQuoted,
-        adminNotes,
         isPromoEvent,
         promoEventName,
         userEmail,
-        botToken,
-        chatId,
       } = req.body;
+
       if (!fullName || !telegramOrPhone || !serviceId) {
         console.warn('⚠️ [ORDER_SUBMIT_REJECTED] Incomplete order payload:', { fullName, telegramOrPhone, serviceId });
-        res.status(400).json({ success: false, error: 'اطلاعات سفارش ناقص است' });
+        res.status(400).json({ success: false, error: 'اطلاعات سفارش ناقص است (نام، راه ارتباطی و خدمت الزامی هستند)' });
         return;
       }
 
+      // Sanitize inputs
+      const safeFullName = String(fullName).trim().slice(0, 100);
+      const safeTelegramOrPhone = String(telegramOrPhone).trim().slice(0, 80);
+      const safeServiceId = String(serviceId).trim().slice(0, 50);
+      const safeServiceTitle = String(serviceTitle || 'خدمت اختصاصی').trim().slice(0, 100);
+      const safeMessage = String(message || '').trim().slice(0, 2000);
+      const safePriceQuoted = priceQuoted ? String(priceQuoted).trim().slice(0, 50) : undefined;
+      const safeUserEmail = userEmail ? String(userEmail).trim().slice(0, 100) : undefined;
+
       const newOrder = db.createOrder({
-        fullName,
-        telegramOrPhone,
-        serviceId,
-        serviceTitle: serviceTitle || 'خدمت اختصاصی',
-        message: message || '',
-        priceQuoted,
-        adminNotes,
+        fullName: safeFullName,
+        telegramOrPhone: safeTelegramOrPhone,
+        serviceId: safeServiceId,
+        serviceTitle: safeServiceTitle,
+        message: safeMessage,
+        priceQuoted: safePriceQuoted,
         isPromoEvent: Boolean(isPromoEvent),
-        promoEventName,
-        userEmail,
+        promoEventName: promoEventName ? String(promoEventName).trim().slice(0, 100) : undefined,
+        userEmail: safeUserEmail,
         status: 'new',
       });
 
@@ -194,29 +305,27 @@ async function startServer() {
       console.log(`• Service: ${newOrder.serviceTitle} | Price: ${newOrder.priceQuoted}`);
       console.log(`• Is Promo Event: ${newOrder.isPromoEvent}`);
 
-      // Asynchronously trigger Telegram notification to ensure guaranteed delivery
-      const envToken = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
-      const effectiveToken = envToken || (botToken && botToken.trim()) || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus';
-      const targetChatIds = resolveTelegramChatIds(chatId);
+      // Dispatch Telegram notification strictly via server environment variable
+      const targetChatIds = resolveTelegramChatIds(undefined);
       const orderId = escapeTgHtml(newOrder.id);
-      const safeName = escapeTgHtml(newOrder.fullName);
+      const tgName = escapeTgHtml(newOrder.fullName);
       const rawContact = (newOrder.telegramOrPhone || '').trim();
       const safeContact = escapeTgHtml(rawContact);
-      const safeService = escapeTgHtml(newOrder.serviceTitle);
-      const safeMsg = escapeTgHtml(newOrder.message || 'بدون توضیح');
-      const safePrice = escapeTgHtml(newOrder.priceQuoted || 'استعلامی');
+      const tgService = escapeTgHtml(newOrder.serviceTitle);
+      const tgMsg = escapeTgHtml(newOrder.message || 'بدون توضیح');
+      const tgPrice = escapeTgHtml(newOrder.priceQuoted || 'استعلامی');
       const { url: pvUrl } = getClientDirectChatUrl(rawContact);
 
       const telegramText = `
 🚀 <b>سفارش جدید در تکویکس (Tekvix AI)</b>
 ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰۰٪ رایگان)</i>\n' : ''}
 📌 <b>کد رهگیری:</b> <code>${orderId}</code>
-👤 <b>نام مشتری:</b> <b>${safeName}</b>
+👤 <b>نام مشتری:</b> <b>${tgName}</b>
 📱 <b>آیدی تلگرام:</b> <a href="${pvUrl}">${safeContact}</a> 👈 <i>(لمس کنید)</i>
-💼 <b>سرویس انتخابی:</b> ${safeService}
-💰 <b>هزینه / برآورد:</b> ${safePrice}
+💼 <b>سرویس انتخابی:</b> ${tgService}
+💰 <b>هزینه / برآورد:</b> ${tgPrice}
 📝 <b>توضیحات:</b>
-<i>${safeMsg}</i>
+<i>${tgMsg}</i>
 
 ⏰ <b>زمان ثبت:</b> ${new Date().toLocaleString('fa-IR')}
 🌐 <b>منبع:</b> وب‌سایت تکویکس
@@ -233,7 +342,7 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
         ],
       };
 
-      dispatchTelegramNotification(effectiveToken, targetChatIds, telegramText, inlineKeyboard).catch(
+      dispatchTelegramNotification(targetChatIds, telegramText, inlineKeyboard).catch(
         (tgErr) => console.error('❌ [BACKGROUND_TELEGRAM_ERROR]:', tgErr)
       );
 
@@ -244,7 +353,7 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
     }
   });
 
-  // 5.1. OPENING EVENT API (GET, POST config)
+  // 5.1. OPENING EVENT API (GET public, POST config protected)
   app.get('/api/opening-event', (req, res) => {
     try {
       const eventState = db.getOpeningEventState();
@@ -255,7 +364,7 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
     }
   });
 
-  app.post('/api/opening-event/config', (req, res) => {
+  app.post('/api/opening-event/config', requireAdminAuth, (req, res) => {
     try {
       const updates = req.body;
       const updatedConfig = db.updateOpeningEventConfig(updates);
@@ -267,7 +376,7 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
     }
   });
 
-  app.patch('/api/orders/:id', (req, res) => {
+  app.patch('/api/orders/:id', requireAdminAuth, (req, res) => {
     try {
       const { id } = req.params;
       const updates = req.body;
@@ -282,7 +391,7 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
     }
   });
 
-  app.delete('/api/orders/:id', (req, res) => {
+  app.delete('/api/orders/:id', requireAdminAuth, (req, res) => {
     try {
       const { id } = req.params;
       const success = db.deleteOrder(id);
@@ -292,25 +401,40 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
     }
   });
 
-  // 5.5. ADMIN PASSWORD AUTHENTICATION & CHANGE API
+  // 5.5. ADMIN PASSWORD AUTHENTICATION, VERIFICATION & LOGOUT API
   app.get('/api/admin/password-status', (req, res) => {
     try {
-      res.json({ success: true, isProtected: true });
+      const isSet = db.isPasswordSet();
+      const isAuthenticated = Boolean(req.session && (req.session as any).isAdmin);
+      res.json({
+        success: true,
+        isProtected: isSet,
+        authenticated: isAuthenticated,
+      });
     } catch (error: any) {
       res.status(500).json({ success: false, error: 'خطا در بررسی وضعیت رمز عبور' });
     }
   });
 
-  app.post('/api/admin/verify-password', (req, res) => {
+  app.post('/api/admin/verify-password', adminAuthLimiter, (req, res) => {
     try {
       const { password } = req.body;
-      if (!password) {
+      if (!password || typeof password !== 'string') {
         res.status(400).json({ success: false, valid: false, message: 'لطفاً رمز عبور را وارد کنید.' });
         return;
       }
       const isValid = db.verifyAdminPassword(password);
       if (isValid) {
-        res.json({ success: true, valid: true, message: 'ورود موفقیت‌آمیز بود.' });
+        // Securely establish server-side session
+        (req.session as any).isAdmin = true;
+        (req.session as any).authTime = Date.now();
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error('Session save error:', saveErr);
+            return res.status(500).json({ success: false, error: 'خطا در برقراری نشست مدیریت' });
+          }
+          res.json({ success: true, valid: true, message: 'ورود با موفقیت انجام شد.' });
+        });
       } else {
         res.status(401).json({ success: false, valid: false, message: 'رمز عبور وارد شده نادرست است.' });
       }
@@ -319,35 +443,46 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
     }
   });
 
-  app.post('/api/admin/change-password', (req, res) => {
+  app.post('/api/admin/change-password', requireAdminAuth, (req, res) => {
     try {
       const { oldPassword, newPassword } = req.body;
       if (!oldPassword || !newPassword) {
         res.status(400).json({ success: false, message: 'رمز عبور فعلی و جدید الزامی هستند.' });
         return;
       }
-      if (newPassword.trim().length < 4) {
+      if (typeof newPassword !== 'string' || newPassword.trim().length < 4) {
         res.status(400).json({ success: false, message: 'رمز عبور جدید باید حداقل ۴ کاراکتر باشد.' });
         return;
       }
-      const isOldValid = db.verifyAdminPassword(oldPassword);
-      if (!isOldValid) {
-        res.status(401).json({ success: false, message: 'رمز عبور فعلی نادرست است.' });
-        return;
-      }
-      const updated = db.setAdminPassword(newPassword.trim());
-      if (updated) {
+      const result = db.changeAdminPassword(String(oldPassword), String(newPassword));
+      if (result.success) {
         res.json({ success: true, message: 'رمز عبور پنل ادمین با موفقیت تغییر یافت.' });
       } else {
-        res.status(500).json({ success: false, message: 'خطا در ذخیره رمز عبور جدید.' });
+        res.status(400).json({ success: false, message: result.error || 'خطا در تغییر رمز عبور.' });
       }
     } catch (error: any) {
       res.status(500).json({ success: false, error: 'خطا در تغییر رمز عبور' });
     }
   });
 
-  // 6. USERS REST API (GET, POST)
-  app.get('/api/users', (req, res) => {
+  app.post('/api/admin/logout', (req, res) => {
+    try {
+      if (req.session) {
+        req.session.destroy((err) => {
+          res.clearCookie('tekvix_session');
+          res.json({ success: true, message: 'خروج از پنل مدیریت با موفقیت انجام شد.' });
+        });
+      } else {
+        res.clearCookie('tekvix_session');
+        res.json({ success: true, message: 'خروج از پنل مدیریت با موفقیت انجام شد.' });
+      }
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: 'خطا در خروج از سیستم' });
+    }
+  });
+
+  // 6. USERS REST API (Protected Admin Endpoints)
+  app.get('/api/users', requireAdminAuth, (req, res) => {
     try {
       const users = db.getUsers();
       res.json({ success: true, users, count: users.length });
@@ -679,21 +814,26 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
 
   // Robust Dispatcher to one or multiple Telegram targets with comprehensive debug logging
   async function dispatchTelegramNotification(
-    token: string | undefined,
     chatIds: string[],
     text: string,
     replyMarkup?: any
   ): Promise<{ success: boolean; deliveredTo: string[]; errors: string[]; messageIds: number[] }> {
-    const envToken = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
-    const fallbackToken = '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus';
-    const effectiveToken = envToken || (token && token.trim()) || fallbackToken;
-    const tokenSource = envToken ? 'process.env.TELEGRAM_BOT_TOKEN' : token ? 'client_request' : 'hardcoded_fallback';
+    const effectiveToken = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
+    if (!effectiveToken) {
+      console.warn('⚠️ [TELEGRAM_DISPATCH_SKIPPED] process.env.TELEGRAM_BOT_TOKEN is not configured.');
+      return {
+        success: false,
+        deliveredTo: [],
+        errors: ['توکن ربات تلگرام در متغیرهای محیطی سرور تنظیم نشده است.'],
+        messageIds: [],
+      };
+    }
 
     const targets = chatIds && chatIds.length > 0 ? chatIds : resolveTelegramChatIds(undefined);
 
     console.log('\n────────────────────────────────────────────────────────────');
     console.log('🚀 [TELEGRAM_DISPATCH_TRIGGERED]');
-    console.log(`• Token Source: ${tokenSource} (Token: ${maskToken(effectiveToken)})`);
+    console.log(`• Token Source: process.env.TELEGRAM_BOT_TOKEN (Token: ${maskToken(effectiveToken)})`);
     console.log(`• Targets: [${targets.join(', ')}]`);
     console.log(`• Text Length: ${text.length} chars`);
     console.log(`• Has Reply Markup: ${Boolean(replyMarkup)}`);
@@ -759,10 +899,10 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
     };
   }
 
-  // 3. Telegram Bot Order Notification API
-  app.post('/api/telegram/send-order', async (req, res) => {
+  // 3. Telegram Bot Order Notification API - Admin Protected
+  app.post('/api/telegram/send-order', requireAdminAuth, async (req, res) => {
     try {
-      const { order, botToken, chatId } = req.body;
+      const { order, chatId } = req.body;
 
       if (!order) {
         console.warn('⚠️ [TELEGRAM_SEND_ORDER_REJECTED] Missing order payload');
@@ -775,8 +915,6 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
       console.log(`• Customer: ${order.fullName || 'N/A'} (${order.telegramOrPhone || 'N/A'})`);
       console.log(`• Service: ${order.serviceTitle || 'N/A'}`);
 
-      const envToken = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
-      const effectiveToken = envToken || (botToken && botToken.trim()) || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus';
       const targetChatIds = resolveTelegramChatIds(chatId);
 
       const orderId = escapeTgHtml(order.id || 'ORD-' + Math.floor(1000 + Math.random() * 9000));
@@ -819,7 +957,6 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
       };
 
       const dispatchResult = await dispatchTelegramNotification(
-        effectiveToken,
         targetChatIds,
         telegramMessage,
         inlineKeyboard
@@ -849,10 +986,10 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
     }
   });
 
-  // 3.5 Telegram Consultation & Lead Notification API
-  app.post('/api/telegram/send-consultation', async (req, res) => {
+  // 3.5 Telegram Consultation & Lead Notification API (Rate limited & secure)
+  app.post('/api/telegram/send-consultation', telegramPublicLimiter, async (req, res) => {
     try {
-      const { name, contactInfo, topic, message, botToken, chatId } = req.body;
+      const { name, contactInfo, topic, message, chatId } = req.body;
 
       if (!name || !contactInfo) {
         console.warn('⚠️ [TELEGRAM_SEND_CONSULTATION_REJECTED] Missing name or contact info');
@@ -860,23 +997,25 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
         return;
       }
 
-      console.log('\n💬 [TELEGRAM_SEND_CONSULTATION_CALLED]');
-      console.log(`• Lead Name: ${name}`);
-      console.log(`• Contact Info: ${contactInfo}`);
-      console.log(`• Consultation Topic: ${topic || 'Default'}`);
+      const safeName = String(name).trim().slice(0, 100);
+      const safeContact = String(contactInfo).trim().slice(0, 80);
+      const safeTopic = topic ? String(topic).trim().slice(0, 100) : 'مشاوره و استعلام عمومی هوش مصنوعی';
+      const safeMessage = message ? String(message).trim().slice(0, 2000) : 'بدون پیام تکمیلی';
 
-      const envToken = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
-      const effectiveToken = envToken || (botToken && botToken.trim()) || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus';
+      console.log('\n💬 [TELEGRAM_SEND_CONSULTATION_CALLED]');
+      console.log(`• Lead Name: ${safeName}`);
+      console.log(`• Contact Info: ${safeContact}`);
+      console.log(`• Consultation Topic: ${safeTopic}`);
+
       const targetChatIds = resolveTelegramChatIds(chatId);
 
-      const fullName = escapeTgHtml(name.trim());
-      const rawContact = contactInfo.trim();
-      const contactEscaped = escapeTgHtml(rawContact);
-      const consultationTopic = escapeTgHtml(topic || 'مشاوره و استعلام عمومی هوش مصنوعی');
-      const userMessage = escapeTgHtml(message || 'بدون پیام تکمیلی');
+      const fullName = escapeTgHtml(safeName);
+      const contactEscaped = escapeTgHtml(safeContact);
+      const consultationTopic = escapeTgHtml(safeTopic);
+      const userMessage = escapeTgHtml(safeMessage);
       const dateStr = new Date().toLocaleString('fa-IR');
 
-      const { url: pvUrl } = getClientDirectChatUrl(rawContact);
+      const { url: pvUrl } = getClientDirectChatUrl(safeContact);
 
       const telegramMessage = `
 💬 <b>درخواست مشاوره و استعلام جدید در تکویکس</b>
@@ -904,7 +1043,6 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
       };
 
       const dispatchResult = await dispatchTelegramNotification(
-        effectiveToken,
         targetChatIds,
         telegramMessage,
         inlineKeyboard
@@ -925,7 +1063,7 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
           telegramSent: false,
           telegramError: dispatchResult.errors.join(' | '),
           pvUrl,
-          fallbackUrl: `https://t.me/Lawat_kar?text=${encodeURIComponent(`مشاوره تکویکس\nکاربر: ${fullName}\nتماس: ${rawContact}\nموضوع: ${consultationTopic}\nپیام: ${userMessage}`)}`,
+          fallbackUrl: `https://t.me/Lawat_kar?text=${encodeURIComponent(`مشاوره تکویکس\nکاربر: ${fullName}\nتماس: ${safeContact}\nموضوع: ${consultationTopic}\nپیام: ${userMessage}`)}`,
         });
       }
     } catch (err: any) {
@@ -934,16 +1072,13 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
     }
   });
 
-  // 4. Test Telegram Bot Connection API (GET & POST)
-  app.get('/api/telegram/test-bot', async (req, res) => {
+  // 4. Test Telegram Bot Connection API (GET & POST) - Admin Protected
+  app.get('/api/telegram/test-bot', requireAdminAuth, async (req, res) => {
     try {
-      const envToken = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
-      const effectiveToken = envToken || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus';
       const targetChatIds = resolveTelegramChatIds(undefined);
-
       const testMsg = `🔔 <b>پیام تست اتصال تکویکس (Tekvix AI) - تست وضعیت سلامت</b>\n\n✅ ربات تلگرام شما آنلاین و متصل است!\n⏰ <b>زمان تست:</b> ${new Date().toLocaleString('fa-IR')}`;
 
-      const dispatchResult = await dispatchTelegramNotification(effectiveToken, targetChatIds, testMsg);
+      const dispatchResult = await dispatchTelegramNotification(targetChatIds, testMsg);
       if (dispatchResult.success) {
         res.json({
           success: true,
@@ -963,25 +1098,14 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
     }
   });
 
-  app.post('/api/telegram/test-bot', async (req, res) => {
+  app.post('/api/telegram/test-bot', requireAdminAuth, async (req, res) => {
     try {
-      const { botToken, chatId } = req.body;
-      const envToken = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
-      const effectiveToken = envToken || (botToken && botToken.trim()) || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus';
+      const { chatId } = req.body;
       const targetChatIds = resolveTelegramChatIds(chatId);
-
-      if (!effectiveToken) {
-        res.status(400).json({
-          success: false,
-          error: 'توکن ربات تلگرام وارد نشده است. لطفاً توکن را از @BotFather دریافت و وارد کنید.',
-        });
-        return;
-      }
 
       const testMsg = `🔔 <b>پیام تست اتصال تکویکس (Tekvix AI)</b>\n\n✅ ربات تلگرام شما با موفقیت به وب‌سایت متصل شد!\nاز این پس تمامی سفارشات و درخواست‌های مشاوره ثبت‌شده توسط کاربران، بی‌درنگ همراه با دکمه ورود مستقیم به پی‌وی به این چت ارسال می‌شوند.\n\n⏰ <b>زمان تست:</b> ${new Date().toLocaleString('fa-IR')}`;
 
       const dispatchResult = await dispatchTelegramNotification(
-        effectiveToken,
         targetChatIds,
         testMsg
       );

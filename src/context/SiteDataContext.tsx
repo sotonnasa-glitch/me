@@ -85,7 +85,7 @@ const INITIAL_ORDERS: OrderItem[] = [
 ];
 
 const DEFAULT_TELEGRAM_SETTINGS: TelegramBotSettings = {
-  botToken: '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus',
+  botToken: '',
   chatId: '7460143967',
   botUsername: 'Tekvixbot',
   autoNotifyNewOrders: true,
@@ -1408,13 +1408,34 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch {}
   };
 
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
-    try {
-      return sessionStorage.getItem('tekvix_admin_auth') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(false);
+
+  // Synchronize admin authentication state with server session on mount
+  useEffect(() => {
+    let isMounted = true;
+    const checkServerSession = async () => {
+      try {
+        const res = await fetch('/api/admin/check-session', {
+          credentials: 'include',
+          headers: { Accept: 'application/json' },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted) {
+            setIsAdminAuthenticated(Boolean(data.authenticated));
+          }
+        } else {
+          if (isMounted) setIsAdminAuthenticated(false);
+        }
+      } catch {
+        if (isMounted) setIsAdminAuthenticated(false);
+      }
+    };
+    checkServerSession();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const verifyAdminPassword = async (
     password: string
@@ -1423,37 +1444,22 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return { success: false, error: 'رمز عبور نمی‌تواند خالی باشد.' };
     }
     const trimmed = password.trim();
-    const validKnownDefaults = ['admin123', 'admin', 'tekvix2026', 'tekvix', '123456', 'Lawat_kar', 'mahdi', '12345678'];
-    const customLocalPass = localStorage.getItem(`${LOCAL_STORAGE_KEY}_admin_pass`);
-
-    if (validKnownDefaults.includes(trimmed) || (customLocalPass && trimmed === customLocalPass.trim())) {
-      setIsAdminAuthenticated(true);
-      try {
-        sessionStorage.setItem('tekvix_admin_auth', 'true');
-      } catch {}
-      return { success: true };
-    }
 
     try {
       const res = await fetch('/api/admin/verify-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ password: trimmed }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          setIsAdminAuthenticated(true);
-          try {
-            sessionStorage.setItem('tekvix_admin_auth', 'true');
-          } catch {}
-          return { success: true };
-        }
-        return { success: false, error: data.error || 'رمز عبور وارد شده اشتباه است.' };
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        setIsAdminAuthenticated(true);
+        return { success: true };
       }
-      return { success: false, error: 'رمز عبور وارد شده نادرست است.' };
+      return { success: false, error: data.message || data.error || 'رمز عبور وارد شده نادرست است.' };
     } catch {
-      return { success: false, error: 'رمز عبور وارد شده نادرست است.' };
+      return { success: false, error: 'خطا در برقراری ارتباط با سرور.' };
     }
   };
 
@@ -1464,35 +1470,42 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const trimmedOld = oldPassword.trim();
     const trimmedNew = newPassword.trim();
 
-    if (!trimmedNew || trimmedNew.length < 3) {
-      return { success: false, error: 'رمز عبور جدید باید حداقل ۳ کاراکتر باشد.' };
+    if (!trimmedNew || trimmedNew.length < 4) {
+      return { success: false, error: 'رمز عبور جدید باید حداقل ۴ کاراکتر باشد.' };
     }
-
-    // Save locally
-    try {
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_admin_pass`, trimmedNew);
-    } catch {}
 
     try {
       const res = await fetch('/api/admin/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ oldPassword: trimmedOld, newPassword: trimmedNew }),
       });
-      if (res.ok) {
-        const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
         return { success: true, message: data.message || 'رمز عبور پنل مدیریت با موفقیت به‌روزرسانی شد.' };
       }
-    } catch {}
-
-    return { success: true, message: 'رمز عبور پنل مدیریت با موفقیت تغییر یافت.' };
+      return { success: false, error: data.message || data.error || 'خطا در تغییر رمز عبور.' };
+    } catch {
+      return { success: false, error: 'خطا در برقراری ارتباط با سرور.' };
+    }
   };
 
-  const logoutAdmin = () => {
-    setIsAdminAuthenticated(false);
+  const logoutAdmin = async () => {
     try {
-      sessionStorage.removeItem('tekvix_admin_auth');
-    } catch {}
+      await fetch('/api/admin/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { Accept: 'application/json' },
+      });
+    } catch (err) {
+      console.warn('Logout request error:', err);
+    } finally {
+      setIsAdminAuthenticated(false);
+      try {
+        sessionStorage.removeItem('tekvix_admin_auth');
+      } catch {}
+    }
   };
 
   const newOrdersCount = orders.filter((o) => o.status === 'new').length;
