@@ -77,65 +77,65 @@ const EventCountdownBox: React.FC<{
   if (!hasCountdown) {
     if (!termsNote) return null;
     return (
-      <div className="w-full max-w-sm rounded-2xl p-4 bg-black/40 border border-white/10 text-xs text-zinc-300 text-start space-y-1 backdrop-blur-md">
-        <span className="font-bold text-amber-400 block flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>شرایط و نکات رویداد:</span>
+      <div className="w-full max-w-xs rounded-xl p-2.5 bg-black/40 border border-white/10 text-[11px] text-zinc-300 text-start space-y-0.5 backdrop-blur-md">
+        <span className="font-bold text-amber-400 flex items-center gap-1">
+          <Sparkles className="w-3 h-3 shrink-0" />
+          <span>شرایط رویداد:</span>
         </span>
-        <p className="text-zinc-300 leading-relaxed text-[11px]">{termsNote}</p>
+        <p className="text-zinc-300 text-[10px] leading-relaxed line-clamp-2">{termsNote}</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-sm rounded-2xl p-5 bg-black/60 border border-white/10 backdrop-blur-xl shadow-2xl space-y-3 text-center transition-all">
-      <div className="flex items-center justify-between text-xs text-zinc-300 pb-2 border-b border-white/10 font-bold">
-        <span className="flex items-center gap-1.5">
-          <Clock className="w-4 h-4 text-amber-400" />
-          <span>شمارش معکوس تا پایان رویداد</span>
+    <div className="w-full max-w-xs sm:max-w-[260px] rounded-xl p-2.5 sm:p-3 bg-black/50 border border-white/10 backdrop-blur-md space-y-1.5 text-center">
+      <div className="flex items-center justify-between text-[11px] text-zinc-300 pb-1.5 border-b border-white/10 font-medium">
+        <span className="flex items-center gap-1 text-zinc-300">
+          <Clock className="w-3.5 h-3.5 text-amber-400" />
+          <span>فرصت باقی‌مانده</span>
         </span>
-        <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${isExpired ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300 animate-pulse'}`}>
-          {isExpired ? 'پایان یافته' : 'در حال اجرا'}
+        <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md ${isExpired ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'}`}>
+          {isExpired ? 'پایان یافته' : 'فعال'}
         </span>
       </div>
 
-      {/* 4 Timer Digital Boxes */}
-      <div className="grid grid-cols-4 gap-2 text-center py-2" dir="ltr">
+      {/* 4 Compact Timer Boxes */}
+      <div className="grid grid-cols-4 gap-1.5 text-center py-0.5" dir="ltr">
         {/* Days */}
-        <div className={`p-2.5 sm:p-3 rounded-xl bg-gradient-to-b ${themeStyles.timerBox} shadow-inner`}>
-          <span className="block text-xl sm:text-2xl font-black font-mono text-white tracking-wider">
+        <div className={`p-1 sm:p-1.5 rounded-lg bg-gradient-to-b ${themeStyles.timerBox}`}>
+          <span className="block text-sm sm:text-base font-extrabold font-mono text-white leading-none">
             {format2Digits(timeLeft.days)}
           </span>
-          <span className="text-[10px] text-zinc-400 font-medium">روز</span>
+          <span className="text-[9px] text-zinc-400 font-normal">روز</span>
         </div>
 
         {/* Hours */}
-        <div className={`p-2.5 sm:p-3 rounded-xl bg-gradient-to-b ${themeStyles.timerBox} shadow-inner`}>
-          <span className="block text-xl sm:text-2xl font-black font-mono text-white tracking-wider">
+        <div className={`p-1 sm:p-1.5 rounded-lg bg-gradient-to-b ${themeStyles.timerBox}`}>
+          <span className="block text-sm sm:text-base font-extrabold font-mono text-white leading-none">
             {format2Digits(timeLeft.hours)}
           </span>
-          <span className="text-[10px] text-zinc-400 font-medium">ساعت</span>
+          <span className="text-[9px] text-zinc-400 font-normal">ساعت</span>
         </div>
 
         {/* Minutes */}
-        <div className={`p-2.5 sm:p-3 rounded-xl bg-gradient-to-b ${themeStyles.timerBox} shadow-inner`}>
-          <span className="block text-xl sm:text-2xl font-black font-mono text-white tracking-wider">
+        <div className={`p-1 sm:p-1.5 rounded-lg bg-gradient-to-b ${themeStyles.timerBox}`}>
+          <span className="block text-sm sm:text-base font-extrabold font-mono text-white leading-none">
             {format2Digits(timeLeft.minutes)}
           </span>
-          <span className="text-[10px] text-zinc-400 font-medium">دقیقه</span>
+          <span className="text-[9px] text-zinc-400 font-normal">دقیقه</span>
         </div>
 
         {/* Seconds */}
-        <div className={`p-2.5 sm:p-3 rounded-xl bg-gradient-to-b ${themeStyles.timerBox} shadow-inner`}>
-          <span className="block text-xl sm:text-2xl font-black font-mono text-amber-300 tracking-wider animate-pulse">
+        <div className={`p-1 sm:p-1.5 rounded-lg bg-gradient-to-b ${themeStyles.timerBox}`}>
+          <span className="block text-sm sm:text-base font-extrabold font-mono text-amber-300 leading-none animate-pulse">
             {format2Digits(timeLeft.seconds)}
           </span>
-          <span className="text-[10px] text-amber-300 font-medium">ثانیه</span>
+          <span className="text-[9px] text-amber-300 font-normal">ثانیه</span>
         </div>
       </div>
 
       {termsNote && (
-        <div className="text-[11px] text-zinc-400 text-center font-normal pt-1 line-clamp-2">
+        <div className="text-[10px] text-zinc-400 text-center font-normal pt-0.5 truncate">
           {termsNote}
         </div>
       )}
@@ -365,59 +365,56 @@ export const OpeningEventBanner: React.FC<OpeningEventBannerProps> = ({ onOpenOr
   return (
     <section
       id="opening-event-banner"
-      className="relative py-6 sm:py-12 overflow-hidden select-none"
+      className="relative py-2.5 sm:py-4 overflow-hidden select-none"
       dir="rtl"
       onMouseEnter={() => setIsAutoPlay(false)}
       onMouseLeave={() => setIsAutoPlay(true)}
     >
       {/* Dynamic Background Glow matching current event */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none" />
       <div
-        className={`absolute top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-gradient-to-r ${currentStyles.glow} rounded-full blur-[100px] pointer-events-none opacity-40 transition-all duration-700`}
+        className={`absolute top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[180px] bg-gradient-to-r ${currentStyles.glow} rounded-full blur-3xl pointer-events-none opacity-25 transform-gpu will-change-transform transition-colors duration-500`}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative z-10">
         
         {/* Top Mini Carousel Navigation Header (If > 1 active event) */}
         {activeEvents.length > 1 && (
-          <div className="flex items-center justify-between gap-3 mb-4 px-2">
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-900/90 border border-zinc-800 text-xs font-bold text-zinc-300 shadow-md">
-                <Layers className="w-3.5 h-3.5 text-purple-400" />
+          <div className="flex items-center justify-between gap-2 mb-2 px-1 text-xs">
+            <div className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-zinc-900/90 border border-zinc-800 text-[11px] font-bold text-zinc-300">
+                <Layers className="w-3 h-3 text-purple-400" />
                 <span>کمپین‌های فعال ({currentIndex + 1} از {activeEvents.length})</span>
-              </span>
-              <span className="text-[11px] text-zinc-500 hidden sm:inline">
-                (برای ورق زدن به چپ و راست بکشید)
               </span>
             </div>
 
             {/* Left & Right Carousel Arrows + AutoPlay Toggle */}
-            <div className="flex items-center gap-1.5" dir="ltr">
+            <div className="flex items-center gap-1" dir="ltr">
               <button
                 type="button"
                 onClick={() => setIsAutoPlay(!isAutoPlay)}
-                className="p-2 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
-                title={isAutoPlay ? 'توقف ورق‌زدن خودکار' : 'پخش خودکار'}
+                className="p-1 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                title={isAutoPlay ? 'توقف ورق‌زدن' : 'پخش خودکار'}
               >
-                {isAutoPlay ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                {isAutoPlay ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
               </button>
 
               <button
                 type="button"
                 onClick={handlePrev}
-                className="p-2 rounded-xl bg-zinc-900/90 hover:bg-purple-600/30 border border-zinc-800 hover:border-purple-500/50 text-zinc-300 hover:text-white transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95"
+                className="p-1 rounded-lg bg-zinc-900/90 hover:bg-purple-600/30 border border-zinc-800 hover:border-purple-500/50 text-zinc-300 hover:text-white transition-all cursor-pointer shadow-sm"
                 title="ایونت قبلی"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-3.5 h-3.5" />
               </button>
 
               <button
                 type="button"
                 onClick={handleNext}
-                className="p-2 rounded-xl bg-zinc-900/90 hover:bg-purple-600/30 border border-zinc-800 hover:border-purple-500/50 text-zinc-300 hover:text-white transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95"
+                className="p-1 rounded-lg bg-zinc-900/90 hover:bg-purple-600/30 border border-zinc-800 hover:border-purple-500/50 text-zinc-300 hover:text-white transition-all cursor-pointer shadow-sm"
                 title="ایونت بعدی"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
@@ -433,59 +430,59 @@ export const OpeningEventBanner: React.FC<OpeningEventBannerProps> = ({ onOpenOr
           {/* Background layered card 2 (Depth illusion when > 2 events) */}
           {activeEvents.length > 2 && (
             <div
-              className="absolute -inset-x-2 -bottom-4 h-full rounded-3xl bg-zinc-900/40 border border-white/5 blur-[2px] transform scale-[0.93] -translate-y-2 pointer-events-none transition-all duration-500 opacity-40 z-0"
+              className="absolute -inset-x-1.5 -bottom-2 h-full rounded-2xl bg-zinc-900/40 border border-white/5 blur-[1px] transform scale-[0.96] -translate-y-1 pointer-events-none transition-all duration-500 opacity-30 z-0"
             />
           )}
 
           {/* Background layered card 1 (Depth illusion when > 1 event) */}
           {activeEvents.length > 1 && (
             <div
-              className="absolute -inset-x-1 -bottom-2 h-full rounded-3xl bg-zinc-900/70 border border-white/10 backdrop-blur-sm transform scale-[0.97] -translate-y-1 pointer-events-none transition-all duration-500 opacity-70 z-10"
+              className="absolute -inset-x-1 -bottom-1 h-full rounded-2xl bg-zinc-900/70 border border-white/10 backdrop-blur-xs transform scale-[0.98] -translate-y-0.5 pointer-events-none transition-all duration-500 opacity-60 z-10"
             />
           )}
 
           {/* Active Front Card */}
           <div
             key={currentEvent.id}
-            className={`relative z-20 rounded-3xl p-6 sm:p-10 border ${currentStyles.border} bg-gradient-to-br ${currentStyles.cardBg} ${currentStyles.shadow} overflow-hidden transition-all duration-500 transform animate-in fade-in zoom-in-95`}
+            className={`relative z-20 rounded-2xl p-3.5 sm:p-5 border ${currentStyles.border} bg-gradient-to-br ${currentStyles.cardBg} ${currentStyles.shadow} overflow-hidden transition-all duration-500 transform animate-in fade-in zoom-in-95`}
           >
             {/* Top Flare Accent */}
-            <div className={`absolute top-0 inset-x-0 h-1 bg-gradient-to-r ${currentStyles.flare}`} />
+            <div className={`absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r ${currentStyles.flare}`} />
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
               
-              {/* Content Column (7 Cols) */}
-              <div className="lg:col-span-7 space-y-5 text-start">
+              {/* Content Column (8 Cols) */}
+              <div className="lg:col-span-8 space-y-2.5 text-start">
                 
                 {/* Badges & Status */}
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <span
-                    className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-gradient-to-r ${currentStyles.badgeBg} text-xs font-bold shadow-sm`}
+                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r ${currentStyles.badgeBg} text-[11px] font-bold shadow-xs`}
                   >
                     {getEventIcon(currentEvent.eventType)}
                     <span>{currentEvent.badgeText || '🎉 رویداد اختصاصی'}</span>
                   </span>
 
                   {isCurrentlyOpen ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold animate-pulse">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                      <span>کمپین فعال و در جریان</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>کمپین در جریان</span>
                     </span>
                   ) : isCapacityFull ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>ظرفیت تکمیل شده</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/30 text-rose-300 text-[10px] font-bold">
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span>ظرفیت تکمیل</span>
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs font-bold">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>مهلت رویداد به پایان رسید</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 text-[10px] font-bold">
+                      <Clock className="w-3 h-3" />
+                      <span>پایان مهلت</span>
                     </span>
                   )}
 
                   {/* Discount/Offer Pill */}
                   {currentEvent.discountOrOffer && (
-                    <span className="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-black font-mono shadow-sm">
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-black font-mono shadow-xs">
                       {currentEvent.discountOrOffer}
                     </span>
                   )}
@@ -493,99 +490,85 @@ export const OpeningEventBanner: React.FC<OpeningEventBannerProps> = ({ onOpenOr
 
                 {/* Title & Subtitle */}
                 <div>
-                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
+                  <h2 className="text-base sm:text-xl lg:text-2xl font-black text-white tracking-tight leading-snug">
                     {currentEvent.title}
                   </h2>
-                  {currentEvent.subtitle && (
-                    <p className="text-sm sm:text-base text-zinc-200 font-medium mt-2 leading-relaxed">
-                      {currentEvent.subtitle}
+                  {(currentEvent.subtitle || currentEvent.description) && (
+                    <p className="text-xs text-zinc-300 font-normal mt-1 leading-relaxed line-clamp-2">
+                      {currentEvent.subtitle || currentEvent.description}
                     </p>
                   )}
                 </div>
 
-                {/* Highlights & Promo Code */}
-                {(currentEvent.highlightText || currentEvent.promoCode) && (
-                  <div className="flex flex-wrap items-center gap-3 pt-1">
-                    {currentEvent.highlightText && (
-                      <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-black/50 border border-white/10 text-xs font-bold text-amber-300">
-                        <Sparkles className="w-4 h-4 text-amber-400" />
-                        <span>{currentEvent.highlightText}</span>
-                      </div>
-                    )}
-
-                    {currentEvent.promoCode && (
-                      <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black/70 border border-amber-400/40 text-xs font-mono text-white shadow-lg">
-                        <span className="text-zinc-400 text-[10px]">کد تخفیف:</span>
-                        <span className="font-black text-amber-300 font-mono tracking-wider text-sm">
-                          {currentEvent.promoCode}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyCode(currentEvent.promoCode!)}
-                          className="px-2 py-0.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] transition-colors flex items-center gap-1 cursor-pointer"
-                          title="کپی کد تخفیف"
-                        >
-                          {copiedCode === currentEvent.promoCode ? (
-                            <>
-                              <Check className="w-3 h-3 text-emerald-400" />
-                              <span>کپی شد</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3 h-3" />
-                              <span>کپی</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Capacity Counter */}
-                {currentEvent.hasCapacityLimit && (
-                  <div className="flex flex-wrap items-center gap-3 pt-1">
-                    <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-black/50 border border-white/10 backdrop-blur-md">
-                      <Flame className="w-4 h-4 text-amber-400 animate-bounce" />
-                      <div className="text-xs">
-                        <span className="text-zinc-300">ظرفیت اختصاصی: </span>
-                        <span className="text-amber-300 font-extrabold text-sm font-mono">
-                          {remainingCapacity} از {currentEvent.maxCapacity} عدد باقی‌مانده
-                        </span>
-                      </div>
+                {/* Highlights, Capacity & Promo Code Line */}
+                <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                  {currentEvent.highlightText && (
+                    <div className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-black/40 border border-white/10 text-[10px] font-semibold text-amber-300">
+                      <Sparkles className="w-3 h-3 text-amber-400" />
+                      <span>{currentEvent.highlightText}</span>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Description */}
-                {currentEvent.description && (
-                  <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-normal">
-                    {currentEvent.description}
-                  </p>
-                )}
+                  {currentEvent.promoCode && (
+                    <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-black/60 border border-amber-400/30 text-[11px] font-mono text-white">
+                      <span className="text-zinc-400 text-[9px]">کد تخفیف:</span>
+                      <span className="font-black text-amber-300 font-mono tracking-wide">
+                        {currentEvent.promoCode}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyCode(currentEvent.promoCode!)}
+                        className="px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[9px] transition-colors flex items-center gap-0.5 cursor-pointer"
+                        title="کپی کد"
+                      >
+                        {copiedCode === currentEvent.promoCode ? (
+                          <>
+                            <Check className="w-2.5 h-2.5 text-emerald-400" />
+                            <span>کپی شد</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-2.5 h-2.5" />
+                            <span>کپی</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
 
-                {/* CTA Buttons */}
-                <div className="flex flex-wrap items-center gap-3 pt-2">
+                  {currentEvent.hasCapacityLimit && (
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/40 border border-white/10 text-[10px]">
+                      <Flame className="w-3 h-3 text-amber-400" />
+                      <span className="text-zinc-400">باقی‌مانده:</span>
+                      <span className="text-amber-300 font-bold font-mono">
+                        {remainingCapacity} از {currentEvent.maxCapacity}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* CTA Button & Support Assurance */}
+                <div className="flex flex-wrap items-center gap-3 pt-1">
                   <button
                     type="button"
                     onClick={handleCtaClick}
-                    className={`py-3.5 px-7 rounded-2xl bg-gradient-to-r ${currentStyles.ctaBtn} font-black text-sm sm:text-base transition-all flex items-center gap-2.5 cursor-pointer hover:scale-105 active:scale-95 shadow-xl`}
+                    className={`py-2 px-5 rounded-xl bg-gradient-to-r ${currentStyles.ctaBtn} font-bold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-95 shadow-md`}
                   >
-                    <Gift className="w-5 h-5" />
+                    <Gift className="w-4 h-4" />
                     <span>{currentEvent.ctaButtonText || 'ثبت سفارش و دریافت تخفیف'}</span>
-                    <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                    <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
                   </button>
 
-                  <span className="text-[11px] text-zinc-400 flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>تضمین بالاترین کیفیت و پشتیبانی اختصاصی TEKVIX</span>
+                  <span className="text-[10px] text-zinc-400 hidden sm:flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
+                    <span>تضمین کیفیت و تحویل سریع تکویکس</span>
                   </span>
                 </div>
 
               </div>
 
-              {/* Right Column: Countdown Box (5 Cols) */}
-              <div className="lg:col-span-5 flex flex-col items-center justify-center space-y-4">
+              {/* Right Column: Compact Countdown Box (4 Cols) */}
+              <div className="lg:col-span-4 flex items-center justify-center lg:justify-end">
                 <EventCountdownBox
                   endDate={currentEvent.endDate}
                   hasCountdown={currentEvent.hasCountdown}
@@ -601,10 +584,10 @@ export const OpeningEventBanner: React.FC<OpeningEventBannerProps> = ({ onOpenOr
 
         {/* 4. Bottom Page Indicators & Theme Chips */}
         {activeEvents.length > 1 && (
-          <div className="mt-5 flex flex-col items-center gap-3">
+          <div className="mt-2.5 flex items-center justify-between sm:justify-center gap-2 flex-wrap">
             
             {/* Interactive Thumbnail / Event Title Pills */}
-            <div className="flex items-center justify-center gap-2 flex-wrap max-w-full overflow-x-auto py-1 px-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
               {activeEvents.map((evt, idx) => {
                 const isSelected = idx === currentIndex;
                 const evtStyles = getThemeStyles(evt.theme);
@@ -614,14 +597,14 @@ export const OpeningEventBanner: React.FC<OpeningEventBannerProps> = ({ onOpenOr
                     key={evt.id}
                     type="button"
                     onClick={() => setCurrentIndex(idx)}
-                    className={`px-3 py-1.5 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border ${
+                    className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
                       isSelected
-                        ? `${evtStyles.tabActive} shadow-lg scale-105`
+                        ? `${evtStyles.tabActive} shadow-sm scale-102`
                         : 'bg-zinc-900/80 hover:bg-zinc-800 border-zinc-800 text-zinc-400 hover:text-zinc-200'
                     }`}
                   >
                     <span className="shrink-0">{getEventIcon(evt.eventType)}</span>
-                    <span className="truncate max-w-[140px] sm:max-w-[200px]">{evt.badgeText || evt.title}</span>
+                    <span className="truncate max-w-[120px] sm:max-w-[160px]">{evt.badgeText || evt.title}</span>
                     {isSelected && (
                       <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping shrink-0" />
                     )}
@@ -630,41 +613,21 @@ export const OpeningEventBanner: React.FC<OpeningEventBannerProps> = ({ onOpenOr
               })}
             </div>
 
-            {/* Pagination Dots with Swipe Helper */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handlePrev}
-                className="p-1 rounded-lg text-zinc-500 hover:text-white transition-colors cursor-pointer"
-                title="ایونت قبلی"
-              >
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-
-              <div className="flex items-center gap-1.5">
-                {activeEvents.map((_, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setCurrentIndex(idx)}
-                    className={`h-2 rounded-full transition-all cursor-pointer ${
-                      idx === currentIndex
-                        ? 'w-7 bg-gradient-to-r from-purple-500 to-amber-400 shadow-sm shadow-purple-500/50'
-                        : 'w-2 bg-zinc-700 hover:bg-zinc-500'
-                    }`}
-                    aria-label={`رفتن به صفحه ${idx + 1}`}
-                  />
-                ))}
-              </div>
-
-              <button
-                type="button"
-                onClick={handleNext}
-                className="p-1 rounded-lg text-zinc-500 hover:text-white transition-colors cursor-pointer"
-                title="ایونت بعدی"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-              </button>
+            {/* Pagination Dots */}
+            <div className="flex items-center gap-1">
+              {activeEvents.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setCurrentIndex(idx)}
+                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                    idx === currentIndex
+                      ? 'w-5 bg-gradient-to-r from-purple-500 to-amber-400'
+                      : 'w-1.5 bg-zinc-700 hover:bg-zinc-500'
+                  }`}
+                  aria-label={`رفتن به صفحه ${idx + 1}`}
+                />
+              ))}
             </div>
 
           </div>

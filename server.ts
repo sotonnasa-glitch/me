@@ -24,6 +24,7 @@ async function startServer() {
   const app = express();
 
   app.use(express.json());
+  app.use('/logos', express.static(path.join(process.cwd(), 'public/logos')));
 
   // Helper for lazy Gemini client
   function getGeminiClient(): GoogleGenAI | null {
@@ -933,7 +934,35 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
     }
   });
 
-  // 4. Test Telegram Bot Connection API
+  // 4. Test Telegram Bot Connection API (GET & POST)
+  app.get('/api/telegram/test-bot', async (req, res) => {
+    try {
+      const envToken = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
+      const effectiveToken = envToken || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus';
+      const targetChatIds = resolveTelegramChatIds(undefined);
+
+      const testMsg = `🔔 <b>پیام تست اتصال تکویکس (Tekvix AI) - تست وضعیت سلامت</b>\n\n✅ ربات تلگرام شما آنلاین و متصل است!\n⏰ <b>زمان تست:</b> ${new Date().toLocaleString('fa-IR')}`;
+
+      const dispatchResult = await dispatchTelegramNotification(effectiveToken, targetChatIds, testMsg);
+      if (dispatchResult.success) {
+        res.json({
+          success: true,
+          status: 'online',
+          message: `ربات فعال است و پیام تست به (${dispatchResult.deliveredTo.join(', ')}) تحویل داده شد.`,
+          deliveredTo: dispatchResult.deliveredTo,
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          status: 'error',
+          error: dispatchResult.errors.join(' | '),
+        });
+      }
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error?.message });
+    }
+  });
+
   app.post('/api/telegram/test-bot', async (req, res) => {
     try {
       const { botToken, chatId } = req.body;

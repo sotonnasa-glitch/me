@@ -49,10 +49,9 @@
   }
 }
 
-/* Rendering performance optimization for large sections: renders only when near viewport */
+/* Smooth GPU layer rendering for smooth scrolling without layout thrashing */
 main > section {
-  content-visibility: auto;
-  contain-intrinsic-size: 800px;
+  contain: paint;
 }
 
 /* User's Gradient & Background Classes from snippet */
