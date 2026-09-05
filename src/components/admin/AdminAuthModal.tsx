@@ -5,10 +5,8 @@ import {
   Eye,
   EyeOff,
   AlertCircle,
-  CheckCircle2,
   ArrowRight,
   ShieldCheck,
-  Sparkles
 } from 'lucide-react';
 import { useSiteData } from '../../context/SiteDataContext';
 import { AICloseButton } from '../common/AICloseButton';
@@ -60,7 +58,7 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
   return (
     <div
       id="admin-auth-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-2xl animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
       dir="rtl"
@@ -146,24 +144,6 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
                 <span>{error}</span>
               </p>
             )}
-          </div>
-
-          {/* Security Note */}
-          <div className="p-3 rounded-xl bg-purple-950/40 border border-purple-500/20 text-[11px] text-purple-200/90 leading-relaxed flex items-center justify-between">
-            <div>
-              <span className="font-bold text-amber-300">رمز عبور پیش‌فرض: </span>
-              <code className="text-purple-200 font-mono bg-purple-900/60 px-2 py-0.5 rounded select-all">mahdi2020</code>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setPassword('mahdi2020');
-                if (error) setError(null);
-              }}
-              className="text-[11px] text-purple-300 hover:text-white px-2 py-1 rounded bg-purple-800/40 hover:bg-purple-700/60 border border-purple-500/30 transition-colors cursor-pointer"
-            >
-              درج خودکار رمز
-            </button>
           </div>
 
           {/* Actions */}

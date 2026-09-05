@@ -350,7 +350,7 @@
     }
   ],
   "totalViewsCount": 2840,
-  "adminPasswordHash": "scrypt:394822479789b168c404a79877e2a137:275ae1f1dade11ba6d1af852a1193c64ce7a2e8596489965c8374d60abcf593510402033b8186d91f44608ae1472f5f4ca565b8da1eb37dc0e906ba70fff8dea",
+  "adminPasswordHash": "scrypt:87c2f52bc8a3e61076c12e5fdf06b6c7:f75f8f2acd5f5e7f4bf46176d1642a648ac5c2d6a856c4c6c0e91665889b104a7f642a61c68d1ce54a78dd73a16f0944d0e100da9f35edb2d07b39b57091c469",
   "openingEventConfig": {
     "isActive": true,
     "title": "جشن افتتاحیه TEKVIX | اولین سفارش‌ها رایگان",
@@ -363,5 +363,5 @@
     "maxWinners": 2,
     "termsNote": "هر کاربر فقط یک‌بار امکان استفاده از جایزه را دارد. سفارش‌های لغوشده محاسبه نمی‌شوند."
   },
-  "savedAt": "2026-09-04T13:26:11.830Z"
+  "savedAt": "2026-09-05T19:25:41.724Z"
 }

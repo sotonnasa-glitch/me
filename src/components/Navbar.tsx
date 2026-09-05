@@ -27,98 +27,67 @@ const RenderNavAiIcon: React.FC<{ href: string }> = ({ href }) => {
   switch (href) {
     case '#services':
       return (
-        <div className="relative w-8 h-8 rounded-xl bg-purple-950/90 border border-purple-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(168,85,247,0.35)]">
-          <div className="absolute inset-0 bg-gradient-to-tr from-purple-600/30 to-cyan-500/20" />
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-gleam pointer-events-none" />
-          <Cpu className="w-4 h-4 text-purple-300 relative z-10 animate-pulse" />
-          <span className="absolute -top-1 -start-1 w-2 h-2 rounded-full bg-cyan-400 animate-ping opacity-75" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-950/90 border border-purple-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.25)] group-hover:border-purple-400 transition-colors">
+          <Cpu className="w-4 h-4 text-purple-300 relative z-10" />
         </div>
       );
     case '#tools':
       return (
-        <div className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-[#0c1330] to-[#1e103d] border border-cyan-400/60 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_15px_rgba(34,211,238,0.45)]">
-          <div className="absolute inset-0 bg-gradient-to-tr from-cyan-600/30 via-purple-600/30 to-indigo-500/30" />
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine-gleam pointer-events-none" />
-          <Bot className="w-4 h-4 text-cyan-300 relative z-10 animate-float" />
-          <Sparkles className="w-2.5 h-2.5 text-amber-300 absolute -top-0.5 -start-0.5 animate-lens-sparkle" />
-          <span className="absolute -bottom-0.5 -end-0.5 w-2 h-2 rounded-full bg-emerald-400 animate-ping opacity-80" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-cyan-950/90 border border-cyan-400/60 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(34,211,238,0.35)] group-hover:border-cyan-300 transition-colors">
+          <Bot className="w-4 h-4 text-cyan-300 relative z-10" />
         </div>
       );
     case '#blog':
       return (
-        <div className="relative w-8 h-8 rounded-xl bg-pink-950/90 border border-pink-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(244,63,94,0.35)]">
-          <div className="absolute inset-0 bg-gradient-to-tr from-rose-600/30 to-amber-500/20" />
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-gleam pointer-events-none" />
-          <Clapperboard className="w-4 h-4 text-rose-300 relative z-10 animate-lens-sparkle" />
-          <span className="absolute top-1 end-1 w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-pink-950/90 border border-pink-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(244,63,94,0.25)] group-hover:border-pink-400 transition-colors">
+          <Clapperboard className="w-4 h-4 text-rose-300 relative z-10" />
         </div>
       );
     case '#reviews':
       return (
-        <div className="relative w-8 h-8 rounded-xl bg-amber-950/90 border border-amber-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.35)]">
-          <div className="absolute inset-0 bg-gradient-to-tr from-amber-600/30 to-yellow-500/20" />
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-gleam pointer-events-none" />
-          <MessageSquare className="w-4 h-4 text-amber-300 relative z-10 animate-float" />
-          <Sparkles className="w-2.5 h-2.5 text-yellow-300 absolute top-1 start-1 animate-pulse" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-950/90 border border-amber-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(245,158,11,0.25)] group-hover:border-amber-400 transition-colors">
+          <MessageSquare className="w-4 h-4 text-amber-300 relative z-10" />
         </div>
       );
     case '#features':
       return (
-        <div className="relative w-8 h-8 rounded-xl bg-cyan-950/90 border border-cyan-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(6,182,212,0.35)]">
-          <div className="absolute inset-0 bg-gradient-to-tr from-cyan-600/30 to-blue-500/20" />
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-gleam pointer-events-none" />
-          <Calculator className="w-4 h-4 text-cyan-300 relative z-10 animate-pulse-slow" />
-          <Zap className="w-2.5 h-2.5 text-cyan-200 absolute -top-0.5 -end-0.5 animate-pulse" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-cyan-950/90 border border-cyan-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(6,182,212,0.25)] group-hover:border-cyan-400 transition-colors">
+          <Calculator className="w-4 h-4 text-cyan-300 relative z-10" />
         </div>
       );
     case '#how-it-works':
       return (
-        <div className="relative w-8 h-8 rounded-xl bg-emerald-950/90 border border-emerald-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.35)]">
-          <div className="absolute inset-0 bg-gradient-to-tr from-emerald-600/30 to-teal-500/20" />
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-gleam pointer-events-none" />
-          <Workflow className="w-4 h-4 text-emerald-300 relative z-10 animate-orbit" />
-          <span className="absolute top-1 start-1 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping opacity-75" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-950/90 border border-emerald-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.25)] group-hover:border-emerald-400 transition-colors">
+          <Workflow className="w-4 h-4 text-emerald-300 relative z-10" />
         </div>
       );
     case '#portfolio':
       return (
-        <div className="relative w-8 h-8 rounded-xl bg-indigo-950/90 border border-indigo-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(99,102,241,0.35)]">
-          <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600/30 to-purple-500/20" />
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-gleam pointer-events-none" />
-          <Layers className="w-4 h-4 text-indigo-300 relative z-10 animate-float" />
-          <Sparkles className="w-2.5 h-2.5 text-purple-300 absolute -bottom-0.5 -start-0.5 animate-lens-sparkle" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-indigo-950/90 border border-indigo-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(99,102,241,0.25)] group-hover:border-indigo-400 transition-colors">
+          <Layers className="w-4 h-4 text-indigo-300 relative z-10" />
         </div>
       );
     case '#about':
       return (
-        <div className="relative w-8 h-8 rounded-xl bg-violet-950/90 border border-violet-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(139,92,246,0.35)]">
-          <div className="absolute inset-0 bg-gradient-to-tr from-violet-600/30 to-fuchsia-500/20" />
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-gleam pointer-events-none" />
-          <ShieldCheck className="w-4 h-4 text-violet-300 relative z-10 animate-pulse-slow" />
-          <span className="absolute inset-0.5 border border-violet-400/30 rounded-lg animate-neon-radar opacity-40" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-violet-950/90 border border-violet-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(139,92,246,0.25)] group-hover:border-violet-400 transition-colors">
+          <ShieldCheck className="w-4 h-4 text-violet-300 relative z-10" />
         </div>
       );
     case '#faq':
       return (
-        <div className="relative w-8 h-8 rounded-xl bg-teal-950/90 border border-teal-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(20,184,166,0.35)]">
-          <div className="absolute inset-0 bg-gradient-to-tr from-teal-600/30 to-emerald-500/20" />
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-gleam pointer-events-none" />
-          <HelpCircle className="w-4 h-4 text-teal-300 relative z-10 animate-pulse" />
-          <span className="absolute top-1 end-1 w-1.5 h-1.5 rounded-full bg-teal-300 animate-ping opacity-80" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-teal-950/90 border border-teal-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(20,184,166,0.25)] group-hover:border-teal-400 transition-colors">
+          <HelpCircle className="w-4 h-4 text-teal-300 relative z-10" />
         </div>
       );
     case '#contact':
       return (
-        <div className="relative w-8 h-8 rounded-xl bg-sky-950/90 border border-sky-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(14,165,233,0.35)]">
-          <div className="absolute inset-0 bg-gradient-to-tr from-sky-600/30 to-blue-500/20" />
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-gleam pointer-events-none" />
-          <Radio className="w-4 h-4 text-sky-300 relative z-10 animate-pulse" />
-          <span className="absolute top-1.5 start-1.5 w-2 h-2 rounded-full bg-sky-400 animate-neon-radar opacity-80" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-sky-950/90 border border-sky-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(14,165,233,0.25)] group-hover:border-sky-400 transition-colors">
+          <Radio className="w-4 h-4 text-sky-300 relative z-10" />
         </div>
       );
     default:
       return (
-        <div className="relative w-8 h-8 rounded-xl bg-purple-950/90 border border-purple-500/50 flex items-center justify-center overflow-hidden shrink-0">
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-950/90 border border-purple-500/50 flex items-center justify-center shrink-0">
           <Sparkles className="w-4 h-4 text-purple-300" />
         </div>
       );

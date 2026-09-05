@@ -20,10 +20,10 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
     >
       {/* Background Cosmic Grid */}
       <div className="absolute inset-0 bg-cosmic-grid opacity-30 pointer-events-none z-0" />
-
-      {/* HTML5 Canvas with minimal fading stars across the ENTIRE full screen background */}
-      <HeroCanvasStars className="absolute inset-0 w-full h-full pointer-events-none z-0" />
       
+      {/* High-Performance Cosmic Canvas Stars & Meteors */}
+      <HeroCanvasStars />
+
       {/* Radial Cosmic Background Aura */}
       <div className="absolute top-1/4 start-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] sm:w-[950px] h-[700px] sm:h-[950px] bg-radial-gradient pointer-events-none -z-10" />
 

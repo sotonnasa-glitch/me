@@ -128,11 +128,7 @@ export const AIPoweredToolsShowcase: React.FC = () => {
           return (
             <div
               key={tool.id}
-              style={{
-                animationDuration: tool.duration,
-                animationDelay: tool.delay,
-              }}
-              className={`${tool.animType} group relative p-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.09] border border-purple-500/20 hover:border-purple-400/60 transition-all duration-300 flex flex-col justify-between gap-3 cursor-pointer backdrop-blur-sm sm:backdrop-blur-md hover:scale-[1.02] active:scale-[0.98] shadow-sm`}
+              className="group relative p-3.5 rounded-2xl bg-[#0f0c24]/80 hover:bg-[#161234] border border-purple-500/20 hover:border-cyan-400/60 transition-all duration-200 flex flex-col justify-between gap-3 cursor-pointer hover:-translate-y-0.5 active:scale-[0.98] shadow-sm hover:shadow-[0_6px_20px_rgba(34,211,238,0.15)]"
             >
               {/* Card Top: Official Logo Image + Clean Unclipped Badge */}
               <div className="flex items-center justify-between gap-1.5">

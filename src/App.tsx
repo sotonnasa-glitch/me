@@ -22,6 +22,7 @@ import { AdminAuthModal } from './components/admin/AdminAuthModal';
 import { GoogleAuthModal } from './components/common/GoogleAuthModal';
 import { TekvixAiAssistant } from './components/common/TekvixAiAssistant';
 import { UniversalBackButton } from './components/common/UniversalBackButton';
+import { GlobalBackgroundStars } from './components/GlobalBackgroundStars';
 import { ArrowUp, Shield, Sparkles, Video, User } from 'lucide-react';
 
 function MainWebsite() {
@@ -101,6 +102,9 @@ function MainWebsite() {
       className="min-h-screen bg-[#05050d] text-gray-200 selection:bg-purple-600 selection:text-white font-sans antialiased overflow-x-hidden relative"
       dir="rtl"
     >
+      {/* Ultra-performant Global Background Celestial Starfield */}
+      <GlobalBackgroundStars />
+
       {/* Sticky Glassmorphic Navbar */}
       <Navbar
         onOpenOrderModal={handleOpenOrderModal}
