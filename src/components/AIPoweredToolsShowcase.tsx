@@ -1,11 +1,43 @@
-import React, { useState } from 'react';
-import { Sparkles, Cpu } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, Cpu, CheckCircle2 } from 'lucide-react';
 import { useSiteData } from '../context/SiteDataContext';
 import { AI_TOOLS_LIST } from '../data/aiToolsData';
 
 export const AIPoweredToolsShowcase: React.FC = () => {
   const { brandInfo } = useSiteData();
   const [activeFilter, setActiveFilter] = useState<string>('all');
+  const [isSpotlighted, setIsSpotlighted] = useState(false);
+
+  useEffect(() => {
+    const triggerSpotlight = () => {
+      setIsSpotlighted(true);
+      const timer = setTimeout(() => {
+        setIsSpotlighted(false);
+      }, 3200);
+      return () => clearTimeout(timer);
+    };
+
+    const handleHighlightEvent = () => triggerSpotlight();
+
+    const handleHashChange = () => {
+      if (window.location.hash === '#tools' || window.location.hash === '#ai-tools') {
+        triggerSpotlight();
+      }
+    };
+
+    window.addEventListener('highlight-tools', handleHighlightEvent);
+    window.addEventListener('hashchange', handleHashChange);
+
+    // If page loaded directly on #tools
+    if (window.location.hash === '#tools' || window.location.hash === '#ai-tools') {
+      triggerSpotlight();
+    }
+
+    return () => {
+      window.removeEventListener('highlight-tools', handleHighlightEvent);
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []);
 
   const filteredTools =
     activeFilter === 'all'
@@ -20,24 +52,36 @@ export const AIPoweredToolsShowcase: React.FC = () => {
 
   return (
     <div
-      className="p-4 sm:p-7 lg:p-8 rounded-3xl bg-[#100828]/95 sm:bg-gradient-to-br sm:from-[#180e38]/95 sm:via-[#0f0928]/95 sm:to-[#080516] border border-purple-500/35 sm:border-purple-500/40 shadow-2xl relative overflow-hidden backdrop-blur-md sm:backdrop-blur-2xl text-white gpu-accelerated"
+      id="tools"
+      className={`p-4 sm:p-7 lg:p-8 rounded-3xl bg-[#100828]/95 sm:bg-gradient-to-br sm:from-[#180e38]/95 sm:via-[#0f0928]/95 sm:to-[#080516] border-2 shadow-2xl relative overflow-hidden backdrop-blur-md sm:backdrop-blur-2xl text-white gpu-accelerated scroll-mt-24 sm:scroll-mt-28 transition-all duration-700 ${
+        isSpotlighted
+          ? 'border-cyan-300 shadow-[0_0_65px_rgba(34,211,238,0.55)] ring-4 ring-cyan-400/60 scale-[1.008]'
+          : 'border-cyan-400/80 shadow-[0_0_35px_rgba(34,211,238,0.25)] ring-1 ring-cyan-400/30'
+      }`}
       dir="rtl"
     >
+      {/* Spotlight sweeping light beam when jumping from menu */}
+      {isSpotlighted && (
+        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-cyan-400/25 to-transparent animate-shine-gleam pointer-events-none z-30" />
+      )}
+
       {/* Subtle ambient light - optimized with low blur on mobile */}
       <div className="absolute -top-10 end-0 w-56 sm:w-80 h-56 sm:h-80 bg-purple-600/15 sm:bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-10 start-0 w-56 sm:w-80 h-56 sm:h-80 bg-cyan-600/15 sm:bg-cyan-600/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-10 start-0 w-56 sm:w-80 h-56 sm:h-80 bg-cyan-600/20 sm:bg-cyan-600/25 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header with Live AI Pulse & Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 relative z-10">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
-            <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-purple-600/30 border border-purple-400/40 flex items-center justify-center text-purple-300 shadow-sm shrink-0">
-              <Cpu className="w-4 h-4 text-purple-300 animate-pulse" />
+            <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-cyan-400/60 bg-cyan-500/20 flex items-center justify-center text-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.25)] shrink-0">
+              <Cpu className="w-4 h-4 text-cyan-300 animate-pulse" />
             </span>
             <div>
-              <h3 className="text-base sm:text-xl font-black text-white leading-tight">
-                قدرت‌گرفته از ۲۰ موتور هوش مصنوعی برتر دنیا
-              </h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base sm:text-xl font-black text-white leading-tight">
+                  قدرت‌گرفته از ۲۰ موتور هوش مصنوعی برتر دنیا
+                </h3>
+              </div>
               <p className="text-xs text-purple-200/80 font-medium">
                 تمامی ۲۰ ابزار جهانی به صورت یکپارچه در پروژه‌های تکویکس فعال هستند
               </p>

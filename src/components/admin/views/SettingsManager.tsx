@@ -114,7 +114,7 @@ export const SettingsManager: React.FC = () => {
     try {
       // First save the current token and chat ID
       updateTelegramSettings(botForm);
-      const res = await testTelegramBotConnection();
+      const res = await testTelegramBotConnection(botForm);
       setTestResult(res);
     } catch (err: any) {
       setTestResult({

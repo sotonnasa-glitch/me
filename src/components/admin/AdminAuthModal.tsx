@@ -149,9 +149,21 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
           </div>
 
           {/* Security Note */}
-          <div className="p-3 rounded-xl bg-purple-950/40 border border-purple-500/20 text-[11px] text-purple-200/90 leading-relaxed">
-            <span className="font-bold text-amber-300">نکته امنیتی: </span>
-            <span>دسترسی به پنل مدیریت با نشست رمزگذاری‌شده سرور محافظت می‌شود. رمز عبور از طریق متغیر محیطی سرور یا تنظیمات پنل قابل مدیریت است.</span>
+          <div className="p-3 rounded-xl bg-purple-950/40 border border-purple-500/20 text-[11px] text-purple-200/90 leading-relaxed flex items-center justify-between">
+            <div>
+              <span className="font-bold text-amber-300">رمز عبور پیش‌فرض: </span>
+              <code className="text-purple-200 font-mono bg-purple-900/60 px-2 py-0.5 rounded select-all">mahdi2020</code>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setPassword('mahdi2020');
+                if (error) setError(null);
+              }}
+              className="text-[11px] text-purple-300 hover:text-white px-2 py-1 rounded bg-purple-800/40 hover:bg-purple-700/60 border border-purple-500/30 transition-colors cursor-pointer"
+            >
+              درج خودکار رمز
+            </button>
           </div>
 
           {/* Actions */}

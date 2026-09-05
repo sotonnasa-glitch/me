@@ -29,52 +29,48 @@ export const HeroCanvasStars: React.FC<{ className?: string }> = ({ className = 
     let lastTime = performance.now();
     let isVisible = true;
 
-    // Palette of celestial soft colors (pure white, soft violet, cyan-blue, lavender, warm gold)
+    // Palette of celestial soft colors (pure white, soft violet, celestial indigo, lavender, warm starlight gold)
     const PALETTE = [
-      { fill: '255, 255, 255', glow: 'rgba(255, 255, 255, 0.5)' },
-      { fill: '224, 215, 255', glow: 'rgba(192, 132, 252, 0.55)' },
-      { fill: '216, 180, 254', glow: 'rgba(168, 85, 247, 0.6)' },
-      { fill: '199, 210, 254', glow: 'rgba(129, 140, 248, 0.5)' },
-      { fill: '254, 240, 138', glow: 'rgba(250, 204, 21, 0.4)' },
+      { fill: '255, 255, 255', glow: 'rgba(255, 255, 255, 0.55)' },
+      { fill: '224, 215, 255', glow: 'rgba(192, 132, 252, 0.6)' },
+      { fill: '216, 180, 254', glow: 'rgba(168, 85, 247, 0.65)' },
+      { fill: '199, 210, 254', glow: 'rgba(129, 140, 248, 0.55)' },
+      { fill: '254, 240, 138', glow: 'rgba(250, 204, 21, 0.45)' },
     ];
 
-    const TOTAL_STARS = 25; // 20 to 25 stars as requested, perfectly uncluttered
+    const TOTAL_STARS = 25; // 20 to 25 stars as requested, clean and uncluttered across the entire screen
     let stars: Star[] = [];
 
-    // Helper to generate a new star position anywhere across the full screen
-    const createStarPosition = (width: number, height: number): { x: number; y: number } => {
-      const centerX = width / 2;
-      const centerY = height < 700 ? height * 0.35 : height * 0.38;
-      const deadZoneRadius = Math.min(width, height) < 640 ? 75 : 120; // avoid center text
-
-      for (let attempt = 0; attempt < 10; attempt++) {
-        const x = Math.random() * width;
-        const y = Math.random() * height;
-        const distFromCenter = Math.hypot(x - centerX, y - centerY);
-        if (distFromCenter > deadZoneRadius) {
-          return { x, y };
-        }
-      }
-      return { x: Math.random() * width, y: Math.random() * height };
-    };
-
     const initStars = (width: number, height: number) => {
+      const centerX = width / 2;
+      const centerY = height * 0.35; // Center of the celestial orb
+      const orbRadius = width < 640 ? 110 : width < 1024 ? 160 : 200;
+
       stars = Array.from({ length: TOTAL_STARS }, () => {
-        const pos = createStarPosition(width, height);
-        const fadeInDuration = 1600 + Math.random() * 2000;
-        const holdDuration = 1200 + Math.random() * 2400;
-        const fadeOutDuration = 1800 + Math.random() * 2200;
+        // Distribute across the entire screen, with a gentle buffer so center text stays crystal clear
+        let x = 0;
+        let y = 0;
+        let attempts = 0;
+        do {
+          x = 24 + Math.random() * (width - 48);
+          y = 20 + Math.random() * (height - 40);
+          attempts++;
+        } while (attempts < 15 && Math.hypot(x - centerX, y - centerY) < orbRadius * 0.8);
+
+        const fadeInDuration = 1800 + Math.random() * 2200;
+        const holdDuration = 1400 + Math.random() * 2600;
+        const fadeOutDuration = 2000 + Math.random() * 2400;
         const totalCycleTime = fadeInDuration + holdDuration + fadeOutDuration;
         const elapsedTime = Math.random() * totalCycleTime;
 
         const theme = PALETTE[Math.floor(Math.random() * PALETTE.length)];
-        const radius = 1.0 + Math.random() * 1.6;
-        const maxAlpha = 0.6 + Math.random() * 0.4;
-        const hasSparkle = Math.random() > 0.4;
+        const radius = 1.2 + Math.random() * 1.8;
+        const maxAlpha = 0.65 + Math.random() * 0.35;
+        const hasSparkle = Math.random() > 0.35;
 
         return {
-          x: pos.x,
-          y: pos.y,
+          x,
+          y,
           radius,
           color: theme.fill,
           glowColor: theme.glow,
@@ -134,19 +130,27 @@ export const HeroCanvasStars: React.FC<{ className?: string }> = ({ className = 
         const star = stars[i];
         star.elapsedTime += delta;
 
-        // When lifecycle finishes, smoothly respawn in a new full-screen location
+        // When lifecycle finishes, smoothly loop and re-randomize across screen
         if (star.elapsedTime >= star.totalCycleTime) {
           star.elapsedTime = 0;
-          const newPos = createStarPosition(width, height);
-          star.x = newPos.x;
-          star.y = newPos.y;
-          star.radius = 1.0 + Math.random() * 1.6;
+          const centerX = width / 2;
+          const centerY = height * 0.35;
+          const orbRadius = width < 640 ? 110 : width < 1024 ? 160 : 200;
+
+          let attempts = 0;
+          do {
+            star.x = 24 + Math.random() * (width - 48);
+            star.y = 20 + Math.random() * (height - 40);
+            attempts++;
+          } while (attempts < 15 && Math.hypot(star.x - centerX, star.y - centerY) < orbRadius * 0.8);
+
+          star.radius = 1.2 + Math.random() * 1.8;
           const theme = PALETTE[Math.floor(Math.random() * PALETTE.length)];
           star.color = theme.fill;
           star.glowColor = theme.glow;
-          star.fadeInDuration = 1600 + Math.random() * 2000;
-          star.holdDuration = 1200 + Math.random() * 2400;
-          star.fadeOutDuration = 1800 + Math.random() * 2200;
+          star.fadeInDuration = 1800 + Math.random() * 2200;
+          star.holdDuration = 1400 + Math.random() * 2600;
+          star.fadeOutDuration = 2000 + Math.random() * 2400;
           star.totalCycleTime = star.fadeInDuration + star.holdDuration + star.fadeOutDuration;
         }
 
@@ -196,7 +200,7 @@ export const HeroCanvasStars: React.FC<{ className?: string }> = ({ className = 
           const spikeLen = star.radius * 3.6;
           ctx.strokeStyle = `rgba(${star.color}, ${spikeAlpha})`;
           ctx.lineWidth = 0.75;
-          
+
           ctx.beginPath();
           ctx.moveTo(cx - spikeLen, cy);
           ctx.lineTo(cx + spikeLen, cy);

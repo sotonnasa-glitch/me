@@ -757,21 +757,32 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const testTelegramBotConnection = async (): Promise<{
+  const testTelegramBotConnection = async (
+    override?: { botToken?: string; chatId?: string }
+  ): Promise<{
     success: boolean;
     message?: string;
     error?: string;
   }> => {
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('tekvix_admin_token') || '' : '';
+      const activeBotToken = (override?.botToken ?? telegramSettings.botToken ?? '').trim();
+      const activeChatId = (override?.chatId ?? telegramSettings.chatId ?? '').trim();
+
       const response = await fetch('/api/telegram/test-bot', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          ...(token ? { 'x-admin-token': token } : {}),
+        },
         body: JSON.stringify({
-          botToken: telegramSettings.botToken,
-          chatId: telegramSettings.chatId,
+          botToken: activeBotToken,
+          chatId: activeChatId,
         }),
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.success) {
         return {
           success: false,
@@ -1117,17 +1128,23 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }).catch(() => {});
   };
 
-  // Universal Navigation Helper (e.g. Return to Movie/Video section)
+  // Universal Navigation Helper (e.g. Return to Movie/Video section, or jump to Tools)
   const navigateToSection = (sectionId: string) => {
     const targetId = sectionId.replace(/^#/, '');
+    if (targetId === 'tools' || targetId === 'ai-tools') {
+      try {
+        window.dispatchEvent(new CustomEvent('highlight-tools'));
+      } catch {}
+    }
     const element = document.getElementById(targetId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
       // add temporary highlight effect
-      element.classList.add('ring-2', 'ring-purple-500', 'ring-offset-4', 'ring-offset-[#05050d]');
+      const ringColor = targetId === 'tools' || targetId === 'ai-tools' ? 'ring-cyan-400' : 'ring-purple-500';
+      element.classList.add('ring-2', ringColor, 'ring-offset-4', 'ring-offset-[#05050d]', 'animate-tools-spotlight');
       setTimeout(() => {
-        element.classList.remove('ring-2', 'ring-purple-500', 'ring-offset-4', 'ring-offset-[#05050d]');
-      }, 2500);
+        element.classList.remove('ring-2', ringColor, 'ring-offset-4', 'ring-offset-[#05050d]', 'animate-tools-spotlight');
+      }, 2800);
     } else {
       window.location.hash = `#${targetId}`;
     }
@@ -1408,16 +1425,22 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch {}
   };
 
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(false);
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    return Boolean(typeof window !== 'undefined' && (localStorage.getItem('tekvix_admin_token') || sessionStorage.getItem('tekvix_admin_auth') === 'true'));
+  });
 
   // Synchronize admin authentication state with server session on mount
   useEffect(() => {
     let isMounted = true;
     const checkServerSession = async () => {
       try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('tekvix_admin_token') || '' : '';
         const res = await fetch('/api/admin/check-session', {
           credentials: 'include',
-          headers: { Accept: 'application/json' },
+          headers: {
+            Accept: 'application/json',
+            ...(token ? { 'x-admin-token': token } : {}),
+          },
         });
         if (res.ok) {
           const data = await res.json();
@@ -1425,10 +1448,10 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             setIsAdminAuthenticated(Boolean(data.authenticated));
           }
         } else {
-          if (isMounted) setIsAdminAuthenticated(false);
+          if (isMounted && !token) setIsAdminAuthenticated(false);
         }
       } catch {
-        if (isMounted) setIsAdminAuthenticated(false);
+        // keep optimistic state on network hiccup
       }
     };
     checkServerSession();
@@ -1443,7 +1466,11 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!password) {
       return { success: false, error: 'رمز عبور نمی‌تواند خالی باشد.' };
     }
-    const trimmed = password.trim();
+    // Normalize Persian and Arabic numerals to English digits
+    const trimmed = password
+      .trim()
+      .replace(/[۰-۹]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 1728))
+      .replace(/[٠-٩]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 1584));
 
     try {
       const res = await fetch('/api/admin/verify-password', {
@@ -1454,6 +1481,10 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.success) {
+        if (data.token && typeof window !== 'undefined') {
+          localStorage.setItem('tekvix_admin_token', data.token);
+          sessionStorage.setItem('tekvix_admin_auth', 'true');
+        }
         setIsAdminAuthenticated(true);
         return { success: true };
       }
@@ -1467,17 +1498,28 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     oldPassword: string,
     newPassword: string
   ): Promise<{ success: boolean; message?: string; error?: string }> => {
-    const trimmedOld = oldPassword.trim();
-    const trimmedNew = newPassword.trim();
+    const trimmedOld = oldPassword
+      .trim()
+      .replace(/[۰-۹]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 1728))
+      .replace(/[٠-٩]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 1584));
+    const trimmedNew = newPassword
+      .trim()
+      .replace(/[۰-۹]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 1728))
+      .replace(/[٠-٩]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 1584));
 
     if (!trimmedNew || trimmedNew.length < 4) {
       return { success: false, error: 'رمز عبور جدید باید حداقل ۴ کاراکتر باشد.' };
     }
 
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('tekvix_admin_token') || '' : '';
       const res = await fetch('/api/admin/change-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          ...(token ? { 'x-admin-token': token } : {}),
+        },
         credentials: 'include',
         body: JSON.stringify({ oldPassword: trimmedOld, newPassword: trimmedNew }),
       });
@@ -1493,6 +1535,10 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const logoutAdmin = async () => {
     try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('tekvix_admin_token');
+        sessionStorage.removeItem('tekvix_admin_auth');
+      }
       await fetch('/api/admin/logout', {
         method: 'POST',
         credentials: 'include',

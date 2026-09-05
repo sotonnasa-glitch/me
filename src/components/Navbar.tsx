@@ -34,6 +34,16 @@ const RenderNavAiIcon: React.FC<{ href: string }> = ({ href }) => {
           <span className="absolute -top-1 -start-1 w-2 h-2 rounded-full bg-cyan-400 animate-ping opacity-75" />
         </div>
       );
+    case '#tools':
+      return (
+        <div className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-[#0c1330] to-[#1e103d] border border-cyan-400/60 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_15px_rgba(34,211,238,0.45)]">
+          <div className="absolute inset-0 bg-gradient-to-tr from-cyan-600/30 via-purple-600/30 to-indigo-500/30" />
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine-gleam pointer-events-none" />
+          <Bot className="w-4 h-4 text-cyan-300 relative z-10 animate-float" />
+          <Sparkles className="w-2.5 h-2.5 text-amber-300 absolute -top-0.5 -start-0.5 animate-lens-sparkle" />
+          <span className="absolute -bottom-0.5 -end-0.5 w-2 h-2 rounded-full bg-emerald-400 animate-ping opacity-80" />
+        </div>
+      );
     case '#blog':
       return (
         <div className="relative w-8 h-8 rounded-xl bg-pink-950/90 border border-pink-500/50 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_12px_rgba(244,63,94,0.35)]">
@@ -174,7 +184,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navLinks = [
     { label: 'خدمات', href: '#services' },
-    { label: 'فیلم‌ها و مقالات', href: '#blog', isHighlight: true },
+    { label: 'ابزارهای هوش مصنوعی', desktopLabel: 'ابزارها', href: '#tools' },
+    { label: 'فیلم‌ها و مقالات', href: '#blog' },
     { label: 'نظرات کاربران', href: '#reviews' },
     { label: 'نحوه کار', href: '#how-it-works' },
     { label: 'نمونه‌کارها', href: '#portfolio' },
@@ -186,6 +197,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   const handleVideoLinkClick = (e: React.MouseEvent) => {
     e.preventDefault();
     navigateToSection('blog');
+  };
+
+  const handleToolsLinkClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigateToSection('tools');
   };
 
   return (
@@ -243,19 +259,21 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Desktop Nav Links */}
-        <nav id="desktop-nav-links" className="hidden lg:flex items-center gap-1 xl:gap-2 px-4 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.06] backdrop-blur-md">
+        <nav id="desktop-nav-links" className="hidden lg:flex items-center gap-1 xl:gap-1.5 px-3 xl:px-4 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.06] backdrop-blur-md">
           {navLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              onClick={link.href === '#blog' ? handleVideoLinkClick : undefined}
-              className={`text-xs xl:text-sm px-3 py-1.5 rounded-full transition-all font-medium flex items-center gap-1 ${
-                link.isHighlight
-                  ? 'bg-purple-600/30 text-purple-200 border border-purple-500/40 hover:bg-purple-600 hover:text-white font-bold shadow-sm'
-                  : 'text-gray-300 hover:text-white hover:bg-white/[0.06]'
-              }`}
+              onClick={(e) => {
+                if (link.href === '#blog') {
+                  handleVideoLinkClick(e);
+                } else if (link.href === '#tools') {
+                  handleToolsLinkClick(e);
+                }
+              }}
+              className="text-xs xl:text-sm px-2.5 xl:px-3 py-1.5 rounded-full transition-all font-medium text-gray-300 hover:text-white hover:bg-white/[0.06]"
             >
-              {link.label}
+              <span>{link.desktopLabel || link.label}</span>
             </a>
           ))}
         </nav>
@@ -425,17 +443,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setMobileMenuOpen(false);
                   if (link.href === '#blog') {
                     handleVideoLinkClick(e);
+                  } else if (link.href === '#tools') {
+                    handleToolsLinkClick(e);
                   }
                 }}
-                className={`text-sm py-2.5 px-3.5 rounded-2xl transition-all flex items-center justify-between group ${
-                  link.isHighlight
-                    ? 'bg-purple-600/25 text-purple-200 font-bold border border-purple-500/40 shadow-sm'
-                    : 'text-gray-200 hover:text-purple-200 hover:bg-white/[0.06] border border-transparent hover:border-white/10'
-                }`}
+                className="text-sm py-2.5 px-3.5 rounded-2xl transition-all flex items-center justify-between group text-gray-200 hover:text-purple-200 hover:bg-white/[0.06] border border-transparent hover:border-white/10"
               >
                 <div className="flex items-center gap-3">
                   <RenderNavAiIcon href={link.href} />
-                  <span className="font-bold">{link.label}</span>
+                  <span className="font-semibold text-gray-200 group-hover:text-purple-200">{link.label}</span>
                 </div>
                 <ArrowLeft className="w-4 h-4 text-gray-400 group-hover:text-purple-300 transition-transform group-hover:-translate-x-1" />
               </a>

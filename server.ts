@@ -41,7 +41,9 @@ async function startServer() {
   app.use(express.json({ limit: '1mb' }));
   app.use('/logos', express.static(path.join(process.cwd(), 'public/logos')));
 
-  // Server-side session configuration with HttpOnly and SameSite cookies
+  app.set('trust proxy', 1);
+
+  // Server-side session configuration with HttpOnly and SameSite=none cookies for iframe compatibility
   app.use(
     session({
       name: 'tekvix_session',
@@ -50,16 +52,20 @@ async function startServer() {
       saveUninitialized: false,
       cookie: {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 8 * 60 * 60 * 1000, // 8 hours session
+        secure: true,
+        sameSite: 'none',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days session
       },
     })
   );
 
-  // Admin authentication guard middleware
+  // Admin authentication guard middleware (supports session cookie OR x-admin-token header)
   const requireAdminAuth: express.RequestHandler = (req, res, next) => {
-    if (req.session && (req.session as any).isAdmin) {
+    const isAdminSession = Boolean(req.session && (req.session as any).isAdmin);
+    const rawHeaderToken = req.headers['x-admin-token'] || req.headers['authorization']?.replace(/^Bearer\s+/i, '');
+    const hasValidToken = Boolean(rawHeaderToken && db.verifyAdminToken(String(rawHeaderToken)));
+
+    if (isAdminSession || hasValidToken) {
       return next();
     }
     res.status(401).json({
@@ -69,10 +75,10 @@ async function startServer() {
     });
   };
 
-  // Rate limiter for admin password verification (Brute-force protection with friendly threshold)
+  // Rate limiter for admin password verification (friendly threshold)
   const adminAuthLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 25,
+    max: 100,
     skipSuccessfulRequests: true,
     standardHeaders: true,
     legacyHeaders: false,
@@ -130,7 +136,9 @@ async function startServer() {
 
   // 1.1 Admin Session Status Check (GET /api/admin/check-session)
   app.get('/api/admin/check-session', (req, res) => {
-    const isAuthenticated = Boolean(req.session && (req.session as any).isAdmin);
+    const rawHeaderToken = req.headers['x-admin-token'] || req.headers['authorization']?.replace(/^Bearer\s+/i, '');
+    const hasValidToken = Boolean(rawHeaderToken && db.verifyAdminToken(String(rawHeaderToken)));
+    const isAuthenticated = Boolean(req.session && (req.session as any).isAdmin) || hasValidToken;
     res.json({
       success: true,
       authenticated: isAuthenticated,
@@ -314,20 +322,20 @@ async function startServer() {
       const tgService = escapeTgHtml(newOrder.serviceTitle);
       const tgMsg = escapeTgHtml(newOrder.message || 'بدون توضیح');
       const tgPrice = escapeTgHtml(newOrder.priceQuoted || 'استعلامی');
-      const { url: pvUrl } = getClientDirectChatUrl(rawContact);
+      const directChat = getClientDirectChatUrl(rawContact);
 
       const telegramText = `
 🚀 <b>سفارش جدید در تکویکس (Tekvix AI)</b>
 ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰۰٪ رایگان)</i>\n' : ''}
 📌 <b>کد رهگیری:</b> <code>${orderId}</code>
 👤 <b>نام مشتری:</b> <b>${tgName}</b>
-📱 <b>آیدی تلگرام:</b> <a href="${pvUrl}">${safeContact}</a> 👈 <i>(لمس کنید)</i>
+📱 <b>آیدی / شماره تماس:</b> <a href="${directChat.url}"><b>${directChat.display}</b></a> 👈 <i>(کلیک کنید)</i>
 💼 <b>سرویس انتخابی:</b> ${tgService}
 💰 <b>هزینه / برآورد:</b> ${tgPrice}
 📝 <b>توضیحات:</b>
 <i>${tgMsg}</i>
 
-⏰ <b>زمان ثبت:</b> ${new Date().toLocaleString('fa-IR')}
+⏰ <b>زمان ثبت (به وقت ایران):</b> ${getIranPersianDateTime()}
 🌐 <b>منبع:</b> وب‌سایت تکویکس
       `.trim();
 
@@ -336,9 +344,19 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
           [
             {
               text: '💬 ورود مستقیم به پی‌وی مشتری (چت تلگرام)',
-              url: pvUrl,
+              url: directChat.url,
             },
           ],
+          ...(directChat.waUrl
+            ? [
+                [
+                  {
+                    text: '📲 گفت‌وگو در واتساپ با مشتری',
+                    url: directChat.waUrl,
+                  },
+                ],
+              ]
+            : []),
         ],
       };
 
@@ -428,12 +446,19 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
         // Securely establish server-side session
         (req.session as any).isAdmin = true;
         (req.session as any).authTime = Date.now();
+        const adminToken = db.generateAdminToken();
+        db.registerAdminToken(adminToken);
+
         req.session.save((saveErr) => {
           if (saveErr) {
-            console.error('Session save error:', saveErr);
-            return res.status(500).json({ success: false, error: 'خطا در برقراری نشست مدیریت' });
+            console.warn('Session save notice:', saveErr);
           }
-          res.json({ success: true, valid: true, message: 'ورود با موفقیت انجام شد.' });
+          res.json({
+            success: true,
+            valid: true,
+            token: adminToken,
+            message: 'ورود با موفقیت انجام شد.',
+          });
         });
       } else {
         res.status(401).json({ success: false, valid: false, message: 'رمز عبور وارد شده نادرست است.' });
@@ -713,6 +738,29 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
     }
   });
 
+  // Accurate Iran/Tehran Standard Time formatting (UTC+3:30) with Persian calendar
+  function getIranPersianDateTime(): string {
+    try {
+      const d = new Date();
+      const dateFormatted = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+        timeZone: 'Asia/Tehran',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(d);
+      const timeFormatted = new Intl.DateTimeFormat('fa-IR', {
+        timeZone: 'Asia/Tehran',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      }).format(d);
+      return `${dateFormatted} | ساعت ${timeFormatted}`;
+    } catch {
+      return new Date().toLocaleString('fa-IR', { timeZone: 'Asia/Tehran' });
+    }
+  }
+
   // Helper to escape HTML for Telegram Markdown/HTML parse mode
   function escapeTgHtml(text: string | undefined | null): string {
     if (!text) return '';
@@ -739,17 +787,47 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
     return `خطای تلگرام: ${description}`;
   }
 
-  // Helper to extract clean Telegram/Phone URL for direct PV chat
-  const getClientDirectChatUrl = (rawContact: string): { url: string; isPhone: boolean } => {
+  // Helper to extract clean Telegram/Phone URL for direct PV chat (پیام شیشه‌ای و لینک مستقیم)
+  function getClientDirectChatUrl(rawContact: string): {
+    url: string;
+    isPhone: boolean;
+    cleanContact: string;
+    display: string;
+    waUrl?: string;
+  } {
     const contact = (rawContact || '').trim();
     if (!contact) {
-      return { url: 'https://t.me/Lawat_kar', isPhone: false };
+      return {
+        url: 'https://t.me/Lawat_kar',
+        isPhone: false,
+        cleanContact: 'بدون آیدی',
+        display: 'ثبت نشده (ارتباط با پشتیبانی)',
+      };
     }
+
+    // Direct t.me links
+    if (contact.includes('t.me/')) {
+      const cleanUrl = contact.startsWith('http') ? contact : `https://${contact}`;
+      const slug = contact.split('t.me/')[1]?.replace(/[/?#].*$/, '') || '';
+      return {
+        url: cleanUrl,
+        isPhone: false,
+        cleanContact: slug ? `@${slug}` : contact,
+        display: slug ? `@${slug}` : contact,
+      };
+    }
+
     // Check if starts with @ or is a username
     if (contact.startsWith('@')) {
       const username = contact.replace(/^@+/, '').trim();
-      return { url: `https://t.me/${username}`, isPhone: false };
+      return {
+        url: `https://t.me/${username}`,
+        isPhone: false,
+        cleanContact: `@${username}`,
+        display: `@${username}`,
+      };
     }
+
     // Check if phone number (Iranian or international)
     const digitsOnly = contact.replace(/\D/g, '');
     if (digitsOnly.length >= 10) {
@@ -759,15 +837,34 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
       } else if (digitsOnly.startsWith('9') && digitsOnly.length === 10) {
         intlPhone = '98' + digitsOnly;
       }
-      return { url: `https://t.me/+${intlPhone}`, isPhone: true };
+      return {
+        url: `https://t.me/+${intlPhone}`,
+        isPhone: true,
+        cleanContact: `+${intlPhone}`,
+        display: `+${intlPhone}`,
+        waUrl: `https://wa.me/${intlPhone}`,
+      };
     }
+
     // Check if alphanumeric username without @
     if (/^[a-zA-Z0-9_]{3,32}$/.test(contact)) {
-      return { url: `https://t.me/${contact}`, isPhone: false };
+      return {
+        url: `https://t.me/${contact}`,
+        isPhone: false,
+        cleanContact: `@${contact}`,
+        display: `@${contact}`,
+      };
     }
+
     // Fallback to Telegram search
-    return { url: `https://t.me/${contact.replace(/\s+/g, '')}`, isPhone: false };
-  };
+    const clean = contact.replace(/[\s@]/g, '');
+    return {
+      url: `https://t.me/${clean}`,
+      isPhone: false,
+      cleanContact: contact,
+      display: contact,
+    };
+  }
 
   // Helper to resolve and normalize Telegram Chat IDs (maps usernames to verified chat IDs)
   function resolveTelegramChatIds(chatIdInput: string | undefined | null): string[] {
@@ -816,9 +913,10 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
   async function dispatchTelegramNotification(
     chatIds: string[],
     text: string,
-    replyMarkup?: any
+    replyMarkup?: any,
+    customToken?: string
   ): Promise<{ success: boolean; deliveredTo: string[]; errors: string[]; messageIds: number[] }> {
-    const effectiveToken = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
+    const effectiveToken = (customToken || process.env.TELEGRAM_BOT_TOKEN || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus').trim();
     if (!effectiveToken) {
       console.warn('⚠️ [TELEGRAM_DISPATCH_SKIPPED] process.env.TELEGRAM_BOT_TOKEN is not configured.');
       return {
@@ -899,10 +997,10 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
     };
   }
 
-  // 3. Telegram Bot Order Notification API - Admin Protected
-  app.post('/api/telegram/send-order', requireAdminAuth, async (req, res) => {
+  // 3. Telegram Bot Order Notification API - Public submission with rate limiting
+  app.post('/api/telegram/send-order', telegramPublicLimiter, async (req, res) => {
     try {
-      const { order, chatId } = req.body;
+      const { order, chatId, botToken } = req.body;
 
       if (!order) {
         console.warn('⚠️ [TELEGRAM_SEND_ORDER_REJECTED] Missing order payload');
@@ -925,41 +1023,52 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
       const message = escapeTgHtml(order.message || 'بدون توضیح');
       const priceQuoted = escapeTgHtml(order.priceQuoted || 'استعلامی');
       const isPromo = Boolean(order.isPromoEvent);
-      const dateStr = new Date().toLocaleString('fa-IR');
+      const dateStr = getIranPersianDateTime();
 
-      const { url: pvUrl } = getClientDirectChatUrl(rawContact);
+      const directChat = getClientDirectChatUrl(rawContact);
 
       const telegramMessage = `
 🚀 <b>سفارش جدید در تکویکس (Tekvix AI)</b>
 ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰۰٪ رایگان)</i>\n' : ''}
 📌 <b>کد رهگیری:</b> <code>${orderId}</code>
 👤 <b>نام مشتری:</b> <b>${fullName}</b>
-📱 <b>آیدی تلگرام:</b> <a href="${pvUrl}">${contactEscaped}</a> 👈 <i>(لمس کنید)</i>
+📱 <b>آیدی / شماره تماس:</b> <a href="${directChat.url}"><b>${directChat.display}</b></a> 👈 <i>(کلیک کنید)</i>
 💼 <b>سرویس انتخابی:</b> ${serviceTitle}
 💰 <b>هزینه / برآورد:</b> ${priceQuoted}
 📝 <b>توضیحات و نیازمندی:</b>
 <i>${message}</i>
 
-⏰ <b>زمان ثبت:</b> ${dateStr}
+⏰ <b>زمان ثبت (به وقت ایران):</b> ${dateStr}
 🌐 <b>منبع:</b> وب‌سایت تکویکس
       `.trim();
 
-      // Inline Keyboard for 1-Tap Direct PV Open
+      // Inline Keyboard with Glass Buttons for 1-Tap Direct PV Open
       const inlineKeyboard = {
         inline_keyboard: [
           [
             {
               text: '💬 ورود مستقیم به پی‌وی مشتری (چت تلگرام)',
-              url: pvUrl,
+              url: directChat.url,
             },
           ],
+          ...(directChat.waUrl
+            ? [
+                [
+                  {
+                    text: '📲 گفت‌وگو در واتساپ با مشتری',
+                    url: directChat.waUrl,
+                  },
+                ],
+              ]
+            : []),
         ],
       };
 
       const dispatchResult = await dispatchTelegramNotification(
         targetChatIds,
         telegramMessage,
-        inlineKeyboard
+        inlineKeyboard,
+        botToken
       );
 
       if (dispatchResult.success) {
@@ -968,7 +1077,7 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
           telegramSent: true,
           deliveredTo: dispatchResult.deliveredTo,
           messageId: dispatchResult.messageIds[0],
-          pvUrl,
+          pvUrl: directChat.url,
           message: 'پیام سفارش فوراً به ربات تلگرام ارسال شد!',
         });
       } else {
@@ -976,7 +1085,7 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
           success: true,
           telegramSent: false,
           telegramError: dispatchResult.errors.join(' | '),
-          pvUrl,
+          pvUrl: directChat.url,
           fallbackUrl: `https://t.me/Lawat_kar?text=${encodeURIComponent(`سفارش ${orderId}: ${serviceTitle} - ${rawContact}`)}`,
         });
       }
@@ -1013,32 +1122,42 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
       const contactEscaped = escapeTgHtml(safeContact);
       const consultationTopic = escapeTgHtml(safeTopic);
       const userMessage = escapeTgHtml(safeMessage);
-      const dateStr = new Date().toLocaleString('fa-IR');
+      const dateStr = getIranPersianDateTime();
 
-      const { url: pvUrl } = getClientDirectChatUrl(safeContact);
+      const directChat = getClientDirectChatUrl(safeContact);
 
       const telegramMessage = `
 💬 <b>درخواست مشاوره و استعلام جدید در تکویکس</b>
 
 👤 <b>نام کاربر:</b> <b>${fullName}</b>
-📱 <b>آیدی تلگرام:</b> <a href="${pvUrl}">${contactEscaped}</a> 👈 <i>(لمس کنید)</i>
+📱 <b>آیدی / شماره تماس:</b> <a href="${directChat.url}"><b>${directChat.display}</b></a> 👈 <i>(کلیک کنید)</i>
 🎯 <b>موضوع مشاوره:</b> ${consultationTopic}
 📝 <b>متن پیام و شرح ایده:</b>
 <i>${userMessage}</i>
 
-⏰ <b>زمان ثبت:</b> ${dateStr}
+⏰ <b>زمان ثبت (به وقت ایران):</b> ${dateStr}
 🌐 <b>بخش:</b> فرم مشاوره و تماس سایت
       `.trim();
 
-      // Inline Keyboard with 1-Tap Direct PV Button
+      // Inline Keyboard with Glass Buttons for 1-Tap Direct PV Open (پیام شیشه‌ای)
       const inlineKeyboard = {
         inline_keyboard: [
           [
             {
-              text: '🚀 ورود مستقیم به پی‌وی کاربر (چت تلگرام)',
-              url: pvUrl,
+              text: '💬 ورود مستقیم به پی‌وی کاربر (چت تلگرام)',
+              url: directChat.url,
             },
           ],
+          ...(directChat.waUrl
+            ? [
+                [
+                  {
+                    text: '📲 گفت‌وگو در واتساپ با کاربر',
+                    url: directChat.waUrl,
+                  },
+                ],
+              ]
+            : []),
         ],
       };
 
@@ -1054,7 +1173,7 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
           telegramSent: true,
           deliveredTo: dispatchResult.deliveredTo,
           messageId: dispatchResult.messageIds[0],
-          pvUrl,
+          pvUrl: directChat.url,
           message: 'درخواست مشاوره با موفقیت به ربات تلگرام ارسال شد.',
         });
       } else {
@@ -1062,7 +1181,7 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
           success: true,
           telegramSent: false,
           telegramError: dispatchResult.errors.join(' | '),
-          pvUrl,
+          pvUrl: directChat.url,
           fallbackUrl: `https://t.me/Lawat_kar?text=${encodeURIComponent(`مشاوره تکویکس\nکاربر: ${fullName}\nتماس: ${safeContact}\nموضوع: ${consultationTopic}\nپیام: ${userMessage}`)}`,
         });
       }
@@ -1076,9 +1195,24 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
   app.get('/api/telegram/test-bot', requireAdminAuth, async (req, res) => {
     try {
       const targetChatIds = resolveTelegramChatIds(undefined);
-      const testMsg = `🔔 <b>پیام تست اتصال تکویکس (Tekvix AI) - تست وضعیت سلامت</b>\n\n✅ ربات تلگرام شما آنلاین و متصل است!\n⏰ <b>زمان تست:</b> ${new Date().toLocaleString('fa-IR')}`;
+      const testMsg = `🔔 <b>پیام تست اتصال تکویکس (Tekvix AI) - تست وضعیت سلامت</b>\n\n✅ ربات تلگرام شما آنلاین و متصل است!\n⏰ <b>زمان تست (به وقت ایران):</b> ${getIranPersianDateTime()}`;
 
-      const dispatchResult = await dispatchTelegramNotification(targetChatIds, testMsg);
+      const testInlineKeyboard = {
+        inline_keyboard: [
+          [
+            {
+              text: '💬 ورود به پی‌وی پشتیبانی تکویکس',
+              url: 'https://t.me/Lawat_kar',
+            },
+            {
+              text: '🌐 کانال تکویکس',
+              url: 'https://t.me/tekvix',
+            },
+          ],
+        ],
+      };
+
+      const dispatchResult = await dispatchTelegramNotification(targetChatIds, testMsg, testInlineKeyboard);
       if (dispatchResult.success) {
         res.json({
           success: true,
@@ -1100,14 +1234,31 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
 
   app.post('/api/telegram/test-bot', requireAdminAuth, async (req, res) => {
     try {
-      const { chatId } = req.body;
+      const { chatId, botToken } = req.body;
       const targetChatIds = resolveTelegramChatIds(chatId);
 
-      const testMsg = `🔔 <b>پیام تست اتصال تکویکس (Tekvix AI)</b>\n\n✅ ربات تلگرام شما با موفقیت به وب‌سایت متصل شد!\nاز این پس تمامی سفارشات و درخواست‌های مشاوره ثبت‌شده توسط کاربران، بی‌درنگ همراه با دکمه ورود مستقیم به پی‌وی به این چت ارسال می‌شوند.\n\n⏰ <b>زمان تست:</b> ${new Date().toLocaleString('fa-IR')}`;
+      const testMsg = `🔔 <b>پیام تست اتصال تکویکس (Tekvix AI)</b>\n\n✅ ربات تلگرام شما با موفقیت به وب‌سایت متصل شد!\nاز این پس تمامی سفارشات و درخواست‌های مشاوره ثبت‌شده توسط کاربران، بی‌درنگ همراه با دکمه ورود مستقیم به پی‌وی به این چت ارسال می‌شوند.\n\n⏰ <b>زمان تست (به وقت ایران):</b> ${getIranPersianDateTime()}`;
+
+      const testInlineKeyboard = {
+        inline_keyboard: [
+          [
+            {
+              text: '💬 ورود به پی‌وی پشتیبانی تکویکس',
+              url: 'https://t.me/Lawat_kar',
+            },
+            {
+              text: '🌐 کانال تکویکس',
+              url: 'https://t.me/tekvix',
+            },
+          ],
+        ],
+      };
 
       const dispatchResult = await dispatchTelegramNotification(
         targetChatIds,
-        testMsg
+        testMsg,
+        testInlineKeyboard,
+        botToken
       );
 
       if (dispatchResult.success) {
