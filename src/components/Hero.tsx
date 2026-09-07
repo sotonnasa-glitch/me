@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { Sparkles, ChevronDown } from 'lucide-react';
+import React, { useState, useCallback, useRef } from 'react';
+import { Sparkles, ChevronDown, Volume2, VolumeX } from 'lucide-react';
 import { useSiteData } from '../context/SiteDataContext';
 import { TRUSTED_COMPANIES } from '../data/mockData';
 import { NeuralSubmitButton } from './common/NeuralSubmitButton';
@@ -10,10 +10,14 @@ interface HeroProps {
   onOpenAdmin?: () => void;
 }
 
+const NASA_SPACE_AUDIO_URL = 'https://svs.gsfc.nasa.gov/vis/a010000/a014900/a014983/SoundsofSpace.mp3';
+
 export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => {
   const { brandInfo } = useSiteData();
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [shockwaves, setShockwaves] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [isSpaceAudioPlaying, setIsSpaceAudioPlaying] = useState(false);
+  const spaceAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Smooth pointer parallax tilt for genuine 3D physical depth
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
@@ -25,6 +29,30 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
 
   const handlePointerLeave = useCallback(() => {
     setTilt({ x: 0, y: 0 });
+  }, []);
+
+  // Play authentic NASA space audio. Browsers require this to be user-initiated.
+  const toggleSpaceAudio = useCallback(async () => {
+    try {
+      if (!spaceAudioRef.current) {
+        const audio = new Audio(NASA_SPACE_AUDIO_URL);
+        audio.loop = true;
+        audio.volume = 0.28;
+        audio.addEventListener('ended', () => setIsSpaceAudioPlaying(false));
+        audio.addEventListener('pause', () => setIsSpaceAudioPlaying(false));
+        audio.addEventListener('play', () => setIsSpaceAudioPlaying(true));
+        spaceAudioRef.current = audio;
+      }
+
+      const audio = spaceAudioRef.current;
+      if (audio.paused) {
+        await audio.play();
+      } else {
+        audio.pause();
+      }
+    } catch {
+      setIsSpaceAudioPlaying(false);
+    }
   }, []);
 
   // Trigger expanding shockwave ring on tap/click
@@ -157,6 +185,19 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
             نسل جدید خدمات هوش مصنوعی و دیجیتال
           </span>
         </div>
+
+        {/* Authentic NASA Space Audio */}
+        <button
+          type="button"
+          id="hero-space-audio-btn"
+          onClick={toggleSpaceAudio}
+          aria-pressed={isSpaceAudioPlaying}
+          aria-label={isSpaceAudioPlaying ? 'توقف صدای واقعی فضا' : 'پخش صدای واقعی فضا'}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/30 border border-cyan-400/20 hover:border-cyan-400/50 hover:bg-cyan-400/10 text-cyan-200 text-xs sm:text-sm backdrop-blur-sm transition-all duration-300 mb-6"
+        >
+          {isSpaceAudioPlaying ? <Volume2 className="w-4 h-4 animate-pulse" /> : <VolumeX className="w-4 h-4" />}
+          <span>{isSpaceAudioPlaying ? 'توقف صدای واقعی فضا' : '🎧 شنیدن صدای واقعی فضا'}</span>
+        </button>
 
         {/* Hero Main Headline */}
         <h1
