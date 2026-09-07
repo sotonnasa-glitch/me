@@ -10,7 +10,8 @@ interface HeroProps {
   onOpenAdmin?: () => void;
 }
 
-const NASA_SPACE_AUDIO_URL = 'https://svs.gsfc.nasa.gov/vis/a010000/a014900/a014983/SoundsofSpace.mp3';
+// Pure NASA/Juno space-radio sonification — no spoken narration or presenter voice.
+const NASA_SPACE_AUDIO_URL = 'https://space.physics.uiowa.edu/plasma-wave/juno/audio/201608/jno-bkom-16-240.wav';
 
 export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => {
   const { brandInfo } = useSiteData();
@@ -31,7 +32,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
     setTilt({ x: 0, y: 0 });
   }, []);
 
-  // Play authentic NASA space audio. Browsers require this to be user-initiated.
+  // Play pure Juno space-radio audio. Browsers require this to be user-initiated.
   const toggleSpaceAudio = useCallback(async () => {
     setAudioRipple((value) => value + 1);
 
@@ -40,6 +41,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
         const audio = new Audio(NASA_SPACE_AUDIO_URL);
         audio.loop = true;
         audio.volume = 0.28;
+        audio.preload = 'auto';
         audio.addEventListener('ended', () => setIsSpaceAudioPlaying(false));
         audio.addEventListener('pause', () => setIsSpaceAudioPlaying(false));
         audio.addEventListener('play', () => setIsSpaceAudioPlaying(true));
@@ -157,7 +159,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
           </span>
         </div>
 
-        {/* Authentic NASA Space Audio */}
+        {/* Pure NASA/Juno Space Radio Audio — no narration */}
         <button
           type="button"
           id="hero-space-audio-btn"
