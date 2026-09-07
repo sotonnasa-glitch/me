@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { Sparkles, ChevronDown, Volume2, VolumeX } from 'lucide-react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Sparkles, ChevronDown, Volume2, VolumeX, Radio, Crosshair, Signal } from 'lucide-react';
 import { useSiteData } from '../context/SiteDataContext';
 import { TRUSTED_COMPANIES } from '../data/mockData';
 import { NeuralSubmitButton } from './common/NeuralSubmitButton';
@@ -23,8 +23,20 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
   const [shockwaves, setShockwaves] = useState<{ id: number; x: number; y: number }[]>([]);
   const [isSpaceAudioPlaying, setIsSpaceAudioPlaying] = useState(false);
   const [audioRipple, setAudioRipple] = useState(0);
+  const [signalLevel, setSignalLevel] = useState(72);
   const spaceAudioRef = useRef<HTMLAudioElement | null>(null);
   const spaceAudioSourceRef = useRef(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setSignalLevel((level) => {
+        const drift = Math.floor(Math.random() * 15) - 7;
+        return Math.max(48, Math.min(96, level + drift));
+      });
+    }, 1800);
+
+    return () => window.clearInterval(timer);
+  }, []);
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -92,6 +104,39 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
     >
       <div className="absolute inset-0 bg-cosmic-grid opacity-30 pointer-events-none z-0" />
       <HeroCanvasStars />
+
+      {/* Deep-space depth: multiple low-cost star fields create parallax-like layers without heavy 3D work. */}
+      <div className="absolute inset-0 pointer-events-none -z-[8] hero-space-depth hero-space-depth-near" />
+      <div className="absolute inset-0 pointer-events-none -z-[9] hero-space-depth hero-space-depth-far" />
+      <div className="absolute inset-0 pointer-events-none -z-[10] hero-space-dust" />
+
+      {/* Mission HUD */}
+      <div className="absolute top-24 start-4 sm:start-7 lg:start-10 z-20 hidden sm:block text-start font-mono select-none pointer-events-none">
+        <div className="flex items-center gap-2 text-[10px] sm:text-xs tracking-[0.22em] text-cyan-300/90">
+          <Crosshair className="w-3.5 h-3.5 animate-pulse" />
+          <span>MISSION // TEKVIX-01</span>
+        </div>
+        <div className="mt-2 ps-5 text-[9px] sm:text-[10px] tracking-[0.16em] text-gray-500">
+          DEEP SPACE NETWORK
+        </div>
+        <div className="mt-1 ps-5 flex items-center gap-2 text-[9px] sm:text-[10px] tracking-[0.14em] text-emerald-300/80">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          SYSTEM ONLINE
+        </div>
+      </div>
+
+      <div className="absolute top-24 end-4 sm:end-7 lg:end-10 z-20 hidden sm:block text-end font-mono select-none pointer-events-none">
+        <div className="flex items-center justify-end gap-2 text-[10px] sm:text-xs tracking-[0.18em] text-purple-300/90">
+          <span>DEEP SPACE LINK</span>
+          <Radio className="w-3.5 h-3.5 animate-pulse" />
+        </div>
+        <div className="mt-2 text-[9px] sm:text-[10px] tracking-[0.14em] text-gray-500">
+          ORBITAL AI CORE // ACTIVE
+        </div>
+        <div className="mt-1 text-[9px] sm:text-[10px] tracking-[0.14em] text-cyan-300/70">
+          CHANNEL 07 // SECURE
+        </div>
+      </div>
 
       <div className="absolute top-0 start-1/4 w-40 sm:w-80 h-[800px] bg-gradient-to-b from-purple-500/10 via-cyan-400/5 to-transparent rotate-[18deg] blur-2xl pointer-events-none -z-10" />
       <div className="absolute top-0 end-1/4 w-32 sm:w-64 h-[750px] bg-gradient-to-b from-cyan-400/10 via-fuchsia-500/5 to-transparent rotate-[-22deg] blur-2xl pointer-events-none -z-10" />
@@ -168,11 +213,38 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
           <div className="absolute top-1/4 end-1/6 w-1.5 h-1.5 rounded-full bg-fuchsia-300 shadow-[0_0_8px_#e879f9] pointer-events-none animate-stardust" style={{ animationDelay: '4s' }} />
         </div>
 
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-950/60 border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.2)] mb-6 mt-4">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-950/60 border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.2)] mb-4 mt-4">
           <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" />
           <span className="text-xs sm:text-sm font-medium text-purple-200">
             نسل جدید خدمات هوش مصنوعی و دیجیتال
           </span>
+        </div>
+
+        {/* Visual signal console. The values are an atmospheric UI simulation, not live spacecraft telemetry. */}
+        <div className="w-full max-w-md mb-4 rounded-2xl border border-cyan-400/15 bg-black/25 backdrop-blur-md px-4 py-3 shadow-[0_0_30px_rgba(34,211,238,0.06)]">
+          <div className="flex items-center justify-between gap-4 text-[9px] sm:text-[10px] font-mono tracking-[0.14em]">
+            <div className="flex items-center gap-2 text-cyan-300/90">
+              <Signal className="w-3.5 h-3.5" />
+              <span>DEEP SPACE SIGNAL</span>
+            </div>
+            <span className="text-emerald-300/80">LOCKED</span>
+          </div>
+          <div className="mt-2 flex items-end gap-1 h-7" aria-hidden="true">
+            {Array.from({ length: 30 }, (_, index) => {
+              const wave = 8 + Math.abs(Math.sin((index + signalLevel) * 0.65)) * 16 + ((signalLevel + index * 3) % 7);
+              return (
+                <span
+                  key={index}
+                  className="flex-1 min-w-0 rounded-full bg-cyan-300/50 transition-all duration-700"
+                  style={{ height: `${Math.min(100, wave * 2.2)}%`, opacity: 0.25 + (index % 5) * 0.1 }}
+                />
+              );
+            })}
+          </div>
+          <div className="mt-1 flex items-center justify-between text-[8px] font-mono tracking-[0.12em] text-gray-500">
+            <span>VISUAL SIMULATION</span>
+            <span>{signalLevel}% SIGNAL</span>
+          </div>
         </div>
 
         {/* Real NASA spacecraft space-radio audio — no narration */}
@@ -256,6 +328,52 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
       </div>
 
       <style>{`
+        .hero-space-depth-near {
+          opacity: 0.55;
+          background-image:
+            radial-gradient(circle at 12% 18%, rgba(255,255,255,.75) 0 1px, transparent 1.5px),
+            radial-gradient(circle at 72% 22%, rgba(103,232,249,.55) 0 1px, transparent 1.5px),
+            radial-gradient(circle at 38% 76%, rgba(216,180,254,.5) 0 1px, transparent 1.5px),
+            radial-gradient(circle at 86% 68%, rgba(255,255,255,.65) 0 1px, transparent 1.5px);
+          background-size: 180px 180px, 230px 230px, 290px 290px, 210px 210px;
+          animation: space-drift-near 24s linear infinite;
+        }
+
+        .hero-space-depth-far {
+          opacity: 0.35;
+          background-image:
+            radial-gradient(circle at 20% 35%, rgba(255,255,255,.65) 0 1px, transparent 1.5px),
+            radial-gradient(circle at 58% 12%, rgba(192,132,252,.45) 0 1px, transparent 1.5px),
+            radial-gradient(circle at 82% 48%, rgba(56,189,248,.45) 0 1px, transparent 1.5px);
+          background-size: 330px 330px, 410px 410px, 520px 520px;
+          animation: space-drift-far 42s linear infinite reverse;
+        }
+
+        .hero-space-dust {
+          opacity: 0.12;
+          background-image: radial-gradient(circle, rgba(124,58,237,.55) 0, transparent 1.5px);
+          background-size: 140px 140px;
+          transform: scale(1.15);
+          animation: space-dust-pulse 9s ease-in-out infinite;
+        }
+
+        @keyframes space-drift-near {
+          0% { transform: translate3d(0, 0, 0) scale(1); }
+          50% { transform: translate3d(-10px, 8px, 0) scale(1.015); }
+          100% { transform: translate3d(0, 0, 0) scale(1); }
+        }
+
+        @keyframes space-drift-far {
+          0% { transform: translate3d(0, 0, 0) scale(1.03); }
+          50% { transform: translate3d(8px, -6px, 0) scale(1); }
+          100% { transform: translate3d(0, 0, 0) scale(1.03); }
+        }
+
+        @keyframes space-dust-pulse {
+          0%, 100% { opacity: 0.08; }
+          50% { opacity: 0.16; }
+        }
+
         @keyframes audio-ripple {
           0% {
             opacity: 0.9;
@@ -275,6 +393,9 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
         }
 
         @media (prefers-reduced-motion: reduce) {
+          .hero-space-depth-near,
+          .hero-space-depth-far,
+          .hero-space-dust,
           .animate-\\[audio-ripple_0\\.75s_ease-out_forwards\\] {
             animation: none;
           }
