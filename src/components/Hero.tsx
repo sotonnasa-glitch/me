@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Sparkles, ChevronDown, Volume2, VolumeX, Headphones } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { Sparkles, ChevronDown } from 'lucide-react';
 import { useSiteData } from '../context/SiteDataContext';
 import { TRUSTED_COMPANIES } from '../data/mockData';
 import { NeuralSubmitButton } from './common/NeuralSubmitButton';
 import { HeroCanvasStars } from './HeroCanvasStars';
-import { spaceAudio } from '../utils/spaceAudio';
 
 interface HeroProps {
   onOpenOrderModal: () => void;
@@ -14,7 +13,6 @@ interface HeroProps {
 export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => {
   const { brandInfo } = useSiteData();
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const [isAudioActive, setIsAudioActive] = useState(false);
   const [shockwaves, setShockwaves] = useState<{ id: number; x: number; y: number }[]>([]);
 
   // Smooth pointer parallax tilt for genuine 3D physical depth
@@ -29,28 +27,14 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
     setTilt({ x: 0, y: 0 });
   }, []);
 
-  // Trigger cosmic resonance pulse and expanding shockwave ring on tap/click
-  const triggerOrbPulse = (e: React.MouseEvent) => {
-    spaceAudio.playOrbPulse();
+  // Trigger expanding shockwave ring on tap/click
+  const triggerOrbPulse = () => {
     const newId = Date.now();
     setShockwaves((prev) => [...prev.slice(-3), { id: newId, x: 0, y: 0 }]);
     setTimeout(() => {
       setShockwaves((prev) => prev.filter((sw) => sw.id !== newId));
     }, 1200);
   };
-
-  const toggleCosmicAudio = () => {
-    const active = spaceAudio.toggle();
-    setIsAudioActive(active);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (spaceAudio.getIsPlaying()) {
-        spaceAudio.stop();
-      }
-    };
-  }, []);
 
   return (
     <section
@@ -79,43 +63,6 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
 
       {/* Main Celestial Glow / Orbital Rings Container */}
       <div className="relative w-full max-w-5xl mx-auto px-4 flex flex-col items-center justify-center my-auto z-10">
-        
-        {/* Interactive Space Ambience Sound Toggle Pill */}
-        <div className="mb-3 z-20">
-          <button
-            type="button"
-            onClick={toggleCosmicAudio}
-            className={`group relative px-4 py-2 sm:px-5 sm:py-2.5 rounded-full border text-xs sm:text-sm font-semibold inline-flex items-center gap-2.5 transition-all duration-300 backdrop-blur-xl shadow-xl active:scale-95 ${
-              isAudioActive
-                ? 'bg-gradient-to-r from-purple-900/80 via-violet-900/70 to-indigo-900/80 border-cyan-400/80 text-cyan-200 shadow-[0_0_25px_rgba(56,189,248,0.5)] ring-2 ring-cyan-400/30'
-                : 'bg-gradient-to-r from-purple-950/70 via-black/80 to-indigo-950/70 hover:from-purple-900/80 hover:to-indigo-900/80 border-purple-400/40 hover:border-cyan-400 text-purple-100 shadow-[0_0_25px_rgba(168,85,247,0.35)] hover:shadow-[0_0_35px_rgba(56,189,248,0.45)]'
-            }`}
-          >
-            {isAudioActive ? (
-              <>
-                <Volume2 className="w-4 h-4 text-cyan-300 animate-pulse shrink-0" />
-                <span className="text-cyan-100 font-bold">در حال پخش فرکانس زنده فضا (کلیک برای قطع)</span>
-                <span className="flex items-end gap-0.5 h-3.5 px-1">
-                  <span className="w-1 h-full bg-cyan-400 animate-bounce rounded-full" />
-                  <span className="w-1 h-3/4 bg-purple-400 animate-pulse rounded-full" style={{ animationDelay: '0.15s' }} />
-                  <span className="w-1 h-1/2 bg-fuchsia-400 animate-bounce rounded-full" style={{ animationDelay: '0.3s' }} />
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="relative flex h-2.5 w-2.5 shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-400 shadow-[0_0_8px_#38bdf8]" />
-                </span>
-                <Headphones className="w-4 h-4 text-purple-300 group-hover:text-cyan-300 transition-colors shrink-0" />
-                <span className="bg-gradient-to-r from-white via-purple-100 to-cyan-200 bg-clip-text text-transparent font-bold">
-                  🎧 برای شنیدن صدای زنده اعماق کهکشان کلیک کنید ✨
-                </span>
-              </>
-            )}
-          </button>
-        </div>
-
         {/* The Cosmic Celestial Planet Orb & Orbit System with 3D Parallax Tilt */}
         <div
           style={{
@@ -177,7 +124,6 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
             aria-label="سیاره هوش مصنوعی تکویکس"
             className="relative z-10 w-[190px] h-[190px] sm:w-[300px] sm:h-[300px] md:w-[380px] md:h-[380px] rounded-full bg-gradient-to-b from-[#2e135b] via-[#1a0c36] to-[#0d071c] border-2 border-purple-400/50 shadow-[0_0_80px_rgba(168,85,247,0.7),inset_0_0_50px_rgba(192,132,252,0.45),inset_-15px_-15px_40px_rgba(0,0,0,0.8)] sm:shadow-[0_0_120px_rgba(168,85,247,0.7),inset_0_0_70px_rgba(192,132,252,0.5),inset_-25px_-25px_60px_rgba(0,0,0,0.8)] flex flex-col items-center justify-center p-3 sm:p-6 overflow-hidden animate-orb-breathe select-none group cursor-pointer active:scale-95 transition-transform"
           >
-            
             {/* Top Atmospheric Highlight / Shimmer */}
             <div className="absolute -top-12 inset-x-0 h-40 bg-gradient-to-b from-purple-300/40 via-violet-500/15 to-transparent blur-xl pointer-events-none" />
 
