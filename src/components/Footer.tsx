@@ -16,7 +16,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin, onOpenOrderTracking
 
   const navLinks = [
     { label: 'خدمات', href: '#services' },
-    { label: 'ویژگی‌ها', href: '#features' },
+    { label: 'ویژگی‌ها', href: '#tools' },
     { label: 'نحوه کار', href: '#how-it-works' },
     { label: 'نمونه‌کارها', href: '#portfolio' },
     { label: 'درباره ما', href: '#about' },
