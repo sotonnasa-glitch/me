@@ -10,8 +10,12 @@ interface HeroProps {
   onOpenAdmin?: () => void;
 }
 
-// Pure NASA/Juno space-radio sonification — no spoken narration or presenter voice.
-const NASA_SPACE_AUDIO_URL = 'https://space.physics.uiowa.edu/plasma-wave/juno/audio/201608/jno-bkom-16-240.wav';
+// Real NASA space-radio recordings mirrored as browser-compatible MP3 files.
+// These are spacecraft measurements/sonifications, not narration or background music.
+const NASA_SPACE_AUDIO_URLS = [
+  'https://gadgetnews.net/wp-content/uploads/2017/10/Cassini-Saturn-Radio-Emissions-1.mp3',
+  'https://gadgetnews.net/wp-content/uploads/2017/10/Cassini-Enceladus-Sound.mp3',
+];
 
 export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => {
   const { brandInfo } = useSiteData();
@@ -20,6 +24,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
   const [isSpaceAudioPlaying, setIsSpaceAudioPlaying] = useState(false);
   const [audioRipple, setAudioRipple] = useState(0);
   const spaceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const spaceAudioSourceRef = useRef(0);
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -32,19 +37,30 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
     setTilt({ x: 0, y: 0 });
   }, []);
 
-  // Play pure Juno space-radio audio. Browsers require this to be user-initiated.
+  // Play real spacecraft space-radio audio. Playback starts only after the user's tap.
   const toggleSpaceAudio = useCallback(async () => {
     setAudioRipple((value) => value + 1);
 
     try {
       if (!spaceAudioRef.current) {
-        const audio = new Audio(NASA_SPACE_AUDIO_URL);
+        const audio = new Audio(NASA_SPACE_AUDIO_URLS[0]);
         audio.loop = true;
         audio.volume = 0.28;
         audio.preload = 'auto';
         audio.addEventListener('ended', () => setIsSpaceAudioPlaying(false));
         audio.addEventListener('pause', () => setIsSpaceAudioPlaying(false));
         audio.addEventListener('play', () => setIsSpaceAudioPlaying(true));
+        audio.addEventListener('error', () => {
+          const nextSource = spaceAudioSourceRef.current + 1;
+          if (nextSource < NASA_SPACE_AUDIO_URLS.length) {
+            spaceAudioSourceRef.current = nextSource;
+            audio.src = NASA_SPACE_AUDIO_URLS[nextSource];
+            audio.load();
+            audio.play().catch(() => setIsSpaceAudioPlaying(false));
+          } else {
+            setIsSpaceAudioPlaying(false);
+          }
+        });
         spaceAudioRef.current = audio;
       }
 
@@ -159,7 +175,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
           </span>
         </div>
 
-        {/* Pure NASA/Juno Space Radio Audio — no narration */}
+        {/* Real NASA spacecraft space-radio audio — no narration */}
         <button
           type="button"
           id="hero-space-audio-btn"
