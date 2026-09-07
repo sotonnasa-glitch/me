@@ -176,7 +176,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
           <span className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400/0 via-cyan-300/10 to-fuchsia-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
           <span className="relative z-10 inline-flex items-center gap-2">
             {isSpaceAudioPlaying ? <Volume2 className="w-4 h-4 animate-pulse" /> : <VolumeX className="w-4 h-4" />}
-            <span>{isSpaceAudioPlaying ? 'توقف صدای واقعی فضا' : '🎧 شنیدن صدای واقعی فضا'}</span>
+            <span>{isSpaceAudioPlaying ? 'توقف صدای واقعی فضا' : '🌌 یه صدا از اعماق فضا... گوش کن 🎧'}</span>
           </span>
         </button>
 
@@ -259,7 +259,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .animate-\[audio-ripple_0\.75s_ease-out_forwards\] {
+          .animate-\\[audio-ripple_0\\.75s_ease-out_forwards\\] {
             animation: none;
           }
         }
