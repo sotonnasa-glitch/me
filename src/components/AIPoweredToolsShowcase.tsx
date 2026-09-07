@@ -126,10 +126,39 @@ export const AIPoweredToolsShowcase: React.FC = () => {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 relative z-10">
         {filteredTools.map((tool) => {
           return (
-            <div
+            <a
               key={tool.id}
-              className="group relative p-3.5 rounded-2xl bg-[#0f0c24]/80 hover:bg-[#161234] border border-purple-500/20 hover:border-cyan-400/60 transition-all duration-200 flex flex-col justify-between gap-3 cursor-pointer hover:-translate-y-0.5 active:scale-[0.98] shadow-sm hover:shadow-[0_6px_20px_rgba(34,211,238,0.15)]"
+              href={tool.websiteUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`مشاهده سایت رسمی ${tool.name}`}
+              style={{
+                animationDuration: tool.duration,
+                animationDelay: tool.delay,
+              }}
+              className={`group relative hover:z-30 p-3.5 rounded-2xl bg-[#0f0c24]/80 hover:bg-[#161234] border border-purple-500/20 hover:border-cyan-400/60 transition-all duration-200 flex flex-col justify-between gap-3 cursor-pointer hover:-translate-y-0.5 active:scale-[0.98] shadow-sm hover:shadow-[0_6px_20px_rgba(34,211,238,0.15)] no-underline text-inherit ${tool.animType}`}
             >
+              {/* Hover Tooltip - One-sentence description of what the tool is best used for */}
+              <div
+                role="tooltip"
+                className="opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 translate-y-1 group-hover:translate-y-0 z-50 pointer-events-none w-48 sm:w-56"
+              >
+                <div className="relative p-2.5 rounded-xl bg-[#0e0a24]/95 backdrop-blur-md border border-purple-400/40 shadow-[0_10px_25px_rgba(0,0,0,0.85),0_0_15px_rgba(168,85,247,0.2)] text-right">
+                  <div className="flex items-center justify-between gap-1 text-[10px] font-bold text-cyan-300 pb-1 mb-1 border-b border-purple-500/20">
+                    <span className="flex items-center gap-1">
+                      <Sparkles className="w-2.5 h-2.5 text-cyan-400 shrink-0" />
+                      <span>کاربرد اصلی</span>
+                    </span>
+                    <span className="text-[9px] text-purple-300/80 font-sans font-normal shrink-0">{tool.name}</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-gray-200 font-normal">
+                    {tool.bestUsedFor}
+                  </p>
+                  {/* Tooltip Downward Arrow */}
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-[#0e0a24] border-r border-b border-purple-400/40" />
+                </div>
+              </div>
+
               {/* Card Top: Official Logo Image + Clean Unclipped Badge */}
               <div className="flex items-center justify-between gap-1.5">
                 <div
@@ -184,7 +213,7 @@ export const AIPoweredToolsShowcase: React.FC = () => {
                 style={{ backgroundColor: tool.colorScheme.glowColor }}
                 className="hidden sm:block absolute -top-4 -end-4 w-12 h-12 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
               />
-            </div>
+            </a>
           );
         })}
       </div>

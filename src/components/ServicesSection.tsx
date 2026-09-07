@@ -449,7 +449,7 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({ onSelectServic
   };
 
   return (
-    <section id="services" className="relative py-24 sm:py-32 bg-[#040209] overflow-hidden">
+    <section id="services" className="relative py-24 sm:py-32 bg-transparent overflow-hidden">
       {/* Dynamic Cosmic Background Nebulas */}
       <div className="absolute top-1/4 end-0 w-[600px] h-[600px] bg-purple-600/12 rounded-full blur-[150px] pointer-events-none" />
       <div className="absolute bottom-10 start-0 w-[600px] h-[600px] bg-indigo-600/12 rounded-full blur-[150px] pointer-events-none" />

@@ -11,7 +11,7 @@ export const FAQSection: React.FC = () => {
   };
 
   return (
-    <section id="faq" className="relative py-24 sm:py-32 bg-[#05050d] overflow-hidden border-t border-purple-900/20">
+    <section id="faq" className="relative py-24 sm:py-32 bg-transparent overflow-hidden border-t border-purple-900/20">
       {/* Background glow */}
       <div className="absolute bottom-0 start-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-purple-900/10 rounded-full blur-3xl pointer-events-none" />
 

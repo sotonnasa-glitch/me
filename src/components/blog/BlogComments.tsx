@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useSiteData } from '../../context/SiteDataContext';
 import { BlogComment } from '../../types';
+import { getLocalAvatarUrl } from '../../utils/avatar';
 
 interface BlogCommentsProps {
   postId: string;
@@ -45,7 +46,7 @@ export const BlogComments: React.FC<BlogCommentsProps> = ({
     const email = currentUser?.email || authorEmail.trim() || undefined;
     const avatar =
       currentUser?.avatar ||
-      `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
+      getLocalAvatarUrl(name);
 
     setIsSubmitting(true);
     setTimeout(() => {
@@ -238,9 +239,7 @@ export const BlogComments: React.FC<BlogCommentsProps> = ({
                     <img
                       src={
                         comment.authorAvatar ||
-                        `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(
-                          comment.authorName
-                        )}`
+                        getLocalAvatarUrl(comment.authorName)
                       }
                       alt={comment.authorName}
                       className="w-9 h-9 rounded-xl object-cover border border-purple-500/40 bg-zinc-900"

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Settings,
   Send,
@@ -44,11 +44,49 @@ export const SettingsManager: React.FC = () => {
     showAnnouncement: brandInfo.showAnnouncement ?? true,
   });
 
-  const [botForm, setBotForm] = useState({
-    botToken: telegramSettings.botToken,
-    chatId: telegramSettings.chatId,
-    autoNotifyNewOrders: telegramSettings.autoNotifyNewOrders,
+  const [botForm, setBotForm] = useState(() => {
+    const rawToken = (telegramSettings.botToken || '').trim();
+    return {
+      botToken: rawToken === '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus' ? '' : rawToken,
+      chatId: telegramSettings.chatId || '7460143967',
+      autoNotifyNewOrders: telegramSettings.autoNotifyNewOrders ?? true,
+    };
   });
+
+  const [botLiveStatus, setBotLiveStatus] = useState<{
+    loading: boolean;
+    online?: boolean;
+    bot?: { username?: string; first_name?: string; id?: number };
+    error?: string;
+  }>({ loading: true });
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch('/api/telegram/status')
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted) {
+          setBotLiveStatus({
+            loading: false,
+            online: data.online,
+            bot: data.bot,
+            error: data.error,
+          });
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          setBotLiveStatus({
+            loading: false,
+            online: false,
+            error: err?.message,
+          });
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Password Management state
   const [passwordForm, setPasswordForm] = useState({
@@ -151,70 +189,113 @@ export const SettingsManager: React.FC = () => {
         
         {/* TELEGRAM BOT REAL INTEGRATION (NEW & ENHANCED) */}
         <div className="p-6 rounded-3xl bg-[#09061c] border border-purple-500/40 space-y-4 shadow-xl relative overflow-hidden">
-          <div className="flex items-center justify-between pb-3 border-b border-purple-500/20">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-purple-500/20">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
                 <Bot className="w-5 h-5" />
               </div>
               <div>
                 <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                  <span>اتصال مستقیم سفارشات به ربات تلگرام (Telegram Bot API)</span>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono border border-emerald-500/30">
-                    فعال و آماده
-                  </span>
+                  <span>ربات رسمی تلگرام تکویکس (@Tekvixbot)</span>
+                  {botLiveStatus.loading ? (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-mono border border-amber-500/30">
+                      در حال بررسی وضعیت...
+                    </span>
+                  ) : botLiveStatus.online ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono border border-emerald-500/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block"></span>
+                      آنلاین و پاسخگو
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-mono border border-rose-500/30">
+                      غیرفعال
+                    </span>
+                  )}
                 </h2>
                 <span className="text-[11px] text-zinc-400">
-                  هر سفارشی که در سایت ثبت شود، فوراً با جزئیات کامل به ربات تلگرام شما ارسال می‌شود.
+                  ربات تلگرام هم به پیام‌های کاربران در تلگرام پاسخ خودکار می‌دهد و هم تمام سفارشات و استعلام‌های سایت را فوری به چت تلگرام شما می‌فرستد.
                 </span>
               </div>
             </div>
 
-            <label className="flex items-center gap-2 cursor-pointer text-xs text-zinc-200">
-              <input
-                type="checkbox"
-                checked={botForm.autoNotifyNewOrders}
-                onChange={(e) =>
-                  setBotForm({ ...botForm, autoNotifyNewOrders: e.target.checked })
-                }
-                className="w-4 h-4 rounded text-purple-600 bg-white/5 border-white/20"
-              />
-              <span className="font-semibold">ارسال خودکار پیام سفارش</span>
-            </label>
+            <div className="flex items-center gap-3">
+              <a
+                href="https://t.me/Tekvixbot"
+                target="_blank"
+                rel="noreferrer"
+                className="px-3 py-1.5 rounded-xl bg-purple-900/60 hover:bg-purple-800/80 border border-purple-500/40 text-purple-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+              >
+                <Send className="w-3.5 h-3.5 rotate-180" />
+                <span>باز کردن ربات در تلگرام</span>
+              </a>
+
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-zinc-200">
+                <input
+                  type="checkbox"
+                  checked={botForm.autoNotifyNewOrders}
+                  onChange={(e) =>
+                    setBotForm({ ...botForm, autoNotifyNewOrders: e.target.checked })
+                  }
+                  className="w-4 h-4 rounded text-purple-600 bg-white/5 border-white/20"
+                />
+                <span className="font-semibold">ارسال خودکار سفارشات</span>
+              </label>
+            </div>
           </div>
+
+          {/* Bot Live Status Banner */}
+          {botLiveStatus.online && (
+            <div className="p-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between text-xs text-emerald-200">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>
+                  ربات متصل: <strong>@{botLiveStatus.bot?.username || 'Tekvixbot'}</strong> (نام: {botLiveStatus.bot?.first_name || 'تکویکس'} - شناسه: {botLiveStatus.bot?.id}) | سرویس پاسخگوی تعاملی و ثبت سفارش فعال است.
+                </span>
+              </div>
+              <span className="text-[10px] text-emerald-400 font-mono bg-emerald-900/50 px-2 py-0.5 rounded border border-emerald-500/20">
+                API Token OK
+              </span>
+            </div>
+          )}
 
           {/* Step by step guide */}
           <div className="p-4 rounded-2xl bg-purple-950/40 border border-purple-500/20 text-xs text-zinc-300 space-y-2">
             <h3 className="font-bold text-amber-300 flex items-center gap-1.5 text-xs">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>راهنمای ۳ مرحله‌ای فعال‌سازی ارسال پیام به ربات تلگرام:</span>
+              <span>راهنمای کارکرد و دریافت سفارشات در تلگرام:</span>
             </h3>
             <ol className="list-decimal list-inside space-y-1.5 text-[11px] text-zinc-300 leading-relaxed pr-1">
               <li>
-                <strong className="text-white">دریافت توکن:</strong> در تلگرام به <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" className="text-purple-300 underline font-mono">@BotFather</a> رفته، دستور <code className="bg-black/40 px-1 py-0.5 rounded text-amber-300">/newbot</code> را بزنید و توکن داده‌شده را در کادر زیر وارد کنید.
+                <strong className="text-white">شروع ربات (الزامی):</strong> وارد ربات <a href="https://t.me/Tekvixbot" target="_blank" rel="noreferrer" className="text-purple-300 underline font-mono font-bold">@Tekvixbot</a> در تلگرام شوید و دکمه <span className="text-emerald-400 font-bold">Start (شروع)</span> را بزنید.
               </li>
               <li>
-                <strong className="text-white">استارت ربات:</strong> حتماً وارد ربات تلگرامی که ساختید شوید و دکمه <span className="text-emerald-400 font-bold">Start (شروع)</span> را بزنید (تلگرام به رباتی که استارت نشده اجازه ارسال پیام نمی‌دهد).
+                <strong className="text-white">دریافت چت‌آیدی اختصاصی شما:</strong> در همان ربات کافی است دستور <code className="bg-black/40 px-1 py-0.5 rounded text-amber-300 font-mono">/id</code> را بفرستید تا ربات بلافاصله شناسه عددی شما را نمایش دهد.
               </li>
               <li>
-                <strong className="text-white">دریافت شناسه چت (Chat ID):</strong> به ربات رایگان <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" className="text-purple-300 underline font-mono">@userinfobot</a> پیام دهید تا شناسه عددی (مثل <code className="bg-black/40 px-1 py-0.5 rounded text-amber-300">123456789</code>) را به شما بدهد و در کادر چت‌آیدی وارد کنید.
+                <strong className="text-white">توکن پیش‌فرض:</strong> توکن رسمی ربات تکویکس به طور پیش‌فرض روی سرور ست شده است و نیازی به تغییر ندارد مگر اینکه بخواهید از ربات دیگری استفاده کنید.
               </li>
             </ol>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1">
-                توکن ربات تلگرام (Telegram Bot Token) <span className="text-rose-400">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-medium text-zinc-300">
+                  توکن ربات تلگرام (Telegram Bot Token)
+                </label>
+                {!botForm.botToken && (
+                  <span className="text-[10px] text-emerald-400 font-mono">توکن پیش‌فرض سرور فعال است</span>
+                )}
+              </div>
               <input
                 type="text"
                 value={botForm.botToken}
                 onChange={(e) => setBotForm({ ...botForm, botToken: e.target.value })}
-                placeholder="7123456789:AAHq..."
+                placeholder="خالی بگذارید تا از توکن سرور (@Tekvixbot) استفاده شود"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-white font-mono focus:border-purple-500 focus:outline-none"
               />
               <span className="text-[10px] text-zinc-500 mt-1 block">
-                توکن اختصاصی دریافت‌شده از BotFather@
+                اگر خالی باشد، به صورت خودکار از توکن متغیر سرور (متصل به @Tekvixbot) استفاده می‌شود.
               </span>
             </div>
 

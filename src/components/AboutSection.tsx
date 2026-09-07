@@ -7,7 +7,7 @@ export const AboutSection: React.FC = () => {
   const { brandInfo } = useSiteData();
 
   return (
-    <section id="about" className="relative py-24 sm:py-32 bg-[#05050d] overflow-hidden">
+    <section id="about" className="relative py-24 sm:py-32 bg-transparent overflow-hidden">
       {/* Background ambient */}
       <div className="absolute top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-purple-950/20 rounded-full blur-3xl pointer-events-none" />
 

@@ -909,6 +909,9 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
     return Array.from(new Set(resolved));
   }
 
+  const VERIFIED_FALLBACK_BOT_TOKEN = '8518856410:AAHIe2F0906hD4O12sNpe_YplCv9_QZ86B4';
+  const VERIFIED_BOT_TOKEN = (process.env.TELEGRAM_BOT_TOKEN || VERIFIED_FALLBACK_BOT_TOKEN).trim();
+
   // Robust Dispatcher to one or multiple Telegram targets with comprehensive debug logging
   async function dispatchTelegramNotification(
     chatIds: string[],
@@ -916,22 +919,16 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
     replyMarkup?: any,
     customToken?: string
   ): Promise<{ success: boolean; deliveredTo: string[]; errors: string[]; messageIds: number[] }> {
-    const effectiveToken = (customToken || process.env.TELEGRAM_BOT_TOKEN || '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus').trim();
-    if (!effectiveToken) {
-      console.warn('⚠️ [TELEGRAM_DISPATCH_SKIPPED] process.env.TELEGRAM_BOT_TOKEN is not configured.');
-      return {
-        success: false,
-        deliveredTo: [],
-        errors: ['توکن ربات تلگرام در متغیرهای محیطی سرور تنظیم نشده است.'],
-        messageIds: [],
-      };
+    let effectiveToken = (customToken || VERIFIED_BOT_TOKEN).trim();
+    if (effectiveToken === '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus' || !effectiveToken) {
+      effectiveToken = VERIFIED_BOT_TOKEN;
     }
 
     const targets = chatIds && chatIds.length > 0 ? chatIds : resolveTelegramChatIds(undefined);
 
     console.log('\n────────────────────────────────────────────────────────────');
     console.log('🚀 [TELEGRAM_DISPATCH_TRIGGERED]');
-    console.log(`• Token Source: process.env.TELEGRAM_BOT_TOKEN (Token: ${maskToken(effectiveToken)})`);
+    console.log(`• Token Source: ${effectiveToken === customToken ? 'Custom Token' : 'Verified Server Bot Token'} (Token: ${maskToken(effectiveToken)})`);
     console.log(`• Targets: [${targets.join(', ')}]`);
     console.log(`• Text Length: ${text.length} chars`);
     console.log(`• Has Reply Markup: ${Boolean(replyMarkup)}`);
@@ -973,8 +970,28 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
           }
           console.log(`✅ [TELEGRAM_DISPATCH_SUCCESS] Chat ID: ${target} | Message ID: ${msgId} | Latency: ${elapsed}ms`);
         } else {
-          const desc = data?.description || `HTTP ${tgRes.status} ${tgRes.statusText}`;
           const errCode = data?.error_code || tgRes.status;
+          // Auto-recovery: if custom token fails with 401 Unauthorized, retry with verified bot token
+          if (errCode === 401 && effectiveToken !== VERIFIED_BOT_TOKEN) {
+            console.warn(`🔄 [TELEGRAM_AUTH_RETRY] Token unauthorized (401). Retrying with server verified bot token for target ${target}...`);
+            const retryRes = await fetch(`https://api.telegram.org/bot${VERIFIED_BOT_TOKEN}/sendMessage`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            });
+            const retryData: any = await retryRes.json().catch(() => null);
+            if (retryData && retryData.ok) {
+              deliveredTo.push(target);
+              const retryMsgId = retryData.result?.message_id;
+              if (retryMsgId) {
+                messageIds.push(retryMsgId);
+              }
+              console.log(`✅ [TELEGRAM_DISPATCH_SUCCESS_AFTER_RETRY] Chat ID: ${target} | Message ID: ${retryMsgId}`);
+              continue;
+            }
+          }
+
+          const desc = data?.description || `HTTP ${tgRes.status} ${tgRes.statusText}`;
           const userFriendlyErr = parseTelegramError(desc, target);
           errors.push(`[${target}]: ${userFriendlyErr}`);
           console.error(`❌ [TELEGRAM_DISPATCH_ERROR] Chat ID: ${target} | Code: ${errCode} | Description: ${desc}`);
@@ -1281,6 +1298,246 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
     }
   });
 
+  // 4.1. Telegram Bot Live Status API (Checks BotFather token & returns bot details)
+  app.get('/api/telegram/status', async (req, res) => {
+    try {
+      const meRes = await fetch(`https://api.telegram.org/bot${VERIFIED_BOT_TOKEN}/getMe`);
+      const meData: any = await meRes.json().catch(() => null);
+      const defaultChatId = resolveTelegramChatIds(undefined)[0] || '7460143967';
+
+      if (meData?.ok) {
+        res.json({
+          success: true,
+          online: true,
+          bot: meData.result,
+          targetChatId: defaultChatId,
+          pollingActive: isPollingActive,
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          online: false,
+          error: meData?.description || 'توکن ربات تلگرام نامعتبر است یا توسط تلگرام تایید نشد.',
+          pollingActive: isPollingActive,
+        });
+      }
+    } catch (err: any) {
+      res.status(500).json({ success: false, online: false, error: err?.message || 'خطا در بررسی وضعیت ربات' });
+    }
+  });
+
+  // 4.2. Interactive Telegram Bot Polling Service (Auto-Responder on Telegram)
+  let isPollingActive = false;
+
+  async function sendBotMessage(chatId: string | number, text: string, replyMarkup?: any) {
+    try {
+      const tgRes = await fetch(`https://api.telegram.org/bot${VERIFIED_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          parse_mode: 'HTML',
+          disable_web_page_preview: true,
+          ...(replyMarkup ? { reply_markup: replyMarkup } : {}),
+        }),
+      });
+      const data: any = await tgRes.json().catch(() => null);
+      if (!data?.ok) {
+        console.warn(`⚠️ [TG_BOT_SEND_WARN] To ${chatId}:`, data?.description);
+      }
+    } catch (err) {
+      console.error(`❌ [TG_BOT_SEND_ERR] To ${chatId}:`, err);
+    }
+  }
+
+  async function handleTelegramUpdate(update: any) {
+    const appUrl = (process.env.APP_URL || 'https://tekvix.ir').replace(/\/$/, '');
+
+    // 1. Handle Callback Queries (Inline Button Clicks)
+    if (update.callback_query) {
+      const cq = update.callback_query;
+      const cqChatId = cq.message?.chat?.id;
+      const data = cq.data;
+
+      if (cqChatId && data === 'get_my_id') {
+        const idMsg = `🆔 <b>شناسه عددی تلگرام شما:</b> <code>${cqChatId}</code>\n\n💡 <i>می‌توانید این شناسه را در پنل ادمین تکویکس برای دریافت مستقیم سفارشات وارد کنید.</i>`;
+        await sendBotMessage(cqChatId, idMsg);
+      }
+
+      // Acknowledge callback query
+      fetch(`https://api.telegram.org/bot${VERIFIED_BOT_TOKEN}/answerCallbackQuery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ callback_query_id: cq.id }),
+      }).catch(() => null);
+      return;
+    }
+
+    // 2. Handle Direct Messages
+    const msg = update.message;
+    if (!msg || !msg.chat) return;
+
+    const chatId = msg.chat.id;
+    const text = (msg.text || '').trim();
+    const firstName = msg.from?.first_name || 'کاربر گرامی';
+    const username = msg.from?.username ? `@${msg.from.username}` : '';
+
+    console.log(`📩 [TG_INTERACTIVE_MSG] From: ${firstName} (${chatId}, ${username}) | Content: "${text}"`);
+
+    // Command: /start
+    if (text.startsWith('/start')) {
+      const welcomeText = `
+👋 <b>درود ${escapeTgHtml(firstName)} عزیز! به ربات رسمی تکویکس (Tekvix AI) خوش آمدید.</b>
+
+ما در <b>تکویکس</b> با به‌کارگیری برترین هوش‌های مصنوعی پیشرفته دنیا (Gemini 2.5، Claude 3.5، Midjourney، Suno و Runway)، خدمات دیجیتال نسل آینده را پیاده‌سازی می‌کنیم:
+
+✨ <b>خدمات ویژه تکویکس:</b>
+• 🌐 <b>طراحی وب‌سایت‌های هوشمند:</b> پرسرعت، مدرن و با سئوی اختصاصی
+• 🎬 <b>تولید ویدیو و تیزر سینمایی:</b> کیفیت 4K با هوش مصنوعی
+• 🎨 <b>طراحی تصویر و کاراکتر:</b> فوق‌واقع‌گرایانه و بدون مرز
+• 🎵 <b>آهنگسازی و تولید موسیقی:</b> با خواننده و ترانه‌سرایی اختصاصی
+• 🎙️ <b>صداگذاری، دوبله و نریشن:</b> با طبیعی‌ترین صداهای هوشمند
+• 🤖 <b>ساخت ربات تلگرام و اتوماسیون:</b> راهکارهای سازمانی و فروشگاهی
+
+👇 <i>برای ثبت سفارش یا مشاوره آنلاین یکی از گزینه‌های زیر را انتخاب فرمایید:</i>
+      `.trim();
+
+      const keyboard = {
+        inline_keyboard: [
+          [
+            { text: '🌐 ورود به وب‌سایت تکویکس', url: appUrl },
+            { text: '💼 خدمات و تعرفه‌ها', url: `${appUrl}#services` },
+          ],
+          [
+            { text: '💬 گفتگوی مستقیم با مدیریت (@Lawat_kar)', url: 'https://t.me/Lawat_kar' },
+            { text: '📢 عضویت در کانال تکویکس', url: 'https://t.me/tekvix' },
+          ],
+          [
+            { text: '🆔 دریافت چت‌آیدی من (/id)', callback_data: 'get_my_id' },
+          ],
+        ],
+      };
+
+      await sendBotMessage(chatId, welcomeText, keyboard);
+      return;
+    }
+
+    // Command: /id or /chatid
+    if (text === '/id' || text === '/chatid' || text === 'آیدی من' || text === 'ایدی') {
+      const idText = `
+🆔 <b>شناسه تلگرام شما:</b> <code>${chatId}</code>
+👤 <b>نام:</b> ${escapeTgHtml(firstName)}
+${username ? `📱 <b>یوزرنیم:</b> ${username}\n` : ''}
+💡 <i>نکته: برای اتصال این چت به سیستم دریافت سفارشات وب‌سایت تکویکس، شناسه عددی بالا (<code>${chatId}</code>) را در تنظیمات پنل ادمین وارد فرمایید.</i>
+      `.trim();
+
+      await sendBotMessage(chatId, idText, {
+        inline_keyboard: [
+          [
+            { text: '🌐 بازگشت به سایت تکویکس', url: appUrl },
+            { text: '💬 ارتباط با ادمین (@Lawat_kar)', url: 'https://t.me/Lawat_kar' },
+          ],
+        ],
+      });
+      return;
+    }
+
+    // Command: /help or /راهنما
+    if (text === '/help' || text === 'راهنما' || text === '/services' || text === 'خدمات') {
+      const helpText = `
+ℹ️ <b>راهنمای خدمات هوش مصنوعی تکویکس (Tekvix)</b>
+
+🔹 <b>ثبت سفارش:</b> از طریق وب‌سایت یا ارسال پیام مستقیم به مدیریت
+🔹 <b>پشتیبانی و مشاوره تخصصی:</b> @Lawat_kar
+🔹 <b>کانال رسمی و نمونه‌کارها:</b> @tekvix
+🔹 <b>شناسه چت تلگرام:</b> ارسال دستور /id
+
+📞 <i>تیم فنی تکویکس آماده تحویل سفارشات شما ظرف ۲۴ الی ۴۸ ساعت با بالاترین استانداردهای هوش مصنوعی است.</i>
+      `.trim();
+
+      await sendBotMessage(chatId, helpText, {
+        inline_keyboard: [
+          [
+            { text: '🌐 ثبت سفارش آنلاین', url: appUrl },
+            { text: '💬 پشتیبانی فوری', url: 'https://t.me/Lawat_kar' },
+          ],
+        ],
+      });
+      return;
+    }
+
+    // Free text message: acknowledge and guide
+    const replyText = `
+درود <b>${escapeTgHtml(firstName)}</b> عزیز! 🌸
+پیام شما در سامانه هوشمند تکویکس دریافت شد.
+
+برای دریافت مشاوره فوری، استعلام هزینه یا ثبت سفارش آنلاین پروژه، می‌توانید مستقیماً از طریق دکمه‌های زیر اقدام نمایید:
+    `.trim();
+
+    await sendBotMessage(chatId, replyText, {
+      inline_keyboard: [
+        [
+          { text: '🌐 ورود به سایت و ثبت سفارش', url: appUrl },
+          { text: '💬 گفتگو با پشتیبانی (@Lawat_kar)', url: 'https://t.me/Lawat_kar' },
+        ],
+        [
+          { text: '📢 کانال نمونه‌کارها (@tekvix)', url: 'https://t.me/tekvix' },
+        ],
+      ],
+    });
+  }
+
+  async function startTelegramBotPolling() {
+    if (isPollingActive) return;
+    isPollingActive = true;
+    console.log('🤖 [TELEGRAM_POLLING] Starting background auto-responder for @Tekvixbot...');
+
+    let offset = 0;
+
+    // Verify bot identity
+    try {
+      const meRes = await fetch(`https://api.telegram.org/bot${VERIFIED_BOT_TOKEN}/getMe`);
+      const meData: any = await meRes.json().catch(() => null);
+      if (meData?.ok) {
+        console.log(`✅ [TELEGRAM_BOT_READY] Bot online: @${meData.result.username} (ID: ${meData.result.id})`);
+      } else {
+        console.warn(`⚠️ [TELEGRAM_BOT_VERIFY_WARN]`, meData);
+      }
+    } catch (err) {
+      console.error(`❌ [TELEGRAM_BOT_INIT_ERR]:`, err);
+    }
+
+    // Background polling loop
+    (async () => {
+      while (isPollingActive) {
+        try {
+          const pollUrl = `https://api.telegram.org/bot${VERIFIED_BOT_TOKEN}/getUpdates?offset=${offset}&timeout=25&allowed_updates=${encodeURIComponent(JSON.stringify(['message', 'callback_query']))}`;
+          const response = await fetch(pollUrl);
+          const data: any = await response.json().catch(() => null);
+
+          if (data && data.ok && Array.isArray(data.result)) {
+            for (const update of data.result) {
+              offset = update.update_id + 1;
+              handleTelegramUpdate(update).catch((uErr) => {
+                console.error('Error in handleTelegramUpdate:', uErr);
+              });
+            }
+          } else if (data && !data.ok) {
+            // If conflict or network error, wait briefly before retrying
+            await new Promise((r) => setTimeout(r, 4000));
+          }
+        } catch (err) {
+          // Network hiccup, wait 3 seconds
+          await new Promise((r) => setTimeout(r, 3000));
+        }
+      }
+    })().catch((loopErr) => {
+      console.error('Fatal in telegram polling loop:', loopErr);
+      isPollingActive = false;
+    });
+  }
+
   // 5. Vite Middleware or Static Production Serving
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
@@ -1298,6 +1555,10 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Tekvix server running on http://0.0.0.0:${PORT}`);
+    // Start background Telegram interactive bot auto-responder
+    startTelegramBotPolling().catch((err) => {
+      console.error('Failed to start Telegram bot polling:', err);
+    });
   });
 }
 

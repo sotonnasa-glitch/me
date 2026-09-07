@@ -279,10 +279,14 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             ? DEFAULT_TELEGRAM_SETTINGS.chatId
             : savedChatId;
 
+        const rawToken = (parsed.botToken || '').trim();
+        const safeToken =
+          rawToken === '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus' ? '' : rawToken;
+
         return {
           ...DEFAULT_TELEGRAM_SETTINGS,
           ...parsed,
-          botToken: parsed.botToken || DEFAULT_TELEGRAM_SETTINGS.botToken,
+          botToken: safeToken,
           chatId: normalizedChatId,
           botUsername: parsed.botUsername || DEFAULT_TELEGRAM_SETTINGS.botUsername,
         };

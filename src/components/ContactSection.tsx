@@ -48,7 +48,7 @@ export const ContactSection: React.FC = () => {
   };
 
   return (
-    <section id="contact" className="relative py-24 sm:py-32 bg-[#05050d] overflow-hidden border-t border-purple-900/20">
+    <section id="contact" className="relative py-24 sm:py-32 bg-transparent overflow-hidden border-t border-purple-900/20">
       {/* Background glow */}
       <div className="absolute top-1/2 end-10 w-96 h-96 bg-purple-900/10 rounded-full blur-3xl pointer-events-none" />
 

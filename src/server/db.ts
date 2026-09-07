@@ -427,7 +427,7 @@ class TekvixDatabase {
       email: userData.email,
       phone: userData.phone || existing?.phone,
       telegram: userData.telegram || existing?.telegram,
-      avatar: userData.avatar || existing?.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${userData.id}`,
+      avatar: userData.avatar || existing?.avatar || '',
       role: userData.role || existing?.role || 'user',
       lastLoginAt: now,
       createdAt: existing?.createdAt || now,

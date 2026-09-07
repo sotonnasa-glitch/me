@@ -136,7 +136,7 @@ export const PortfolioSection: React.FC<PortfolioSectionProps> = ({ onOpenOrderM
   };
 
   return (
-    <section id="portfolio" className="relative py-20 sm:py-28 bg-[#05050d] overflow-hidden" dir="rtl">
+    <section id="portfolio" className="relative py-20 sm:py-28 bg-transparent overflow-hidden" dir="rtl">
       {/* Dynamic Cosmic Ambient Glows */}
       <div className="absolute top-1/4 start-10 w-[550px] h-[550px] bg-purple-900/15 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-10 end-10 w-[450px] h-[450px] bg-indigo-900/15 rounded-full blur-3xl pointer-events-none" />

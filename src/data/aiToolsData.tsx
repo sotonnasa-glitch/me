@@ -3,6 +3,8 @@ import React from 'react';
 export interface AIToolItem {
   id: string;
   name: string;
+  websiteUrl: string;
+  bestUsedFor: string;
   categoryBadge: string;
   categoryFa: string;
   company: string;
@@ -21,7 +23,53 @@ export interface AIToolItem {
   svgIcon: React.ReactNode;
 }
 
-export const AI_TOOLS_LIST: AIToolItem[] = [
+export const AI_TOOL_WEBSITE_URLS: Record<string, string> = {
+  'chatgpt-openai': 'https://chatgpt.com',
+  'google-gemini': 'https://gemini.google.com',
+  'claude-anthropic': 'https://claude.ai',
+  'midjourney': 'https://www.midjourney.com',
+  'suno-ai': 'https://suno.com',
+  'elevenlabs': 'https://elevenlabs.io',
+  'runway-ml': 'https://runwayml.com',
+  'sora-openai': 'https://sora.com',
+  'flux-1': 'https://bfl.ai',
+  'kling-ai': 'https://klingai.com',
+  'deepseek': 'https://chat.deepseek.com',
+  'dall-e-3': 'https://openai.com/dall-e-3',
+  'stable-diffusion': 'https://stability.ai',
+  'pika-labs': 'https://pika.art',
+  'adobe-firefly': 'https://firefly.adobe.com',
+  'meta-llama': 'https://www.meta.ai',
+  'leonardo-ai': 'https://leonardo.ai',
+  'perplexity-ai': 'https://www.perplexity.ai',
+  'n8n-automation': 'https://n8n.io',
+  'grok-xai': 'https://grok.com',
+};
+
+export const AI_TOOL_BEST_USED_FOR: Record<string, string> = {
+  'chatgpt-openai': 'بهترین برای تولید محتوا، برنامه‌نویسی، سناریونویسی و پردازش هوشمند متون.',
+  'google-gemini': 'پیشرو در استدلال چندرسانه‌ای، تحلیل اسناد سنگین و درک همزمان تصویر و کد.',
+  'claude-anthropic': 'بهترین گزینه برای تحلیل اسناد طولانی، منطق پیشرفته و برنامه‌نویسی بدون خطا.',
+  'midjourney': 'خلق باکیفیت‌ترین تصاویر هنری، جلوه‌های سینمایی و رندرهای واقع‌گرایانه.',
+  'suno-ai': 'ساخت آهنگ‌های کامل استودیویی با خواننده، سازهای اختصاصی و ترانه‌سرایی.',
+  'elevenlabs': 'طبیعی‌ترین شبیه‌سازی صدا، گویندگی پادکست، دوبله و تولید صدای واقع‌گرایانه.',
+  'runway-ml': 'تولید تیزرهای سینمایی تبلیغاتی و تبدیل عکس یا متن به ویدیوهای حرفه‌ای.',
+  'sora-openai': 'تولید صحنه‌های ویدیویی فوق‌واقعی با شبیه‌سازی فیزیک دنیای واقعی.',
+  'flux-1': 'بهترین رندر متون گرافیکی روی عکس، آناتومی بی‌نقص و پرتره‌های طبیعی.',
+  'kling-ai': 'خلق انیمیشن‌های نرم، حرکات داینامیک بدن و موشن‌های ویدیویی ۱۰۸۰p.',
+  'deepseek': 'حل مسائل پیچیده ریاضی، معماری نرم‌افزار و استدلال عمیق منطقی.',
+  'dall-e-3': 'تبدیل دقیق پرامپت‌های مفهومی و متنی به تصاویر گرافیکی و استیکرها.',
+  'stable-diffusion': 'سفارشی‌سازی تخصصی مدل‌ها، کنترل خطوط تصویر (ControlNet) و آزادی طراحی.',
+  'pika-labs': 'ایجاد افکت‌های سه‌بعدی ویدیویی خلاقانه مانند خرد شدن، کش‌آمدن و بادکنکی شدن.',
+  'adobe-firefly': 'طراحی گرافیک تجاری بدون حق کپی‌رایت، وکتورسازی و ادغام با فتوشاپ.',
+  'meta-llama': 'موتور پردازش سریع زبان طبیعی، درک متن و پاسخ‌دهی به مکالمات پیچیده.',
+  'leonardo-ai': 'ایده‌آل برای بازی‌سازی، طراحی کانسپت کاراکتر و تکسچرسازی سه‌بعدی.',
+  'perplexity-ai': 'جستجو و تحقیق دقیق با ارائه منابع معتبر وب و مقالات به‌صورت زنده.',
+  'n8n-automation': 'اتوماسیون فرآیندها، اتصال مدل‌های هوش مصنوعی به تلگرام و پایگاه‌های داده.',
+  'grok-xai': 'تحلیل رویدادها و اخبار زنده توییتر (X) بدون سانسور با لحن هوشمند.',
+};
+
+const RAW_AI_TOOLS: Omit<AIToolItem, 'websiteUrl' | 'bestUsedFor'>[] = [
   {
     id: 'google-gemini',
     name: 'Google Gemini',
@@ -562,3 +610,9 @@ export const AI_TOOLS_LIST: AIToolItem[] = [
     ),
   },
 ];
+
+export const AI_TOOLS_LIST: AIToolItem[] = RAW_AI_TOOLS.map((tool) => ({
+  ...tool,
+  websiteUrl: AI_TOOL_WEBSITE_URLS[tool.id] || '#',
+  bestUsedFor: AI_TOOL_BEST_USED_FOR[tool.id] || tool.categoryFa,
+}));

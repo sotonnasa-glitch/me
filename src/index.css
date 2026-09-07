@@ -49,11 +49,6 @@
   }
 }
 
-/* Smooth GPU layer rendering for smooth scrolling without layout thrashing */
-main > section {
-  contain: paint;
-}
-
 /* User's Gradient & Background Classes from snippet */
 .black-gradient {
   background: #000000;
@@ -178,19 +173,23 @@ main > section {
 }
 
 .animate-orbit {
-  animation: orbit-rotate 40s linear infinite;
+  animation: orbit-rotate 18s linear infinite;
+  transform-origin: center center;
+  will-change: transform;
 }
 
 .animate-orbit-reverse {
-  animation: orbit-counter-rotate 55s linear infinite;
+  animation: orbit-counter-rotate 24s linear infinite;
+  transform-origin: center center;
+  will-change: transform;
 }
 
 .animate-pulse-slow {
-  animation: pulse-slow 8s ease-in-out infinite;
+  animation: pulse-slow 5s ease-in-out infinite;
 }
 
 .animate-float {
-  animation: float-gentle 5s ease-in-out infinite;
+  animation: float-gentle 3.5s ease-in-out infinite;
 }
 
 /* Celestial Star Twinkle - 100% GPU Composited with zero paint overhead */
@@ -217,6 +216,91 @@ main > section {
 .animate-orb-breathe {
   animation: orb-breathe 6s ease-in-out infinite;
   will-change: transform;
+}
+
+/* Enhanced Deep Space Animations */
+@keyframes orbit-tilt-slow {
+  0% {
+    transform: rotate3d(1, 0.4, 0.2, 60deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotate3d(1, 0.4, 0.2, 60deg) rotateZ(360deg);
+  }
+}
+
+@keyframes orbit-tilt-counter {
+  0% {
+    transform: rotate3d(0.3, 1, 0.4, 50deg) rotateZ(360deg);
+  }
+  100% {
+    transform: rotate3d(0.3, 1, 0.4, 50deg) rotateZ(0deg);
+  }
+}
+
+@keyframes cosmic-corona {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+    filter: drop-shadow(0 0 25px rgba(168, 85, 247, 0.5));
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.06);
+    filter: drop-shadow(0 0 45px rgba(192, 132, 252, 0.8)) drop-shadow(0 0 70px rgba(56, 189, 248, 0.4));
+  }
+}
+
+@keyframes nebula-pulse {
+  0%, 100% {
+    transform: scale(1) translate(0px, 0px);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.1) translate(-10px, 8px);
+    opacity: 0.7;
+  }
+}
+
+@keyframes cosmic-dust-drift {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-16px) rotate(180deg);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(0px) rotate(360deg);
+    opacity: 0.4;
+  }
+}
+
+.animate-orbit-tilt {
+  animation: orbit-tilt-slow 28s linear infinite;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.animate-orbit-tilt-counter {
+  animation: orbit-tilt-counter 22s linear infinite;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.animate-cosmic-corona {
+  animation: cosmic-corona 5s ease-in-out infinite;
+  will-change: transform, opacity, filter;
+}
+
+.animate-nebula {
+  animation: nebula-pulse 10s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.animate-stardust {
+  animation: cosmic-dust-drift 8s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 .animate-marquee {
@@ -650,7 +734,7 @@ main > section {
   backface-visibility: hidden;
 }
 
-/* Optimize rendering and reduce heavy GPU raster costs on mobile devices */
+/* Optimize rendering on mobile devices */
 @media (max-width: 640px) {
   * {
     -webkit-tap-highlight-color: transparent;
@@ -658,31 +742,6 @@ main > section {
   
   body {
     -webkit-overflow-scrolling: touch;
-  }
-
-  /* Simplify intense multi-layer drop-shadows on small screens for silky 60fps scrolling */
-  .animate-color-swirl,
-  .animate-cpu-pulse,
-  .animate-circuit-energy,
-  .animate-lens-sparkle {
-    filter: none !important;
-  }
-
-  /* Tone down infinite orbit calculation on lower-end mobile CPUs */
-  .animate-orbit {
-    animation-duration: 60s;
-  }
-  .animate-orbit-reverse {
-    animation-duration: 80s;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
   }
 }
 

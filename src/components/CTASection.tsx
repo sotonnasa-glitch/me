@@ -11,7 +11,7 @@ export const CTASection: React.FC<CTASectionProps> = ({ onOpenOrderModal }) => {
   const { brandInfo } = useSiteData();
 
   return (
-    <section className="relative py-20 sm:py-28 bg-[#05050d] overflow-hidden">
+    <section className="relative py-20 sm:py-28 bg-transparent overflow-hidden">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Big Cosmic Mesh Grid Banner Card */}

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteDataContext';
 import { SiteReview } from '../types';
+import { getLocalAvatarUrl } from '../utils/avatar';
 
 interface CustomerReviewsSectionProps {
   onOpenAuthModal?: () => void;
@@ -79,7 +80,7 @@ export const CustomerReviewsSection: React.FC<CustomerReviewsSectionProps> = ({
     const reviewerName = currentUser?.name || name.trim() || 'کاربر تکویکس';
     const reviewerAvatar =
       currentUser?.avatar ||
-      `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(reviewerName)}`;
+      getLocalAvatarUrl(reviewerName);
 
     setTimeout(() => {
       addSiteReview({
@@ -106,7 +107,7 @@ export const CustomerReviewsSection: React.FC<CustomerReviewsSectionProps> = ({
   };
 
   return (
-    <section id="reviews" className="py-24 sm:py-32 relative bg-[#060411] overflow-hidden border-t border-purple-900/30" dir="rtl">
+    <section id="reviews" className="py-24 sm:py-32 relative bg-transparent overflow-hidden border-t border-purple-900/30" dir="rtl">
       {/* Background ambient lighting */}
       <div className="absolute top-1/3 start-1/4 w-[600px] h-[600px] bg-purple-900/10 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-10 end-10 w-[450px] h-[450px] bg-indigo-900/10 rounded-full blur-[120px] pointer-events-none" />

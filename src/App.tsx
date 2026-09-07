@@ -81,7 +81,14 @@ function MainWebsite() {
   };
 
   const isEnabled = (key: string) => {
-    const section = sectionsConfig.find((s) => s.key === key || s.id === key);
+    const normalized = key.toLowerCase().replace(/[-_]/g, '');
+    const section = sectionsConfig.find(
+      (s) =>
+        s.key === key ||
+        s.id === key ||
+        (s.key && s.key.toLowerCase().replace(/[-_]/g, '') === normalized) ||
+        (s.id && s.id.toLowerCase().replace(/[-_]/g, '') === normalized)
+    );
     return section ? section.enabled : true;
   };
 
@@ -130,7 +137,7 @@ function MainWebsite() {
           <ServicesSection onSelectServiceForQuote={(serviceId) => handleOpenOrderModal(serviceId)} />
         )}
 
-        {/* 4. How It Works (3-Step Flow) */}
+        {/* 3. How It Works (3-Step Flow) */}
         {isEnabled('how_it_works') && <HowItWorks onOpenOrderModal={() => handleOpenOrderModal()} />}
 
         {/* 5. Portfolio Section */}

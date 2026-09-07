@@ -9,15 +9,15 @@ interface HowItWorksProps {
 export const HowItWorks: React.FC<HowItWorksProps> = ({ onOpenOrderModal }) => {
   const getStepIcon = (iconName: string) => {
     switch (iconName) {
-      case 'Layers': return <Layers className="w-6 h-6 text-purple-300" />;
-      case 'FileSpreadsheet': return <FileSpreadsheet className="w-6 h-6 text-indigo-300" />;
-      case 'Send': return <Send className="w-6 h-6 text-violet-300 rotate-180" />;
-      default: return <Layers className="w-6 h-6 text-purple-300" />;
+      case 'Layers': return <Layers className="w-6 h-6 text-purple-300 animate-float" />;
+      case 'FileSpreadsheet': return <FileSpreadsheet className="w-6 h-6 text-indigo-300 animate-pulse-slow" />;
+      case 'Send': return <Send className="w-6 h-6 text-violet-300 rotate-180 animate-paper-plane" />;
+      default: return <Layers className="w-6 h-6 text-purple-300 animate-float" />;
     }
   };
 
   return (
-    <section id="how-it-works" className="relative py-24 sm:py-32 bg-[#05050d] overflow-hidden border-t border-purple-900/20">
+    <section id="how-it-works" className="relative py-24 sm:py-32 bg-transparent overflow-hidden border-t border-purple-900/20">
       {/* Background Grid Pattern and Ambient Glow */}
       <div className="absolute inset-0 bg-cosmic-grid opacity-25 pointer-events-none" />
       <div className="absolute top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-radial-gradient opacity-50 pointer-events-none -z-10" />

@@ -11,14 +11,14 @@ export const CrystalCubeIcon: React.FC<CrystalCubeIconProps> = ({
 }) => {
   return (
     <div
-      className={`relative flex items-center justify-center select-none ${className}`}
+      className={`relative flex items-center justify-center select-none animate-float ${className}`}
       style={{ width: size, height: size }}
     >
       <svg
         viewBox="0 0 100 100"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full drop-shadow-[0_0_12px_rgba(168,85,247,0.8)]"
+        className="w-full h-full drop-shadow-[0_0_14px_rgba(168,85,247,0.85)]"
       >
         <defs>
           {/* Rounded Glossy Squircle Background */}
@@ -88,10 +88,10 @@ export const CrystalCubeIcon: React.FC<CrystalCubeIconProps> = ({
         />
 
         {/* Orbiting Glowing Spheres */}
-        <circle cx="22" cy="62" r="4" fill="#d946ef" className="drop-shadow-[0_0_6px_#e879f9]" />
+        <circle cx="22" cy="62" r="4" fill="#d946ef" className="drop-shadow-[0_0_8px_#e879f9] animate-pulse" />
         <circle cx="22" cy="62" r="1.5" fill="#ffffff" />
 
-        <circle cx="80" cy="38" r="3.5" fill="#38bdf8" className="drop-shadow-[0_0_6px_#38bdf8]" />
+        <circle cx="80" cy="38" r="3.5" fill="#38bdf8" className="drop-shadow-[0_0_8px_#38bdf8] animate-pulse" />
         <circle cx="80" cy="38" r="1.2" fill="#ffffff" />
 
         {/* 3D Isometric Glowing Crystal Cube */}
@@ -128,7 +128,7 @@ export const CrystalCubeIcon: React.FC<CrystalCubeIconProps> = ({
         <line x1="72" y1="35" x2="28" y2="62" stroke="#ffffff" strokeWidth="0.5" opacity="0.6" />
 
         {/* Radiant 4-Pointed Core Light Star (Glowing at center) */}
-        <g filter="url(#starBloom)">
+        <g filter="url(#starBloom)" className="animate-pulse-slow">
           {/* Main Star Core */}
           <path
             d="M50 34 Q50 48 36 48 Q50 48 50 62 Q50 48 64 48 Q50 48 50 34 Z"

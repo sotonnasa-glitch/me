@@ -5,13 +5,14 @@ interface Star {
   y: number;
   baseRadius: number;
   radius: number;
-  color: 'purple' | 'cyan' | 'gold' | 'white';
+  color: 'purple' | 'cyan' | 'gold' | 'white' | 'fuchsia' | 'emerald';
   alpha: number;
   baseAlpha: number;
   twinkleSpeed: number;
   twinklePhase: number;
   vx: number;
   vy: number;
+  hasSpike?: boolean;
 }
 
 interface ShootingStar {
@@ -22,6 +23,7 @@ interface ShootingStar {
   angle: number;
   opacity: number;
   active: boolean;
+  color: string;
 }
 
 export const HeroCanvasStars: React.FC = () => {
@@ -35,13 +37,12 @@ export const HeroCanvasStars: React.FC = () => {
     if (!ctx) return;
 
     let animId: number = 0;
-    let isVisible = true;
     let width = 0;
     let height = 0;
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5); // Cap DPR to prevent mobile fill-rate lag
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     // Pre-rendered offscreen sprite for zero GC overhead during animation
-    const spriteSize = 32;
+    const spriteSize = 36;
     const offscreenSprites: Record<string, HTMLCanvasElement> = {};
 
     const createGlowSprite = (innerColor: string, outerColor: string) => {
@@ -54,7 +55,7 @@ export const HeroCanvasStars: React.FC = () => {
       const half = spriteSize / 2;
       const grad = octx.createRadialGradient(half, half, 0, half, half, half);
       grad.addColorStop(0, '#ffffff');
-      grad.addColorStop(0.25, innerColor);
+      grad.addColorStop(0.22, innerColor);
       grad.addColorStop(0.65, outerColor);
       grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
@@ -63,23 +64,46 @@ export const HeroCanvasStars: React.FC = () => {
       return offCanvas;
     };
 
-    offscreenSprites['purple'] = createGlowSprite('rgba(192, 132, 252, 0.85)', 'rgba(147, 51, 234, 0.25)');
-    offscreenSprites['cyan'] = createGlowSprite('rgba(103, 232, 249, 0.85)', 'rgba(6, 182, 212, 0.25)');
-    offscreenSprites['gold'] = createGlowSprite('rgba(253, 224, 71, 0.85)', 'rgba(234, 179, 8, 0.25)');
-    offscreenSprites['white'] = createGlowSprite('rgba(243, 232, 255, 0.9)', 'rgba(168, 85, 247, 0.2)');
+    offscreenSprites['purple'] = createGlowSprite('rgba(192, 132, 252, 0.95)', 'rgba(147, 51, 234, 0.35)');
+    offscreenSprites['cyan'] = createGlowSprite('rgba(103, 232, 249, 0.95)', 'rgba(6, 182, 212, 0.35)');
+    offscreenSprites['gold'] = createGlowSprite('rgba(253, 224, 71, 0.95)', 'rgba(234, 179, 8, 0.35)');
+    offscreenSprites['fuchsia'] = createGlowSprite('rgba(244, 114, 182, 0.95)', 'rgba(217, 70, 239, 0.35)');
+    offscreenSprites['emerald'] = createGlowSprite('rgba(110, 231, 183, 0.95)', 'rgba(16, 185, 129, 0.35)');
+    offscreenSprites['white'] = createGlowSprite('rgba(255, 255, 255, 0.98)', 'rgba(168, 85, 247, 0.3)');
 
-    // Star collection (controlled count: 42 stars for optimal balance of beauty and performance)
-    const STAR_COUNT = 42;
+    // Star collection (Rich deep space star count)
+    const STAR_COUNT = 150;
     const stars: Star[] = [];
-
-    const colors: ('purple' | 'cyan' | 'gold' | 'white')[] = ['purple', 'purple', 'cyan', 'gold', 'white'];
+    const colors: ('purple' | 'cyan' | 'gold' | 'white' | 'fuchsia' | 'emerald')[] = [
+      'purple',
+      'cyan',
+      'gold',
+      'fuchsia',
+      'white',
+      'cyan',
+      'purple',
+      'emerald',
+    ];
 
     const initStars = (w: number, h: number) => {
       stars.length = 0;
       for (let i = 0; i < STAR_COUNT; i++) {
-        const baseRadius = 0.8 + Math.random() * 1.6;
+        // 3 tiers: micro dust, standard twinkling star, bright beacon star with diffraction spike
+        const isMicro = i < 60;
+        const isBeacon = i > 135;
+        const baseRadius = isMicro
+          ? 0.5 + Math.random() * 0.7
+          : isBeacon
+          ? 2.2 + Math.random() * 1.2
+          : 1.0 + Math.random() * 1.5;
+
         const color = colors[Math.floor(Math.random() * colors.length)];
-        const baseAlpha = 0.35 + Math.random() * 0.55;
+        const baseAlpha = isMicro
+          ? 0.25 + Math.random() * 0.35
+          : isBeacon
+          ? 0.65 + Math.random() * 0.35
+          : 0.45 + Math.random() * 0.45;
+
         stars.push({
           x: Math.random() * w,
           y: Math.random() * h,
@@ -88,52 +112,55 @@ export const HeroCanvasStars: React.FC = () => {
           color,
           alpha: baseAlpha,
           baseAlpha,
-          twinkleSpeed: 0.015 + Math.random() * 0.03,
+          twinkleSpeed: 0.015 + Math.random() * 0.035,
           twinklePhase: Math.random() * Math.PI * 2,
           vx: (Math.random() - 0.5) * 0.12,
           vy: (Math.random() - 0.5) * 0.12,
+          hasSpike: isBeacon,
         });
       }
     };
 
-    // Single shooting star pool
-    const shootingStar: ShootingStar = {
-      x: 0,
-      y: 0,
-      length: 0,
-      speed: 0,
-      angle: Math.PI / 4,
-      opacity: 0,
-      active: false,
-    };
+    // Pool of shooting stars / comets
+    const shootingStars: ShootingStar[] = [
+      { x: 0, y: 0, length: 0, speed: 0, angle: Math.PI / 4, opacity: 0, active: false, color: '#c084fc' },
+      { x: 0, y: 0, length: 0, speed: 0, angle: Math.PI / 4, opacity: 0, active: false, color: '#38bdf8' },
+      { x: 0, y: 0, length: 0, speed: 0, angle: Math.PI / 4, opacity: 0, active: false, color: '#fde047' },
+    ];
 
-    let nextShootTime = Date.now() + 2000;
+    let nextShootTime = Date.now() + 800;
 
     const spawnShootingStar = () => {
-      shootingStar.x = Math.random() * (width * 0.7);
-      shootingStar.y = Math.random() * (height * 0.3);
-      shootingStar.length = 60 + Math.random() * 80;
-      shootingStar.speed = 10 + Math.random() * 8;
-      shootingStar.angle = (Math.PI / 5) + (Math.random() * 0.1);
-      shootingStar.opacity = 1;
-      shootingStar.active = true;
-      nextShootTime = Date.now() + 4000 + Math.random() * 6000;
+      const inactive = shootingStars.find((s) => !s.active);
+      if (!inactive) return;
+
+      inactive.x = Math.random() * (width * 0.9);
+      inactive.y = Math.random() * (height * 0.4);
+      inactive.length = 85 + Math.random() * 110;
+      inactive.speed = 14 + Math.random() * 9;
+      inactive.angle = Math.PI / 5 + (Math.random() - 0.5) * 0.2;
+      inactive.opacity = 1;
+      inactive.active = true;
+      const cometColors = ['#c084fc', '#38bdf8', '#fde047', '#f472b6'];
+      inactive.color = cometColors[Math.floor(Math.random() * cometColors.length)];
+
+      nextShootTime = Date.now() + 2000 + Math.random() * 3000;
     };
 
     const handleResize = () => {
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
-      width = rect.width;
-      height = rect.height;
+      width = rect.width || window.innerWidth || 1200;
+      height = rect.height || 700;
 
       canvas.width = Math.floor(width * dpr);
       canvas.height = Math.floor(height * dpr);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
 
       if (stars.length === 0) {
         initStars(width, height);
       } else {
-        // Re-scale star positions proportionally
         stars.forEach((s) => {
           if (s.x > width) s.x = Math.random() * width;
           if (s.y > height) s.y = Math.random() * height;
@@ -143,41 +170,77 @@ export const HeroCanvasStars: React.FC = () => {
 
     handleResize();
 
-    // IntersectionObserver to auto-pause when Hero is not on screen (0% GPU/CPU while scrolled down!)
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        isVisible = entry.isIntersecting;
-        if (isVisible && !animId) {
-          lastFrameTime = performance.now();
-          render(lastFrameTime);
-        }
-      },
-      { threshold: 0.05 }
-    );
-    observer.observe(canvas);
-
-    // Animation Loop with smooth delta-time throttling
     let lastFrameTime = performance.now();
+    let pointerX = -9999;
+    let pointerY = -9999;
+    let isPointerActive = false;
+
+    const onPointerMove = (e: MouseEvent | TouchEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = 'touches' in e ? e.touches[0]?.clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0]?.clientY : e.clientY;
+      if (clientX !== undefined && clientY !== undefined) {
+        pointerX = clientX - rect.left;
+        pointerY = clientY - rect.top;
+        isPointerActive = true;
+      }
+    };
+
+    const onPointerLeave = () => {
+      isPointerActive = false;
+      pointerX = -9999;
+      pointerY = -9999;
+    };
+
+    window.addEventListener('mousemove', onPointerMove, { passive: true });
+    window.addEventListener('touchmove', onPointerMove, { passive: true });
+    window.addEventListener('mouseleave', onPointerLeave, { passive: true });
 
     const render = (now: number) => {
-      if (!isVisible) {
-        animId = 0;
-        return;
-      }
-
       animId = requestAnimationFrame(render);
 
-      // Delta time check (cap at 60fps to save CPU/battery)
+      // Delta time limiter (~60fps)
       const elapsed = now - lastFrameTime;
-      if (elapsed < 14) return; // ~60fps limiter
+      if (elapsed < 14) return;
       lastFrameTime = now;
 
       ctx.clearRect(0, 0, width, height);
 
+      // Draw faint constellation lines between neighboring bright stars
+      ctx.lineWidth = 0.6;
+      for (let i = 80; i < stars.length; i++) {
+        for (let j = i + 1; j < stars.length; j++) {
+          const dx = stars[i].x - stars[j].x;
+          const dy = stars[i].y - stars[j].y;
+          const distSq = dx * dx + dy * dy;
+          if (distSq < 7500) { // approx 86px
+            const dist = Math.sqrt(distSq);
+            const lineAlpha = (1 - dist / 86) * 0.14;
+            ctx.strokeStyle = `rgba(192, 132, 252, ${lineAlpha})`;
+            ctx.beginPath();
+            ctx.moveTo(stars[i].x, stars[i].y);
+            ctx.lineTo(stars[j].x, stars[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+
       // Render & update twinkling stars
       for (let i = 0; i < stars.length; i++) {
         const s = stars[i];
+
+        // Gravitational interaction with cursor / touch
+        if (isPointerActive) {
+          const pdx = pointerX - s.x;
+          const pdy = pointerY - s.y;
+          const pdistSq = pdx * pdx + pdy * pdy;
+          if (pdistSq < 22500 && pdistSq > 100) { // within 150px
+            const pdist = Math.sqrt(pdistSq);
+            const force = (1 - pdist / 150) * 0.45;
+            s.x += (pdx / pdist) * force;
+            s.y += (pdy / pdist) * force;
+          }
+        }
 
         // Soft drift
         s.x += s.vx;
@@ -187,16 +250,26 @@ export const HeroCanvasStars: React.FC = () => {
         if (s.y < 0) s.y = height;
         if (s.y > height) s.y = 0;
 
-        // Harmonic twinkle without random jumps
+        // Harmonic twinkle
         s.twinklePhase += s.twinkleSpeed;
         const sineVal = Math.sin(s.twinklePhase);
-        const currentAlpha = Math.max(0.15, s.baseAlpha + sineVal * 0.35);
-        const currentRadius = s.baseRadius * (1 + sineVal * 0.2);
+        let currentAlpha = Math.max(0.18, s.baseAlpha + sineVal * 0.38);
+        let currentRadius = s.baseRadius * (1 + sineVal * 0.28);
+
+        // Brighten up near cursor
+        if (isPointerActive) {
+          const cdx = pointerX - s.x;
+          const cdy = pointerY - s.y;
+          if (cdx * cdx + cdy * cdy < 14400) {
+            currentAlpha = Math.min(1, currentAlpha + 0.35);
+            currentRadius *= 1.25;
+          }
+        }
 
         // Fast GPU blit using pre-rendered sprite
         const sprite = offscreenSprites[s.color] || offscreenSprites['white'];
         ctx.globalAlpha = currentAlpha;
-        const renderDiameter = currentRadius * 8;
+        const renderDiameter = currentRadius * 8.5;
         ctx.drawImage(
           sprite,
           s.x - renderDiameter / 2,
@@ -208,45 +281,63 @@ export const HeroCanvasStars: React.FC = () => {
         // Sharp star core center
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.arc(s.x, s.y, currentRadius * 0.7, 0, Math.PI * 2);
+        ctx.arc(s.x, s.y, Math.max(0.5, currentRadius * 0.65), 0, Math.PI * 2);
         ctx.fill();
+
+        // If beacon star, draw subtle 4-point telescope diffraction spikes (JWST/Hubble style)
+        if (s.hasSpike && currentAlpha > 0.45) {
+          const spikeLen = currentRadius * (5 + sineVal * 1.5);
+          ctx.strokeStyle = `rgba(255, 255, 255, ${currentAlpha * 0.5})`;
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          // Horizontal
+          ctx.moveTo(s.x - spikeLen, s.y);
+          ctx.lineTo(s.x + spikeLen, s.y);
+          // Vertical
+          ctx.moveTo(s.x, s.y - spikeLen);
+          ctx.lineTo(s.x, s.y + spikeLen);
+          ctx.stroke();
+        }
       }
 
-      // Shooting star logic
-      if (!shootingStar.active && now > nextShootTime) {
+      // Shooting star trigger
+      if (now > nextShootTime) {
         spawnShootingStar();
       }
 
-      if (shootingStar.active) {
-        shootingStar.x += Math.cos(shootingStar.angle) * shootingStar.speed;
-        shootingStar.y += Math.sin(shootingStar.angle) * shootingStar.speed;
-        shootingStar.opacity -= 0.02;
+      // Update active shooting stars
+      for (const star of shootingStars) {
+        if (!star.active) continue;
 
-        if (shootingStar.opacity <= 0 || shootingStar.x > width || shootingStar.y > height) {
-          shootingStar.active = false;
+        star.x += Math.cos(star.angle) * star.speed;
+        star.y += Math.sin(star.angle) * star.speed;
+        star.opacity -= 0.02;
+
+        if (star.opacity <= 0 || star.x > width || star.y > height) {
+          star.active = false;
         } else {
           ctx.save();
-          ctx.globalAlpha = shootingStar.opacity;
-          const tailX = shootingStar.x - Math.cos(shootingStar.angle) * shootingStar.length;
-          const tailY = shootingStar.y - Math.sin(shootingStar.angle) * shootingStar.length;
+          ctx.globalAlpha = star.opacity;
+          const tailX = star.x - Math.cos(star.angle) * star.length;
+          const tailY = star.y - Math.sin(star.angle) * star.length;
 
-          const shootGrad = ctx.createLinearGradient(tailX, tailY, shootingStar.x, shootingStar.y);
+          const shootGrad = ctx.createLinearGradient(tailX, tailY, star.x, star.y);
           shootGrad.addColorStop(0, 'rgba(168, 85, 247, 0)');
-          shootGrad.addColorStop(0.6, 'rgba(192, 132, 252, 0.4)');
-          shootGrad.addColorStop(1, 'rgba(255, 255, 255, 0.95)');
+          shootGrad.addColorStop(0.5, star.color);
+          shootGrad.addColorStop(1, '#ffffff');
 
           ctx.strokeStyle = shootGrad;
-          ctx.lineWidth = 1.5;
+          ctx.lineWidth = 2.2;
           ctx.lineCap = 'round';
           ctx.beginPath();
           ctx.moveTo(tailX, tailY);
-          ctx.lineTo(shootingStar.x, shootingStar.y);
+          ctx.lineTo(star.x, star.y);
           ctx.stroke();
 
           // Shooting star head glow
           ctx.fillStyle = '#ffffff';
           ctx.beginPath();
-          ctx.arc(shootingStar.x, shootingStar.y, 1.8, 0, Math.PI * 2);
+          ctx.arc(star.x, star.y, 2.6, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         }
@@ -255,19 +346,19 @@ export const HeroCanvasStars: React.FC = () => {
       ctx.globalAlpha = 1;
     };
 
+    // Start render loop immediately
     animId = requestAnimationFrame(render);
 
     let resizeTimer: any = null;
     const onWindowResize = () => {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(handleResize, 150);
+      resizeTimer = setTimeout(handleResize, 100);
     };
 
     window.addEventListener('resize', onWindowResize, { passive: true });
 
     return () => {
       if (animId) cancelAnimationFrame(animId);
-      observer.disconnect();
       window.removeEventListener('resize', onWindowResize);
       clearTimeout(resizeTimer);
     };

@@ -592,22 +592,6 @@ export const DEFAULT_SECTIONS_CONFIG: SiteSectionConfig[] = [
     orderIndex: 1
   },
   {
-    id: 'features',
-    key: 'features',
-    nameFa: 'ویژگی‌های تعاملی و داشبورد زنده',
-    titleFa: 'ویژگی‌های تعاملی و داشبورد زنده',
-    nameEn: 'Interactive Features & Live Dashboard',
-    titleEn: 'Interactive Features',
-    category: 'قابلیت‌ها',
-    badgeText: 'داشبورد زنده',
-    description: 'تب‌های تعاملی قابلیت‌های پلتفرم و پیش‌نمایش گرافیکی',
-    subtitleFa: 'تب‌های تعاملی قابلیت‌های پلتفرم و پیش‌نمایش گرافیکی',
-    enabled: true,
-    customTitle: 'قابلیت‌های قدرتمند و بلادرنگ',
-    customSubtitle: 'پلتفرم جامع برای پیاده‌سازی سریع‌ترین راهکارهای دیجیتال',
-    orderIndex: 2
-  },
-  {
     id: 'services',
     key: 'services',
     nameFa: 'فهرست خدمات و پکیج‌ها',

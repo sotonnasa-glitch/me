@@ -6,7 +6,7 @@ export const TestimonialsSection: React.FC = () => {
   const { testimonials, brandInfo } = useSiteData();
 
   return (
-    <section className="relative py-24 sm:py-32 bg-[#05050d] overflow-hidden border-t border-purple-900/20">
+    <section className="relative py-24 sm:py-32 bg-transparent overflow-hidden border-t border-purple-900/20">
       {/* Background glow */}
       <div className="absolute top-1/2 end-1/4 w-[500px] h-[500px] bg-purple-900/10 rounded-full blur-3xl pointer-events-none" />
 

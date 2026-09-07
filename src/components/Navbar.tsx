@@ -27,68 +27,80 @@ const RenderNavAiIcon: React.FC<{ href: string }> = ({ href }) => {
   switch (href) {
     case '#services':
       return (
-        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-950/90 border border-purple-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.25)] group-hover:border-purple-400 transition-colors">
-          <Cpu className="w-4 h-4 text-purple-300 relative z-10" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-950/90 border border-purple-500/50 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(168,85,247,0.35)] group-hover:border-purple-400 transition-colors overflow-hidden">
+          <span className="absolute inset-0 rounded-xl bg-purple-500/25 animate-neon-radar pointer-events-none" />
+          <Cpu className="w-4 h-4 text-purple-300 relative z-10 animate-cpu-pulse" />
+          <span className="absolute -top-0.5 -end-0.5 w-1.5 h-1.5 rounded-full bg-purple-300 animate-ping" />
         </div>
       );
     case '#tools':
       return (
-        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-cyan-950/90 border border-cyan-400/60 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(34,211,238,0.35)] group-hover:border-cyan-300 transition-colors">
-          <Bot className="w-4 h-4 text-cyan-300 relative z-10" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-cyan-950/90 border border-cyan-400/60 flex items-center justify-center shrink-0 shadow-[0_0_14px_rgba(34,211,238,0.4)] group-hover:border-cyan-300 transition-colors overflow-hidden">
+          <span className="absolute inset-0 rounded-xl bg-cyan-400/20 animate-neon-radar pointer-events-none" />
+          <Bot className="w-4 h-4 text-cyan-300 relative z-10 animate-float" />
+          <span className="absolute -top-0.5 start-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-cyan-300 animate-pulse shadow-[0_0_6px_#22d3ee]" />
         </div>
       );
     case '#blog':
       return (
-        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-pink-950/90 border border-pink-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(244,63,94,0.25)] group-hover:border-pink-400 transition-colors">
-          <Clapperboard className="w-4 h-4 text-rose-300 relative z-10" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-pink-950/90 border border-pink-500/50 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(244,63,94,0.35)] group-hover:border-pink-400 transition-colors overflow-hidden">
+          <span className="absolute inset-0 rounded-xl bg-pink-500/20 animate-neon-radar pointer-events-none" />
+          <Clapperboard className="w-4 h-4 text-rose-300 relative z-10 animate-clapper-action" />
+          <span className="absolute top-0.5 end-0.5 w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping" />
         </div>
       );
     case '#reviews':
       return (
-        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-950/90 border border-amber-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(245,158,11,0.25)] group-hover:border-amber-400 transition-colors">
-          <MessageSquare className="w-4 h-4 text-amber-300 relative z-10" />
-        </div>
-      );
-    case '#features':
-      return (
-        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-cyan-950/90 border border-cyan-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(6,182,212,0.25)] group-hover:border-cyan-400 transition-colors">
-          <Calculator className="w-4 h-4 text-cyan-300 relative z-10" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-950/90 border border-amber-500/50 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.35)] group-hover:border-amber-400 transition-colors overflow-hidden">
+          <span className="absolute inset-0 rounded-xl bg-amber-500/20 animate-neon-radar pointer-events-none" />
+          <MessageSquare className="w-4 h-4 text-amber-300 relative z-10 animate-pulse-slow" />
+          <span className="absolute top-0.5 end-0.5 w-1.5 h-1.5 rounded-full bg-amber-300 animate-ping" />
         </div>
       );
     case '#how-it-works':
       return (
-        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-950/90 border border-emerald-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.25)] group-hover:border-emerald-400 transition-colors">
-          <Workflow className="w-4 h-4 text-emerald-300 relative z-10" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-950/90 border border-emerald-500/50 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.35)] group-hover:border-emerald-400 transition-colors overflow-hidden">
+          <span className="absolute inset-0 rounded-xl bg-emerald-500/20 animate-neon-radar pointer-events-none" />
+          <Workflow className="w-4 h-4 text-emerald-300 relative z-10 animate-pulse" />
+          <span className="absolute -bottom-0.5 end-0.5 w-1.5 h-1.5 rounded-full bg-emerald-300 animate-ping" />
         </div>
       );
     case '#portfolio':
       return (
-        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-indigo-950/90 border border-indigo-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(99,102,241,0.25)] group-hover:border-indigo-400 transition-colors">
-          <Layers className="w-4 h-4 text-indigo-300 relative z-10" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-indigo-950/90 border border-indigo-500/50 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(99,102,241,0.35)] group-hover:border-indigo-400 transition-colors overflow-hidden">
+          <span className="absolute inset-0 rounded-xl bg-indigo-500/20 animate-neon-radar pointer-events-none" />
+          <Layers className="w-4 h-4 text-indigo-300 relative z-10 animate-float" />
+          <span className="absolute top-0.5 end-0.5 w-1.5 h-1.5 rounded-full bg-indigo-300 animate-ping" />
         </div>
       );
     case '#about':
       return (
-        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-violet-950/90 border border-violet-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(139,92,246,0.25)] group-hover:border-violet-400 transition-colors">
-          <ShieldCheck className="w-4 h-4 text-violet-300 relative z-10" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-violet-950/90 border border-violet-500/50 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(139,92,246,0.35)] group-hover:border-violet-400 transition-colors overflow-hidden">
+          <span className="absolute inset-0 rounded-xl bg-violet-500/20 animate-neon-radar pointer-events-none" />
+          <ShieldCheck className="w-4 h-4 text-violet-300 relative z-10 animate-pulse" />
+          <span className="absolute -top-0.5 start-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-violet-300 animate-ping" />
         </div>
       );
     case '#faq':
       return (
-        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-teal-950/90 border border-teal-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(20,184,166,0.25)] group-hover:border-teal-400 transition-colors">
-          <HelpCircle className="w-4 h-4 text-teal-300 relative z-10" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-teal-950/90 border border-teal-500/50 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(20,184,166,0.35)] group-hover:border-teal-400 transition-colors overflow-hidden">
+          <span className="absolute inset-0 rounded-xl bg-teal-500/20 animate-neon-radar pointer-events-none" />
+          <HelpCircle className="w-4 h-4 text-teal-300 relative z-10 animate-pulse-slow" />
+          <span className="absolute top-0.5 end-0.5 w-1.5 h-1.5 rounded-full bg-teal-300 animate-ping" />
         </div>
       );
     case '#contact':
       return (
-        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-sky-950/90 border border-sky-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(14,165,233,0.25)] group-hover:border-sky-400 transition-colors">
-          <Radio className="w-4 h-4 text-sky-300 relative z-10" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-sky-950/90 border border-sky-500/50 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(14,165,233,0.35)] group-hover:border-sky-400 transition-colors overflow-hidden">
+          <span className="absolute inset-0 rounded-xl bg-sky-500/25 animate-neon-radar pointer-events-none" />
+          <Radio className="w-4 h-4 text-sky-300 relative z-10 animate-pulse" />
+          <span className="absolute top-0.5 start-0.5 w-1.5 h-1.5 rounded-full bg-sky-300 animate-ping" />
         </div>
       );
     default:
       return (
-        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-950/90 border border-purple-500/50 flex items-center justify-center shrink-0">
-          <Sparkles className="w-4 h-4 text-purple-300" />
+        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-950/90 border border-purple-500/50 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.25)] overflow-hidden">
+          <Sparkles className="w-4 h-4 text-purple-300 animate-pulse" />
         </div>
       );
   }
@@ -404,10 +416,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           className="lg:hidden fixed inset-x-0 top-[60px] bg-[#070614]/98 backdrop-blur-2xl border-b border-purple-900/40 px-5 py-6 shadow-2xl flex flex-col gap-4 animate-in fade-in slide-in-from-top-4 duration-200 max-h-[calc(100vh-70px)] overflow-y-auto"
         >
           <div className="flex flex-col gap-2">
-            {navLinks.map((link) => (
+            {navLinks.map((link, idx) => (
               <a
                 key={link.href}
                 href={link.href}
+                style={{ animationDelay: `${idx * 40}ms` }}
                 onClick={(e) => {
                   setMobileMenuOpen(false);
                   if (link.href === '#blog') {
@@ -416,13 +429,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                     handleToolsLinkClick(e);
                   }
                 }}
-                className="text-sm py-2.5 px-3.5 rounded-2xl transition-all flex items-center justify-between group text-gray-200 hover:text-purple-200 hover:bg-white/[0.06] border border-transparent hover:border-white/10"
+                className="text-sm py-2.5 px-3.5 rounded-2xl transition-all flex items-center justify-between group text-gray-200 hover:text-purple-200 hover:bg-white/[0.06] active:bg-purple-900/30 border border-transparent hover:border-purple-500/30 active:border-purple-400/50 animate-in fade-in slide-in-from-right-3 duration-300 fill-mode-both"
               >
                 <div className="flex items-center gap-3">
                   <RenderNavAiIcon href={link.href} />
                   <span className="font-semibold text-gray-200 group-hover:text-purple-200">{link.label}</span>
                 </div>
-                <ArrowLeft className="w-4 h-4 text-gray-400 group-hover:text-purple-300 transition-transform group-hover:-translate-x-1" />
+                <ArrowLeft className="w-4 h-4 text-gray-400 group-hover:text-purple-300 transition-transform group-hover:-translate-x-1.5 group-active:-translate-x-2" />
               </a>
             ))}
           </div>
