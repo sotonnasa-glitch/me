@@ -113,6 +113,7 @@ function MainWebsite() {
     >
       <GlobalBackgroundStars />
 
+      {/* Shooting stars across the full landing page */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-[2]" aria-hidden="true">
         <span className="page-meteor page-meteor-1" />
         <span className="page-meteor page-meteor-2" />
@@ -122,8 +123,8 @@ function MainWebsite() {
         <span className="page-meteor page-meteor-6" />
       </div>
 
-      {/* Multiple unique spacecraft drifting through the full landing page */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden z-[3]" aria-hidden="true">
+      {/* Unique spacecraft stay only inside the star-filled opening Hero scene */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-screen overflow-hidden z-[3]" aria-hidden="true">
         <span className="page-ship page-ship-1 ship-disc" />
         <span className="page-ship page-ship-2 ship-shuttle" />
         <span className="page-ship page-ship-3 ship-fighter" />
@@ -306,7 +307,6 @@ function MainWebsite() {
           pointer-events: none;
         }
 
-        /* 01 — Flying saucer */
         .ship-disc {
           width: 78px;
           height: 28px;
@@ -333,7 +333,6 @@ function MainWebsite() {
           filter: blur(2px);
         }
 
-        /* 02 — Deep-space shuttle */
         .ship-shuttle {
           width: 30px;
           height: 88px;
@@ -347,146 +346,144 @@ function MainWebsite() {
           width: 64px;
           height: 22px;
           background: linear-gradient(180deg, rgba(34,211,238,.35), rgba(30,41,59,.95));
-          clip-path: polygon(0 0, 100% 35%, 83% 100%, 17% 100%);
-          border: 1px solid rgba(103,232,249,.55);
+          clip-path: polygon(0 55%, 34% 0, 100% 35%, 78% 100%, 30% 100%);
         }
         .ship-shuttle::after {
           left: 9px;
-          bottom: -24px;
+          bottom: -22px;
           width: 12px;
-          height: 26px;
-          background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(34,211,238,.9), transparent);
-          clip-path: polygon(30% 0, 70% 0, 100% 70%, 50% 100%, 0 70%);
-        }
-
-        /* 03 — Angular fighter */
-        .ship-fighter {
-          width: 84px;
-          height: 34px;
-          background: linear-gradient(180deg, rgba(148,163,184,.95), rgba(30,41,59,.98));
-          clip-path: polygon(0 50%, 22% 30%, 44% 0, 63% 29%, 100% 42%, 100% 58%, 63% 71%, 44% 100%, 22% 70%);
-          border: 1px solid rgba(216,180,254,.7);
-        }
-        .ship-fighter::before {
-          left: 34px;
-          top: 10px;
-          width: 18px;
-          height: 14px;
-          border-radius: 45% 45% 60% 60%;
-          background: linear-gradient(180deg, rgba(103,232,249,.95), rgba(59,130,246,.35));
-          box-shadow: 0 0 12px rgba(34,211,238,.6);
-        }
-        .ship-fighter::after {
-          left: -24px;
-          top: 13px;
-          width: 30px;
-          height: 8px;
-          background: linear-gradient(90deg, transparent, rgba(244,114,182,.85));
+          height: 25px;
+          background: linear-gradient(180deg, rgba(251,191,36,.9), rgba(249,115,22,.2), transparent);
           filter: blur(3px);
         }
 
-        /* 04 — Long-range rocket */
-        .ship-rocket {
-          width: 28px;
-          height: 92px;
-          border-radius: 55% 55% 18% 18%;
-          background: linear-gradient(90deg, rgba(51,65,85,.95), rgba(248,250,252,.98), rgba(71,85,105,.95));
-          border: 1px solid rgba(255,255,255,.75);
-        }
-        .ship-rocket::before {
-          top: 11px;
-          left: 5px;
-          width: 18px;
-          height: 26px;
-          border-radius: 50%;
-          background: radial-gradient(circle at 50% 35%, #67e8f9 0 18%, rgba(59,130,246,.65) 35%, rgba(15,23,42,.95) 70%);
-          border: 1px solid rgba(165,243,252,.8);
-        }
-        .ship-rocket::after {
-          left: 4px;
-          bottom: -31px;
-          width: 20px;
-          height: 34px;
-          background: linear-gradient(180deg, rgba(253,224,71,.95), rgba(244,114,182,.65), transparent);
-          clip-path: polygon(32% 0, 68% 0, 100% 68%, 50% 100%, 0 68%);
-          filter: blur(.3px);
-        }
-
-        /* 05 — Scout craft */
-        .ship-scout {
-          width: 66px;
-          height: 22px;
-          border-radius: 45% 45% 18% 18%;
-          background: linear-gradient(180deg, rgba(34,211,238,.35), rgba(17,24,39,.98));
-          border: 1px solid rgba(103,232,249,.85);
-          box-shadow: inset 0 0 0 1px rgba(148,163,184,.25), 0 0 14px rgba(34,211,238,.35);
-        }
-        .ship-scout::before {
-          left: -13px;
-          top: 4px;
+        .ship-fighter {
           width: 92px;
-          height: 13px;
+          height: 26px;
+          background: linear-gradient(90deg, rgba(15,23,42,.95), rgba(148,163,184,.95), rgba(15,23,42,.95));
+          clip-path: polygon(0 50%, 25% 20%, 58% 0, 100% 50%, 58% 100%, 25% 80%);
+          border: 1px solid rgba(167,139,250,.8);
+        }
+        .ship-fighter::before {
+          left: 34px;
+          top: 8px;
+          width: 28px;
+          height: 8px;
           border-radius: 50%;
-          border: 1px solid rgba(192,132,252,.55);
-          transform: rotate(-8deg);
+          background: rgba(34,211,238,.85);
+          box-shadow: 0 0 12px rgba(34,211,238,.9);
         }
-        .ship-scout::after {
-          left: 29px;
-          top: -16px;
-          width: 8px;
-          height: 20px;
-          border-radius: 999px;
-          background: linear-gradient(180deg, rgba(216,180,254,.85), rgba(103,232,249,.6));
-          box-shadow: 0 0 8px rgba(192,132,252,.6);
-        }
-
-        /* 06 — Compact exploration capsule */
-        .ship-capsule {
-          width: 38px;
-          height: 64px;
-          border-radius: 52% 52% 42% 42%;
-          background: linear-gradient(90deg, rgba(71,85,105,.95), rgba(241,245,249,.98), rgba(71,85,105,.95));
-          border: 1px solid rgba(165,243,252,.7);
-        }
-        .ship-capsule::before {
-          left: 7px;
-          top: 12px;
-          width: 22px;
-          height: 25px;
-          border-radius: 50%;
-          background: radial-gradient(circle at 50% 35%, rgba(34,211,238,.95), rgba(30,64,175,.55) 45%, rgba(15,23,42,.95) 75%);
-          border: 1px solid rgba(103,232,249,.65);
-        }
-        .ship-capsule::after {
-          left: 4px;
-          right: 4px;
-          bottom: -13px;
-          height: 14px;
-          background: linear-gradient(180deg, rgba(103,232,249,.65), transparent);
+        .ship-fighter::after {
+          left: -35px;
+          top: 10px;
+          width: 40px;
+          height: 6px;
+          background: linear-gradient(90deg, transparent, rgba(168,85,247,.75));
           filter: blur(2px);
         }
 
-        .page-ship-1 { top: 12%; left: -12%; animation-delay: 1s; animation-duration: 28s; transform: scale(.9) rotate(-7deg); }
-        .page-ship-2 { top: 27%; right: -12%; animation-delay: 6s; animation-duration: 31s; transform: scale(.72) rotate(18deg); }
-        .page-ship-3 { top: 43%; left: -16%; animation-delay: 12s; animation-duration: 26s; transform: scale(.6) rotate(-4deg); }
-        .page-ship-4 { top: 59%; right: -11%; animation-delay: 4s; animation-duration: 34s; transform: scale(.66) rotate(12deg); }
-        .page-ship-5 { top: 75%; left: -10%; animation-delay: 15s; animation-duration: 29s; transform: scale(.78) rotate(5deg); }
-        .page-ship-6 { top: 89%; right: -10%; animation-delay: 9s; animation-duration: 32s; transform: scale(.64) rotate(-12deg); }
-
-        @keyframes page-ship-drift {
-          0% { opacity: 0; transform: translate3d(0, 0, 0) rotate(var(--ship-rotation, 0deg)) scale(.72); }
-          7% { opacity: .78; }
-          48% { opacity: .9; }
-          88% { opacity: .7; }
-          100% { opacity: 0; transform: translate3d(calc(100vw + 300px), 100px, 0) rotate(var(--ship-rotation, 0deg)) scale(.9); }
+        .ship-rocket {
+          width: 30px;
+          height: 90px;
+          border-radius: 50% 50% 18% 18%;
+          background: linear-gradient(90deg, rgba(51,65,85,.95), rgba(248,250,252,.96) 50%, rgba(51,65,85,.95));
+          border: 1px solid rgba(216,180,254,.75);
+        }
+        .ship-rocket::before {
+          left: -19px;
+          top: 48px;
+          width: 68px;
+          height: 18px;
+          background: rgba(71,85,105,.9);
+          clip-path: polygon(0 50%, 35% 0, 100% 25%, 82% 100%, 35% 100%);
+        }
+        .ship-rocket::after {
+          left: 7px;
+          bottom: -28px;
+          width: 16px;
+          height: 34px;
+          background: linear-gradient(180deg, rgba(251,191,36,.95), rgba(239,68,68,.3), transparent);
+          filter: blur(3px);
         }
 
-        .page-ship-1 { --ship-rotation: -7deg; }
-        .page-ship-2 { --ship-rotation: 18deg; }
-        .page-ship-3 { --ship-rotation: -4deg; }
-        .page-ship-4 { --ship-rotation: 12deg; }
-        .page-ship-5 { --ship-rotation: 5deg; }
-        .page-ship-6 { --ship-rotation: -12deg; }
+        .ship-scout {
+          width: 64px;
+          height: 36px;
+          border-radius: 55% 45% 50% 40%;
+          background: linear-gradient(135deg, rgba(15,23,42,.95), rgba(125,211,252,.8));
+          border: 1px solid rgba(125,211,252,.9);
+          transform: rotate(-12deg);
+        }
+        .ship-scout::before {
+          left: -24px;
+          top: 13px;
+          width: 28px;
+          height: 10px;
+          border-radius: 50%;
+          background: rgba(192,132,252,.7);
+          box-shadow: 0 0 14px rgba(192,132,252,.8);
+        }
+        .ship-scout::after {
+          right: 9px;
+          top: 9px;
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: rgba(34,211,238,.95);
+          box-shadow: 0 0 10px rgba(34,211,238,1);
+        }
+
+        .ship-capsule {
+          width: 42px;
+          height: 62px;
+          border-radius: 50% 50% 36% 36%;
+          background: linear-gradient(90deg, rgba(71,85,105,.9), rgba(241,245,249,.96), rgba(71,85,105,.9));
+          border: 1px solid rgba(165,243,252,.85);
+          transform: rotate(18deg);
+        }
+        .ship-capsule::before {
+          left: 8px;
+          top: 13px;
+          width: 24px;
+          height: 18px;
+          border-radius: 50%;
+          background: radial-gradient(circle at 45% 35%, rgba(34,211,238,.95), rgba(15,23,42,.9));
+          border: 1px solid rgba(103,232,249,.8);
+        }
+        .ship-capsule::after {
+          left: 13px;
+          bottom: -18px;
+          width: 14px;
+          height: 22px;
+          background: linear-gradient(180deg, rgba(34,211,238,.8), transparent);
+          filter: blur(2px);
+        }
+
+        .page-ship-1 { top: 18%; left: 8%; animation-delay: 0s; animation-duration: 24s; }
+        .page-ship-2 { top: 63%; left: 18%; animation-delay: 4s; animation-duration: 28s; }
+        .page-ship-3 { top: 29%; left: 62%; animation-delay: 8s; animation-duration: 26s; }
+        .page-ship-4 { top: 72%; left: 72%; animation-delay: 12s; animation-duration: 30s; }
+        .page-ship-5 { top: 42%; left: 36%; animation-delay: 16s; animation-duration: 25s; }
+        .page-ship-6 { top: 15%; left: 76%; animation-delay: 20s; animation-duration: 27s; }
+
+        @keyframes page-ship-drift {
+          0% { opacity: 0; transform: translate3d(-80px, 35px, 0) rotate(-8deg) scale(.72); }
+          7% { opacity: .9; }
+          35% { opacity: .95; transform: translate3d(110px, -45px, 0) rotate(5deg) scale(1); }
+          68% { opacity: .8; transform: translate3d(340px, 75px, 0) rotate(-4deg) scale(.92); }
+          92% { opacity: .65; }
+          100% { opacity: 0; transform: translate3d(620px, -90px, 0) rotate(8deg) scale(.72); }
+        }
+
+        @media (max-width: 640px) {
+          .page-ship { transform-origin: center; }
+          .ship-disc { width: 62px; height: 22px; }
+          .ship-shuttle { width: 24px; height: 68px; }
+          .ship-fighter { width: 72px; height: 20px; }
+          .ship-rocket { width: 24px; height: 70px; }
+          .ship-scout { width: 50px; height: 28px; }
+          .ship-capsule { width: 34px; height: 50px; }
+        }
 
         @media (prefers-reduced-motion: reduce) {
           .page-meteor { animation: none; opacity: 0; }
