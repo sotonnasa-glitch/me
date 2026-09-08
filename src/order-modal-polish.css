@@ -1,141 +1,268 @@
-/* Tekvix order console — visual-only polish. No business logic or interaction hooks are changed. */
+/* TEKVIX // ORDER CONSOLE
+   Visual-only redesign. Business logic, handlers, fields, links and submit flow remain untouched. */
+
 #order-modal-backdrop {
-  padding: 12px !important;
-  background: rgba(2, 1, 12, 0.92) !important;
-  backdrop-filter: blur(14px) saturate(125%);
+  padding: 14px !important;
+  background: radial-gradient(circle at 50% 35%, rgba(79, 45, 150, .18), transparent 42%), rgba(1, 1, 9, .94) !important;
+  backdrop-filter: blur(18px) saturate(135%) !important;
 }
 
 #order-modal-content {
-  width: min(100%, 920px) !important;
-  max-width: 920px !important;
-  min-height: min(94vh, 900px) !important;
-  border: 1px solid rgba(139, 92, 246, 0.32) !important;
-  border-radius: 30px !important;
-  padding: 22px !important;
+  position: relative !important;
+  width: min(100%, 980px) !important;
+  max-width: 980px !important;
+  min-height: min(92dvh, 860px) !important;
+  padding: 26px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(167, 139, 250, .34) !important;
+  border-radius: 32px !important;
   background:
-    radial-gradient(circle at 50% -15%, rgba(124, 58, 237, 0.19), transparent 38%),
-    radial-gradient(circle at 100% 100%, rgba(14, 165, 233, 0.08), transparent 30%),
-    linear-gradient(180deg, rgba(17, 10, 39, 0.98), rgba(6, 4, 16, 0.98)) !important;
+    linear-gradient(135deg, rgba(255,255,255,.035), transparent 28%),
+    radial-gradient(circle at 82% 8%, rgba(34,211,238,.10), transparent 24%),
+    radial-gradient(circle at 15% 88%, rgba(168,85,247,.13), transparent 28%),
+    linear-gradient(145deg, #100a27 0%, #080617 46%, #03030b 100%) !important;
   box-shadow:
-    0 24px 90px rgba(0, 0, 0, 0.58),
-    0 0 55px rgba(124, 58, 237, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+    0 30px 120px rgba(0,0,0,.72),
+    0 0 0 1px rgba(255,255,255,.025) inset,
+    0 0 70px rgba(124,58,237,.16) !important;
+}
+
+/* premium top edge */
+#order-modal-content::before {
+  content: '';
+  position: absolute;
+  inset: 0 12% auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(103,232,249,.85), rgba(168,85,247,.95), transparent);
+  box-shadow: 0 0 18px rgba(103,232,249,.35);
+  pointer-events: none;
+}
+
+#order-modal-content::after {
+  content: 'TEKVIX  //  ORDER CHANNEL  //  ONLINE';
+  position: absolute;
+  top: 13px;
+  left: 26px;
+  padding: 4px 9px;
+  border: 1px solid rgba(103,232,249,.18);
+  border-radius: 999px;
+  background: rgba(8,18,30,.58);
+  color: rgba(103,232,249,.68);
+  font: 700 8px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .12em;
+  pointer-events: none;
 }
 
 #order-modal-content > .absolute.top-0 {
-  opacity: 0.5;
+  opacity: .7 !important;
+  filter: blur(34px) !important;
 }
 
 #order-modal-content > .absolute.-bottom-10 {
-  opacity: 0.38;
+  opacity: .45 !important;
 }
 
+/* Header becomes a compact command bar */
 #order-modal-content > .relative.z-10.flex.items-center.justify-between {
-  padding: 4px 2px 18px !important;
-  margin-bottom: 4px;
-  border-bottom-color: rgba(139, 92, 246, 0.22) !important;
+  position: relative;
+  margin: 13px 0 18px !important;
+  padding: 0 0 19px !important;
+  border-bottom: 1px solid rgba(139,92,246,.20) !important;
+}
+
+#order-modal-content > .relative.z-10.flex.items-center.justify-between > div:first-child > div:first-child {
+  gap: 10px !important;
+}
+
+#order-modal-content > .relative.z-10.flex.items-center.justify-between > div:first-child > div:first-child > div:first-child {
+  width: 46px !important;
+  height: 46px !important;
+  border-radius: 15px !important;
+  background: linear-gradient(145deg, rgba(124,58,237,.95), rgba(37,99,235,.85)) !important;
+  box-shadow: 0 10px 30px rgba(124,58,237,.28), inset 0 1px 0 rgba(255,255,255,.18) !important;
 }
 
 #order-modal-content h2 {
-  letter-spacing: -0.02em;
+  margin-top: 5px !important;
+  font-size: clamp(20px, 3vw, 27px) !important;
+  line-height: 1.15 !important;
+  letter-spacing: -.035em !important;
 }
 
 #order-modal-content form {
   position: relative;
   z-index: 10;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-top: 8px;
+  gap: 18px !important;
+  margin-top: 5px !important;
+  padding: 20px !important;
+  border: 1px solid rgba(139,92,246,.18) !important;
+  border-radius: 24px !important;
+  background: linear-gradient(145deg, rgba(18,11,43,.78), rgba(5,5,17,.72)) !important;
+  box-shadow: 0 20px 55px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+
+/* Field groups */
+#order-modal-content form > div {
+  position: relative;
+}
+
+#order-modal-content form label {
+  display: block !important;
+  margin: 0 0 8px !important;
+  color: rgba(245,243,255,.94) !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  letter-spacing: -.01em;
 }
 
 #order-modal-content form input,
 #order-modal-content form textarea,
 #order-modal-content form select {
-  width: 100%;
-  min-height: 48px;
-  border-radius: 15px !important;
-  border: 1px solid rgba(139, 92, 246, 0.24) !important;
-  background: rgba(10, 7, 28, 0.76) !important;
-  color: #f8f7ff !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.025), 0 10px 30px rgba(0,0,0,0.12) !important;
-  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease, transform 160ms ease;
+  width: 100% !important;
+  min-height: 52px !important;
+  padding: 12px 15px !important;
+  border: 1px solid rgba(139,92,246,.25) !important;
+  border-radius: 16px !important;
+  outline: none !important;
+  background: rgba(3,3,13,.72) !important;
+  color: #faf9ff !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 8px 24px rgba(0,0,0,.12) !important;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease, transform .18s ease !important;
 }
 
 #order-modal-content form textarea {
-  min-height: 118px;
+  min-height: 125px !important;
+  line-height: 1.8 !important;
   resize: vertical;
 }
 
-#order-modal-content form input::placeholder,
-#order-modal-content form textarea::placeholder {
-  color: rgba(203, 196, 225, 0.58) !important;
+#order-modal-content form input:hover,
+#order-modal-content form textarea:hover,
+#order-modal-content form select:hover {
+  border-color: rgba(168,85,247,.42) !important;
+  background: rgba(7,5,22,.88) !important;
 }
 
 #order-modal-content form input:focus,
 #order-modal-content form textarea:focus,
 #order-modal-content form select:focus {
-  outline: none;
-  border-color: rgba(168, 85, 247, 0.72) !important;
-  background: rgba(14, 9, 38, 0.94) !important;
-  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.10), 0 0 24px rgba(124, 58, 237, 0.12) !important;
-}
-
-#order-modal-content form label {
-  color: rgba(236, 233, 255, 0.92);
-  font-weight: 800;
-  letter-spacing: -0.01em;
-}
-
-#order-modal-content form button:not([type="submit"]) {
-  border-radius: 14px;
-}
-
-#order-modal-content form button[type="submit"] {
-  min-height: 54px;
-  border-radius: 16px;
-}
-
-/* Service/category controls: preserve their existing icons, copy and handlers while improving hierarchy. */
-#order-modal-content form button[class*="border"] {
-  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
-}
-
-#order-modal-content form button[class*="border"]:hover {
+  border-color: rgba(103,232,249,.62) !important;
+  background: rgba(7,6,25,.96) !important;
+  box-shadow: 0 0 0 3px rgba(103,232,249,.08), 0 0 28px rgba(124,58,237,.15), inset 0 1px 0 rgba(255,255,255,.04) !important;
   transform: translateY(-1px);
 }
 
-/* Success state */
+#order-modal-content form input::placeholder,
+#order-modal-content form textarea::placeholder {
+  color: rgba(196,190,220,.48) !important;
+}
+
+/* Service/category controls get a proper command-deck treatment */
+#order-modal-content form button[class*="border"] {
+  min-height: 50px;
+  border-color: rgba(139,92,246,.22) !important;
+  border-radius: 15px !important;
+  background: linear-gradient(145deg, rgba(20,13,48,.78), rgba(7,6,20,.72)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease !important;
+}
+
+#order-modal-content form button[class*="border"]:hover {
+  transform: translateY(-2px) !important;
+  border-color: rgba(168,85,247,.58) !important;
+  background: linear-gradient(145deg, rgba(42,23,82,.84), rgba(9,7,27,.82)) !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,.22), 0 0 20px rgba(124,58,237,.10) !important;
+}
+
+/* Promo/event block */
+#order-modal-content form .bg-gradient-to-r.from-amber-500\/20 {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px !important;
+  padding: 15px !important;
+  box-shadow: 0 12px 35px rgba(245,158,11,.07), inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+/* Main submit control */
+#order-modal-content form button[type="submit"] {
+  min-height: 58px !important;
+  border-radius: 17px !important;
+  font-size: 14px !important;
+  font-weight: 950 !important;
+  box-shadow: 0 16px 38px rgba(124,58,237,.22) !important;
+}
+
+/* Success screen becomes mission-complete */
+#order-modal-content .text-center {
+  position: relative;
+  z-index: 10;
+}
+
+#order-modal-content .text-center > .relative > div:first-child {
+  box-shadow: 0 0 55px rgba(16,185,129,.20), inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+
+#order-modal-content .text-center h3 {
+  letter-spacing: -.035em;
+}
+
 #order-modal-content .text-center .font-mono {
-  letter-spacing: 0.08em;
+  letter-spacing: .10em !important;
 }
 
-@media (min-width: 640px) {
-  #order-modal-backdrop { padding: 18px !important; }
-  #order-modal-content { padding: 28px !important; }
+/* Keep all interactive controls touch-friendly */
+#order-modal-content button,
+#order-modal-content a {
+  -webkit-tap-highlight-color: transparent;
 }
 
-@media (max-width: 639px) {
+#order-modal-content button:not([disabled]):active,
+#order-modal-content a:active {
+  transform: scale(.98);
+}
+
+@media (min-width: 700px) {
+  #order-modal-content form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  #order-modal-content form > :last-child,
+  #order-modal-content form button[type="submit"],
+  #order-modal-content form textarea {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 699px) {
   #order-modal-backdrop {
     padding: 0 !important;
   }
 
   #order-modal-content {
-    min-height: 100dvh !important;
     width: 100% !important;
     max-width: none !important;
+    min-height: 100dvh !important;
     border-radius: 0 !important;
     border-left: 0 !important;
     border-right: 0 !important;
-    padding: 16px !important;
+    padding: 15px !important;
+  }
+
+  #order-modal-content::after {
+    display: none;
   }
 
   #order-modal-content > .relative.z-10.flex.items-center.justify-between {
-    padding-bottom: 14px !important;
+    margin-top: 5px !important;
+    padding-bottom: 15px !important;
   }
 
   #order-modal-content form {
-    gap: 13px;
+    padding: 15px !important;
+    gap: 14px !important;
+    border-radius: 20px !important;
   }
 
   #order-modal-content form input,
@@ -149,7 +276,8 @@
   #order-modal-content form input,
   #order-modal-content form textarea,
   #order-modal-content form select,
-  #order-modal-content form button {
+  #order-modal-content form button,
+  #order-modal-content a {
     transition: none !important;
   }
 }
