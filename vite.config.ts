@@ -1,7 +1,7 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig} from 'vite';
+import { defineConfig } from 'vite';
 
 export default defineConfig(() => {
   return {
@@ -14,7 +14,7 @@ export default defineConfig(() => {
     build: {
       // Keep production output lean without changing the rendered UI or assets.
       target: 'es2020',
-      minify: 'esbuild',
+      minify: 'esbuild' as const,
       cssMinify: true,
       reportCompressedSize: false,
       rollupOptions: {
