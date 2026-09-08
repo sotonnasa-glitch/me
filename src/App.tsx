@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { SiteDataProvider, useSiteData } from './context/SiteDataContext';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -15,15 +15,17 @@ import { SocialMediaSection } from './components/SocialMediaSection';
 import { CTASection } from './components/CTASection';
 import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
-import { OrderModal } from './components/OrderModal';
-import { OrderTrackingModal } from './components/OrderTrackingModal';
-import { AdminLayout } from './components/admin/AdminLayout';
-import { AdminAuthModal } from './components/admin/AdminAuthModal';
-import { GoogleAuthModal } from './components/common/GoogleAuthModal';
+import { GlobalBackgroundStars } from './components/GlobalBackgroundStars';
+import { ArrowUp, Video } from 'lucide-react';
+
+const OrderModal = lazy(() => import('./components/OrderModal').then((module) => ({ default: module.OrderModal })));
+const OrderTrackingModal = lazy(() => import('./components/OrderTrackingModal').then((module) => ({ default: module.OrderTrackingModal })));
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout').then((module) => ({ default: module.AdminLayout })));
+const AdminAuthModal = lazy(() => import('./components/admin/AdminAuthModal').then((module) => ({ default: module.AdminAuthModal })));
+const GoogleAuthModal = lazy(() => import('./components/common/GoogleAuthModal').then((module) => ({ default: module.GoogleAuthModal })));
+
 import { TekvixAiAssistant } from './components/common/TekvixAiAssistant';
 import { UniversalBackButton } from './components/common/UniversalBackButton';
-import { GlobalBackgroundStars } from './components/GlobalBackgroundStars';
-import { ArrowUp, Shield, Sparkles, Video, User } from 'lucide-react';
 
 function MainWebsite() {
   const {
@@ -98,9 +100,9 @@ function MainWebsite() {
 
   if (isAdminOpen) {
     return (
-      <AdminLayout
-        onSwitchToSite={() => setIsAdminOpen(false)}
-      />
+      <Suspense fallback={null}>
+        <AdminLayout onSwitchToSite={() => setIsAdminOpen(false)} />
+      </Suspense>
     );
   }
 
@@ -221,43 +223,45 @@ function MainWebsite() {
         onOpenOrderTracking={handleOpenOrderTracking}
       />
 
-      {/* Unified Place Order / Get Quote Modal */}
-      <OrderModal
-        isOpen={isOrderModalOpen}
-        onClose={handleCloseOrderModal}
-        initialServiceId={selectedServiceForOrder}
-        onOpenGoogleAuth={() => setIsGoogleAuthOpen(true)}
-        onOpenOrderTracking={(orderId) => {
-          setIsOrderModalOpen(false);
-          handleOpenOrderTracking(orderId);
-        }}
-      />
+      <Suspense fallback={null}>
+        {/* Unified Place Order / Get Quote Modal */}
+        <OrderModal
+          isOpen={isOrderModalOpen}
+          onClose={handleCloseOrderModal}
+          initialServiceId={selectedServiceForOrder}
+          onOpenGoogleAuth={() => setIsGoogleAuthOpen(true)}
+          onOpenOrderTracking={(orderId) => {
+            setIsOrderModalOpen(false);
+            handleOpenOrderTracking(orderId);
+          }}
+        />
 
-      {/* 3-Step Real-time Order Tracking Pipeline Modal */}
-      <OrderTrackingModal
-        isOpen={isOrderTrackingOpen}
-        onClose={() => setIsOrderTrackingOpen(false)}
-        onOpenOrderModal={() => handleOpenOrderModal()}
-        initialQuery={trackingInitialQuery}
-      />
+        {/* 3-Step Real-time Order Tracking Pipeline Modal */}
+        <OrderTrackingModal
+          isOpen={isOrderTrackingOpen}
+          onClose={() => setIsOrderTrackingOpen(false)}
+          onOpenOrderModal={() => handleOpenOrderModal()}
+          initialQuery={trackingInitialQuery}
+        />
 
-      {/* Admin Password Authentication Gate Modal */}
-      <AdminAuthModal
-        isOpen={isAdminAuthOpen}
-        onSuccess={() => {
-          setIsAdminAuthOpen(false);
-          setIsAdminOpen(true);
-        }}
-        onCancel={() => setIsAdminAuthOpen(false)}
-      />
+        {/* Admin Password Authentication Gate Modal */}
+        <AdminAuthModal
+          isOpen={isAdminAuthOpen}
+          onSuccess={() => {
+            setIsAdminAuthOpen(false);
+            setIsAdminOpen(true);
+          }}
+          onCancel={() => setIsAdminAuthOpen(false)}
+        />
 
-      {/* Google Authentication & Account Modal */}
-      <GoogleAuthModal
-        isOpen={isGoogleAuthOpen}
-        onClose={() => setIsGoogleAuthOpen(false)}
-        onOpenOrderModal={() => handleOpenOrderModal()}
-        onOpenOrderTracking={handleOpenOrderTracking}
-      />
+        {/* Google Authentication & Account Modal */}
+        <GoogleAuthModal
+          isOpen={isGoogleAuthOpen}
+          onClose={() => setIsGoogleAuthOpen(false)}
+          onOpenOrderModal={() => handleOpenOrderModal()}
+          onOpenOrderTracking={handleOpenOrderTracking}
+        />
+      </Suspense>
 
       <style>{`
         .page-meteor {
@@ -270,6 +274,8 @@ function MainWebsite() {
           opacity: 0;
           transform: rotate(28deg) translate3d(0,0,0) scaleX(.55);
           animation: page-meteor-fly 12s linear infinite;
+          will-change: transform, opacity;
+          contain: paint;
         }
 
         .page-meteor-1 { top: 9%; left: -10%; animation-delay: 0s; }
