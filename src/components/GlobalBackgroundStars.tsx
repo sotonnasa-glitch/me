@@ -101,8 +101,8 @@ export const GlobalBackgroundStars: React.FC = () => {
   return (
     <div
       aria-hidden="true"
-      className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none will-change-auto"
-      style={{ contain: 'strict' }}
+      className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none"
+      style={{ contain: 'strict', isolation: 'isolate' }}
     >
       {stars.map((star) => (
         <div
@@ -116,7 +116,8 @@ export const GlobalBackgroundStars: React.FC = () => {
             backgroundColor: star.color,
             boxShadow: `0 0 ${star.size * 3}px ${star.glow}, 0 0 ${star.size * 7}px ${star.glow}`,
             animation: `star-twinkle ${star.duration}s ease-in-out ${star.delay}s infinite`,
-            transform: 'translateZ(0)',
+            transform: 'translate3d(0,0,0)',
+            contain: 'layout paint style',
           }}
         >
           {star.hasSpike && (
