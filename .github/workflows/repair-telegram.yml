@@ -1,0 +1,171 @@
+name: Retry Telegram repair
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply safe Telegram fixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git log -1 --pretty=%B | grep -Fq 'fix: repair Telegram delivery'; then
+            exit 0
+          fi
+
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          server = Path('server.ts')
+          text = server.read_text()
+
+          text, count = re.subn(
+              r"const VERIFIED_FALLBACK_BOT_TOKEN\s*=.*?;\s*\n\s*const VERIFIED_BOT_TOKEN\s*=\s*\(process\.env\.TELEGRAM_BOT_TOKEN\s*\|\|\s*VERIFIED_FALLBACK_BOT_TOKEN\)\.trim\(\);",
+              "// Telegram credentials must come only from the server environment.\n  const VERIFIED_BOT_TOKEN = (process.env.TELEGRAM_BOT_TOKEN || '').trim();",
+              text,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit('token declaration not found')
+
+          text, count = re.subn(
+              r"  function resolveTelegramChatIds\(chatIdInput: string \| undefined \| null\): string\[\] \{.*?\n  \}\n\n  // Telegram credentials",
+              '''  function resolveTelegramChatIds(_chatIdInput: string | undefined | null): string[] {
+    const envChatId = (process.env.TELEGRAM_CHAT_ID || '').trim();
+    if (!envChatId) return [];
+    return Array.from(new Set(envChatId.split(/[,;\\n]+/).map((s) => s.trim()).filter(Boolean)));
+  }
+
+  // Telegram credentials''',
+              text,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit('chat resolver not found')
+
+          text, count = re.subn(
+              r"    let effectiveToken = \(customToken \|\| VERIFIED_BOT_TOKEN\)\.trim\(\);.*?\n\n    const targets = chatIds && chatIds\.length > 0 \? chatIds : resolveTelegramChatIds\(undefined\);",
+              '''    void customToken;
+    const effectiveToken = VERIFIED_BOT_TOKEN;
+    const targets = chatIds && chatIds.length > 0 ? chatIds : resolveTelegramChatIds(undefined);
+    if (!effectiveToken) {
+      return { success: false, deliveredTo: [], errors: ['TELEGRAM_BOT_TOKEN روی سرور تنظیم نشده است.'], messageIds: [] };
+    }
+    if (targets.length === 0) {
+      return { success: false, deliveredTo: [], errors: ['TELEGRAM_CHAT_ID روی سرور تنظیم نشده است.'], messageIds: [] };
+    }''',
+              text,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit('effective token block not found')
+
+          text, count = re.subn(
+              r"          // Auto-recovery: if custom token fails with 401 Unauthorized, retry with verified bot token.*?\n          \}\n\n          const desc",
+              "          const desc",
+              text,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit('auth retry block not found')
+
+          text, count = re.subn(
+              r"      // Dispatch Telegram notification strictly via server environment variable.*?      res\.status\(201\)\.json\(\{ success: true, order: newOrder \}\);",
+              "      // Telegram delivery is owned by the dedicated send-order endpoint.\n      res.status(201).json({ success: true, order: newOrder });",
+              text,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit('orders dispatch block not found')
+
+          text = text.replace("      const { order, chatId, botToken } = req.body;", "      const { order } = req.body;", 1)
+          text = text.replace("      const targetChatIds = resolveTelegramChatIds(chatId);", "      const targetChatIds = resolveTelegramChatIds(undefined);", 1)
+          text = text.replace("        inlineKeyboard,\n        botToken\n      );", "        inlineKeyboard\n      );", 1)
+
+          text, count = re.subn(
+              r"      \} else \{\n        res\.json\(\{\n          success: true,\n          telegramSent: false,",
+              "      } else {\n        res.status(502).json({\n          success: false,\n          telegramSent: false,",
+              text,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit('send-order failure response not found')
+
+          text = text.replace("      const { name, contactInfo, topic, message, chatId } = req.body;", "      const { name, contactInfo, topic, message } = req.body;", 1)
+          text = text.replace("      const targetChatIds = resolveTelegramChatIds(chatId);", "      const targetChatIds = resolveTelegramChatIds(undefined);", 1)
+          text = text.replace("      } else {\n        res.json({\n          success: true,\n          telegramSent: false,", "      } else {\n        res.status(502).json({\n          success: false,\n          telegramSent: false,", 1)
+          text = text.replace("      const { chatId, botToken } = req.body;\n      const targetChatIds = resolveTelegramChatIds(chatId);", "      const targetChatIds = resolveTelegramChatIds(undefined);", 1)
+          text = text.replace("        testInlineKeyboard,\n        botToken\n      );", "        testInlineKeyboard\n      );", 1)
+          server.write_text(text)
+
+          ctx = Path('src/context/SiteDataContext.tsx')
+          t = ctx.read_text()
+          p = re.compile(r"  const sendOrderToTelegramBot = async \(\n    order: OrderItem\n  \): Promise<\{ success: boolean; message\?: string; directLink\?: string \}> => \{.*?\n  \};\n\n  const sendConsultationToTelegram", re.S)
+          replacement = '''  const sendOrderToTelegramBot = async (
+    order: OrderItem
+  ): Promise<{ success: boolean; message?: string; directLink?: string }> => {
+    try {
+      const response = await fetch('/api/telegram/send-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || data.telegramSent !== true) {
+        throw new Error(data.telegramError || data.error || 'ارسال سفارش به تلگرام ناموفق بود.');
+      }
+      return { success: true, message: data.message || 'سفارش با موفقیت به تلگرام ارسال شد.', directLink: data.directLink || data.pvUrl };
+    } catch (err: any) {
+      console.error('Backend Telegram order delivery failed:', err);
+      throw err;
+    }
+  };
+
+  const sendConsultationToTelegram'''
+          t, count = p.subn(replacement, t, count=1)
+          if count != 1:
+              raise SystemExit('sendOrderToTelegramBot not found')
+          t = t.replace("          ...data,\n          botToken: telegramSettings.botToken,\n          chatId: telegramSettings.chatId,", "          ...data,", 1)
+          ctx.write_text(t)
+
+          modal = Path('src/components/OrderModal.tsx')
+          m = modal.read_text()
+          old_submit = """    try {\n      await sendOrderToTelegramBot(created);\n    } catch (err) {\n      console.warn('Telegram send ignored:', err);\n    } finally {\n      setIsSubmitting(false);\n      setIsSuccess(true);\n    }"""
+          new_submit = """    try {\n      const delivery = await sendOrderToTelegramBot(created);\n      if (!delivery.success) throw new Error(delivery.message || 'ارسال به تلگرام ناموفق بود.');\n      setIsSubmitting(false);\n      setIsSuccess(true);\n    } catch (err: any) {\n      console.error('Telegram delivery failed:', err);\n      setIsSubmitting(false);\n      setIsSuccess(false);\n      setErrors({ telegramOrPhone: err?.message || 'ارسال سفارش به تلگرام ناموفق بود. لطفاً دوباره تلاش کنید.' });\n    }"""
+          if old_submit not in m:
+              raise SystemExit('OrderModal submit handler not found')
+          modal.write_text(m.replace(old_submit, new_submit, 1))
+          PY
+
+      - name: Validate
+        run: |
+          npm ci
+          npm run lint
+          npm run build
+
+      - name: Commit repair and clean temporary workflows
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -f .github/workflows/fix-telegram-once.yml .github/workflows/repair-telegram.yml
+          git add server.ts src/context/SiteDataContext.tsx src/components/OrderModal.tsx .github/workflows/fix-telegram-once.yml .github/workflows/repair-telegram.yml
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'fix: repair Telegram delivery'
+          git push
