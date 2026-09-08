@@ -112,6 +112,16 @@ function MainWebsite() {
       {/* Ultra-performant Global Background Celestial Starfield */}
       <GlobalBackgroundStars />
 
+      {/* Shooting stars across the full landing page */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden z-[2]" aria-hidden="true">
+        <span className="page-meteor page-meteor-1" />
+        <span className="page-meteor page-meteor-2" />
+        <span className="page-meteor page-meteor-3" />
+        <span className="page-meteor page-meteor-4" />
+        <span className="page-meteor page-meteor-5" />
+        <span className="page-meteor page-meteor-6" />
+      </div>
+
       {/* Sticky Glassmorphic Navbar */}
       <Navbar
         onOpenOrderModal={handleOpenOrderModal}
@@ -248,6 +258,47 @@ function MainWebsite() {
         onOpenOrderModal={() => handleOpenOrderModal()}
         onOpenOrderTracking={handleOpenOrderTracking}
       />
+
+      <style>{`
+        .page-meteor {
+          position: absolute;
+          width: 110px;
+          height: 1.5px;
+          border-radius: 999px;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,.95), rgba(103,232,249,.72), transparent);
+          filter: drop-shadow(0 0 6px rgba(103,232,249,.7));
+          opacity: 0;
+          transform: rotate(28deg) translate3d(0,0,0) scaleX(.55);
+          animation: page-meteor-fly 12s linear infinite;
+        }
+
+        .page-meteor-1 { top: 9%; left: -10%; animation-delay: 0s; }
+        .page-meteor-2 { top: 24%; left: 48%; width: 85px; transform: rotate(24deg) translate3d(0,0,0) scaleX(.5); animation-delay: 4s; }
+        .page-meteor-3 { top: 39%; left: 12%; width: 125px; transform: rotate(30deg) translate3d(0,0,0) scaleX(.45); animation-delay: 8s; }
+        .page-meteor-4 { top: 55%; left: 67%; width: 75px; transform: rotate(25deg) translate3d(0,0,0) scaleX(.5); animation-delay: 2s; animation-duration: 14s; }
+        .page-meteor-5 { top: 72%; left: 30%; width: 100px; transform: rotate(29deg) translate3d(0,0,0) scaleX(.5); animation-delay: 7s; animation-duration: 13s; }
+        .page-meteor-6 { top: 88%; left: 78%; width: 70px; transform: rotate(27deg) translate3d(0,0,0) scaleX(.45); animation-delay: 10s; animation-duration: 15s; }
+
+        @keyframes page-meteor-fly {
+          0%, 72% {
+            opacity: 0;
+            transform: translate3d(0,0,0) rotate(28deg) scaleX(.45);
+          }
+          76% { opacity: .95; }
+          88% {
+            opacity: .72;
+            transform: translate3d(300px,210px,0) rotate(28deg) scaleX(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translate3d(500px,350px,0) rotate(28deg) scaleX(1.15);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .page-meteor { animation: none; opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }
