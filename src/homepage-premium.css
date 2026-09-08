@@ -1,0 +1,163 @@
+/*
+ * Aziz Abzar — premium homepage visual layer
+ * Visual-only overrides: preserves the existing Hero structure, content and interactions.
+ * Direction: premium Persian product/commerce site with the existing space identity,
+ * inspired by the polish and visual confidence of Tekvix — not its business/content.
+ */
+
+:root {
+  --aziz-violet: #8b5cf6;
+  --aziz-cyan: #22d3ee;
+  --aziz-pink: #f472b6;
+  --aziz-bg: #03030a;
+}
+
+/* --- Global first-impression surface --- */
+#main-navbar {
+  background: linear-gradient(180deg, rgba(3, 3, 10, 0.82), rgba(3, 3, 10, 0.22)) !important;
+  backdrop-filter: blur(18px) saturate(130%);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
+}
+
+#hero-section {
+  isolation: isolate;
+  min-height: 100svh;
+  background:
+    radial-gradient(ellipse 70% 52% at 50% 32%, rgba(124, 58, 237, 0.14), transparent 68%),
+    radial-gradient(ellipse 42% 35% at 72% 52%, rgba(34, 211, 238, 0.07), transparent 70%),
+    radial-gradient(ellipse 40% 34% at 24% 58%, rgba(236, 72, 153, 0.055), transparent 72%),
+    linear-gradient(180deg, #03030a 0%, #060511 48%, #03030a 100%) !important;
+}
+
+#hero-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(139, 92, 246, 0.035) 50%, transparent 100%),
+    radial-gradient(circle at 50% 45%, transparent 0 34%, rgba(0, 0, 0, 0.18) 70%, rgba(0, 0, 0, 0.58) 100%);
+}
+
+#hero-section::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 22%;
+  pointer-events: none;
+  z-index: 2;
+  background: linear-gradient(180deg, transparent, rgba(3, 3, 10, 0.88));
+}
+
+#hero-section .bg-cosmic-grid {
+  opacity: 0.13 !important;
+  mask-image: radial-gradient(ellipse at center, black 15%, rgba(0,0,0,.7) 48%, transparent 82%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 15%, rgba(0,0,0,.7) 48%, transparent 82%);
+}
+
+/* The HUD becomes a refined glass detail rather than a game overlay. */
+#hero-section .font-mono {
+  padding: 10px 13px;
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  border-radius: 16px;
+  background: rgba(7, 7, 18, 0.42);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.045), 0 12px 40px rgba(0,0,0,.18);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* --- Premium orbital centerpiece --- */
+#hero-section .animate-orb-breathe {
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255,255,255,.17), transparent 14%),
+    radial-gradient(circle at 60% 52%, rgba(139,92,246,.30), transparent 45%),
+    radial-gradient(circle at 38% 76%, rgba(34,211,238,.10), transparent 38%),
+    linear-gradient(145deg, #241047 0%, #10091f 54%, #05040d 100%) !important;
+  border-color: rgba(196, 181, 253, 0.48) !important;
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.08),
+    0 0 70px rgba(124, 58, 237, 0.34),
+    0 0 150px rgba(34, 211, 238, 0.08),
+    inset 0 1px 0 rgba(255,255,255,.12),
+    inset -24px -30px 70px rgba(0,0,0,.62) !important;
+}
+
+#hero-section .animate-orb-breathe::after {
+  content: '';
+  position: absolute;
+  inset: 7%;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.055);
+  box-shadow: inset 0 0 30px rgba(34,211,238,.05);
+  pointer-events: none;
+}
+
+#hero-section .animate-orbit,
+#hero-section .animate-orbit-reverse {
+  border-color: rgba(196, 181, 253, 0.18) !important;
+}
+
+#hero-section .animate-orbit > div,
+#hero-section .animate-orbit-reverse > div {
+  filter: drop-shadow(0 0 7px currentColor);
+}
+
+/* Make the atmospheric light feel expensive, not noisy. */
+#hero-section .hero-space-depth,
+#hero-section .hero-space-dust {
+  opacity: .72;
+}
+
+/* Refined meteor trails. */
+#hero-section .hero-meteor {
+  opacity: .6;
+  filter: drop-shadow(0 0 8px rgba(34,211,238,.5));
+}
+
+/* Keep the CTA treatment premium and tactile. */
+#hero-section .neural-btn-wrapper {
+  box-shadow:
+    0 10px 35px rgba(76, 29, 149, .22),
+    0 0 30px rgba(34,211,238,.08) !important;
+}
+
+#hero-section .neural-btn-wrapper:hover:not(:disabled) {
+  transform: translateY(-3px) !important;
+}
+
+/* Softer scroll transition into the rest of the page. */
+#hero-section + section,
+#hero-section + div {
+  position: relative;
+}
+
+/* Mobile: reduce visual density while keeping the premium look. */
+@media (max-width: 640px) {
+  #hero-section {
+    min-height: 100svh;
+    padding-top: 7rem !important;
+    padding-bottom: 4rem !important;
+  }
+
+  #hero-section::after {
+    height: 15%;
+  }
+
+  #hero-section .animate-orb-breathe {
+    box-shadow:
+      0 0 45px rgba(124,58,237,.34),
+      inset -16px -20px 45px rgba(0,0,0,.58) !important;
+  }
+}
+
+/* Respect reduced-motion accessibility settings. */
+@media (prefers-reduced-motion: reduce) {
+  #hero-section *,
+  #main-navbar * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
