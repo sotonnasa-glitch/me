@@ -11,9 +11,28 @@ export default defineConfig(() => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    build: {
+      // Keep production output lean without changing the rendered UI or assets.
+      target: 'es2020',
+      minify: 'esbuild',
+      cssMinify: true,
+      reportCompressedSize: false,
+      rollupOptions: {
+        output: {
+          // Stable vendor chunks improve browser caching across normal site updates.
+          manualChunks: {
+            react: ['react', 'react-dom'],
+            icons: ['lucide-react'],
+            charts: ['recharts'],
+            animation: ['motion'],
+            ai: ['@google/genai'],
+          },
+        },
+      },
+    },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
+      // Do not modify—file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
