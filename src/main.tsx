@@ -4,6 +4,7 @@ import '@fontsource-variable/vazirmatn';
 import '@fontsource/plus-jakarta-sans';
 import App from './App.tsx';
 import './index.css';
+import './order-modal-polish.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
