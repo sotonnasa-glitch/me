@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
-  X,
   CheckCircle2,
   ArrowLeft,
   Sparkles,
   Send,
   ShieldCheck,
   AlertCircle,
-  Phone,
   User,
   MessageSquare,
   Copy,
@@ -21,7 +19,9 @@ import {
   Music,
   FileText,
   Gift,
-  Flame,
+  Wand2,
+  Cpu,
+  BadgeCheck,
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteDataContext';
 import { OrderFormData } from '../types';
@@ -35,6 +35,83 @@ interface OrderModalProps {
   onOpenGoogleAuth?: () => void;
   onOpenOrderTracking?: (orderId: string) => void;
 }
+
+type ServiceVisual = {
+  icon: React.ElementType;
+  eyebrow: string;
+  headline: string;
+  description: string;
+  accent: string;
+  glow: string;
+  points: string[];
+};
+
+const SERVICE_VISUALS: Record<string, ServiceVisual> = {
+  'ai-website': {
+    icon: Globe,
+    eyebrow: 'WEB • AI • PRODUCT',
+    headline: 'یک وب‌سایت هوشمند برای ایده‌ات',
+    description: 'از لندینگ تا تجربه‌های تعاملی؛ ظاهر مدرن، عملکرد سریع و قابلیت‌های AI در یک پروژه یکپارچه.',
+    accent: 'text-cyan-300',
+    glow: 'bg-cyan-400/15',
+    points: ['UI مدرن و واکنش‌گرا', 'اتصال قابلیت‌های AI', 'تحویل آماده استفاده'],
+  },
+  'ai-video': {
+    icon: Clapperboard,
+    eyebrow: 'VIDEO • AI • STORY',
+    headline: 'ویدیویی که ایده‌ات را زنده می‌کند',
+    description: 'برای تبلیغات، شبکه‌های اجتماعی، معرفی محصول یا روایت یک ایده، سناریو و خروجی بصری را حرفه‌ای می‌سازیم.',
+    accent: 'text-fuchsia-300',
+    glow: 'bg-fuchsia-400/15',
+    points: ['سناریو و ایده‌پردازی', 'تولید با ابزارهای AI', 'خروجی مناسب انتشار'],
+  },
+  'telegram-bot': {
+    icon: Bot,
+    eyebrow: 'BOT • AUTOMATION • AI',
+    headline: 'رباتی که بخشی از کار را برایت انجام می‌دهد',
+    description: 'ربات تلگرامی اختصاصی با جریان‌های خودکار، تعامل هوشمند و قابلیت اتصال به سرویس‌های موردنیازت.',
+    accent: 'text-sky-300',
+    glow: 'bg-sky-400/15',
+    points: ['فرآیندهای خودکار', 'اتصال سرویس‌ها', 'تجربه ساده برای کاربر'],
+  },
+  'image-creation': {
+    icon: Palette,
+    eyebrow: 'VISUAL • BRAND • AI',
+    headline: 'تصویری که دقیقاً برای برندت ساخته شده',
+    description: 'از پوستر و کاور تا سبک‌های اختصاصی تصویری؛ خروجی تمیز، قابل استفاده و متناسب با هویت بصری پروژه.',
+    accent: 'text-violet-300',
+    glow: 'bg-violet-400/15',
+    points: ['کانسپت و art direction', 'سبک تصویری اختصاصی', 'فایل مناسب انتشار'],
+  },
+  'ai-music': {
+    icon: Music,
+    eyebrow: 'AUDIO • MUSIC • SOUND',
+    headline: 'صدا و موسیقی متناسب با پروژه‌ات',
+    description: 'برای محتوا، برند یا تجربه دیجیتال، فضای صوتی اختصاصی می‌سازیم تا خروجی فقط «یک فایل صدا» نباشد.',
+    accent: 'text-amber-300',
+    glow: 'bg-amber-400/15',
+    points: ['فضاسازی صوتی', 'موسیقی متناسب با کاربرد', 'خروجی آماده انتشار'],
+  },
+  'text-content': {
+    icon: FileText,
+    eyebrow: 'CONTENT • AI • COPY',
+    headline: 'محتوایی که برای هدف مشخص نوشته شده',
+    description: 'محتوای سایت، شبکه‌های اجتماعی، معرفی محصول و متن‌های کاربردی با ساختار، لحن و هدف مشخص.',
+    accent: 'text-emerald-300',
+    glow: 'bg-emerald-400/15',
+    points: ['لحن اختصاصی برند', 'ساختار هدفمند', 'مناسب انتشار سریع'],
+  },
+};
+
+const DEFAULT_SERVICE_VISUAL: ServiceVisual = {
+  icon: Sparkles,
+  eyebrow: 'AI SERVICE • TEKVIX',
+  headline: 'پروژه‌ات را با Tekvix شروع کن',
+  description: 'جزئیات ایده‌ات را بگو تا بهترین مسیر اجرا را برایت مشخص کنیم.',
+  accent: 'text-purple-300',
+  glow: 'bg-purple-400/15',
+  points: ['راهکار متناسب با پروژه', 'فرآیند شفاف', 'پشتیبانی مستقیم'],
+};
 
 export const OrderModal: React.FC<OrderModalProps> = ({
   isOpen,
@@ -53,7 +130,6 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     openingEventState,
   } = useSiteData();
 
-  // Filter out inactive/unavailable services completely from order menu
   const availableServices = useMemo(
     () => services.filter((s) => s.active !== false && s.availabilityStatus !== 'unavailable'),
     [services]
@@ -73,29 +149,30 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     serviceId: defaultServiceId,
     message: '',
   });
-
   const [errors, setErrors] = useState<{ fullName?: string; telegramOrPhone?: string }>({});
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submittedOrderId, setSubmittedOrderId] = useState<string>('');
+  const [submittedOrderId, setSubmittedOrderId] = useState('');
   const [countdown, setCountdown] = useState(10);
   const [copiedCode, setCopiedCode] = useState(false);
-
   const lastTrackedServiceRef = useRef<string | null>(null);
 
-  // Quick service categories pills (only available ones)
   const quickCategories = useMemo(
     () =>
       [
         { id: 'ai-website', label: 'طراحی وب‌سایت', icon: Globe },
-        { id: 'ai-video', label: 'ویدیو سینمایی', icon: Clapperboard },
+        { id: 'ai-video', label: 'ویدیو', icon: Clapperboard },
         { id: 'telegram-bot', label: 'ربات تلگرام', icon: Bot },
-        { id: 'image-creation', label: 'تصویر و گرافیک', icon: Palette },
-        { id: 'ai-music', label: 'موزیک و صدا', icon: Music },
-        { id: 'text-content', label: 'تولید محتوا', icon: FileText },
+        { id: 'image-creation', label: 'تصویر', icon: Palette },
+        { id: 'ai-music', label: 'موزیک', icon: Music },
+        { id: 'text-content', label: 'محتوا', icon: FileText },
       ].filter((cat) => availableServices.some((s) => s.id === cat.id)),
     [availableServices]
   );
+
+  const selectedService = availableServices.find((s) => s.id === formData.serviceId) || availableServices[0];
+  const serviceVisual = (selectedService && SERVICE_VISUALS[selectedService.id]) || DEFAULT_SERVICE_VISUAL;
+  const ServiceIcon = serviceVisual.icon;
 
   useEffect(() => {
     if (currentUser?.name) {
@@ -143,14 +220,15 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     onClose();
   };
 
+  const handleServiceChange = (serviceId: string) => {
+    setFormData((prev) => ({ ...prev, serviceId }));
+    trackServiceClick(serviceId);
+  };
+
   const validate = (): boolean => {
     const newErrors: { fullName?: string; telegramOrPhone?: string } = {};
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'لطفاً نام و نام خانوادگی خود را وارد کنید.';
-    }
-    if (!formData.telegramOrPhone.trim()) {
-      newErrors.telegramOrPhone = 'لطفاً آیدی تلگرام خود را وارد کنید.';
-    }
+    if (!formData.fullName.trim()) newErrors.fullName = 'لطفاً نام و نام خانوادگی خود را وارد کنید.';
+    if (!formData.telegramOrPhone.trim()) newErrors.telegramOrPhone = 'لطفاً آیدی تلگرام خود را وارد کنید.';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -174,15 +252,10 @@ export const OrderModal: React.FC<OrderModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) {
-      return;
-    }
+    if (!validate()) return;
 
     setIsSubmitting(true);
-
     const isPromo = Boolean(openingEventState.isCurrentlyOpen);
-
-    // 1. Save directly to centralized site database context
     const created = addOrder({
       ...formData,
       isPromoEvent: isPromo,
@@ -190,7 +263,6 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     });
     setSubmittedOrderId(created.id);
 
-    // 2. Dispatch telegram notification to bot
     try {
       await sendOrderToTelegramBot(created);
     } catch (err) {
@@ -201,456 +273,371 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     }
   };
 
-  const selectedService = availableServices.find((s) => s.id === formData.serviceId) || availableServices[0];
-
   return (
     <div
       id="order-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 bg-black/90 backdrop-blur-xl animate-in fade-in duration-200 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#020108]/90 backdrop-blur-xl overflow-y-auto p-0 sm:p-5"
       role="dialog"
       aria-modal="true"
       dir="rtl"
     >
       <div
         id="order-modal-content"
-        className="w-full min-h-screen sm:min-h-0 sm:max-w-2xl sm:rounded-3xl bg-gradient-to-b from-[#0e0924] via-[#090618] to-[#05030e] border-0 sm:border sm:border-purple-500/30 p-5 sm:p-8 shadow-[0_0_80px_rgba(147,51,234,0.35)] relative flex flex-col justify-between text-start my-auto overflow-hidden"
+        className="relative w-full min-h-screen sm:min-h-0 sm:max-w-5xl sm:max-h-[92vh] overflow-hidden sm:rounded-[32px] border border-white/10 bg-[#080712] text-white shadow-[0_30px_120px_rgba(0,0,0,.65)]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Ambient Top Glow Effect */}
-        <div className="absolute top-0 start-1/2 -translate-x-1/2 w-96 h-40 bg-gradient-to-r from-purple-600/30 via-indigo-600/20 to-purple-600/30 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 -end-10 w-60 h-60 bg-purple-900/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_78%_18%,rgba(139,92,246,.16),transparent_28%),radial-gradient(circle_at_15%_90%,rgba(6,182,212,.10),transparent_25%)]" />
+        <div className="absolute inset-0 pointer-events-none opacity-40 bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,.025)_45%,transparent_70%)]" />
 
-        {/* Top Header Bar */}
-        <div className="relative z-10 flex items-center justify-between pb-4 sm:pb-5 border-b border-purple-900/30">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 border border-purple-400/40 flex items-center justify-center text-white shadow-[0_0_18px_rgba(168,85,247,0.5)] shrink-0">
-              <Sparkles className="w-5 h-5 text-white animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/40 text-purple-300">
-                  {brandInfo.latinName || 'Tekvix'} AI
-                </span>
-                <span className="text-[11px] text-gray-400 font-mono hidden sm:inline">
-                  پشتیبانی: {brandInfo.telegramHandle}
-                </span>
+        <div className="relative z-10 flex min-h-[92vh] sm:min-h-0 sm:max-h-[92vh] flex-col">
+          <header className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4 sm:px-7 sm:py-5">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-purple-400/30 bg-purple-500/10 shadow-[0_0_30px_rgba(139,92,246,.18)]">
+                <Cpu className="h-5 w-5 text-purple-300" />
+                <span className="absolute -bottom-1 -end-1 h-3 w-3 rounded-full border-2 border-[#080712] bg-emerald-400" />
               </div>
-              <h2 className="text-lg sm:text-xl font-black text-white tracking-tight mt-0.5">
-                سفارش خدمات هوش مصنوعی
-              </h2>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {!isSuccess && (
-              <button
-                type="button"
-                onClick={handleQuickFill}
-                className="hidden sm:inline-flex items-center gap-1 text-[11px] text-purple-300 hover:text-white bg-purple-950/70 hover:bg-purple-900/80 px-3 py-1.5 rounded-xl border border-purple-500/40 transition-colors cursor-pointer"
-                title="تکمیل سریع نمونه برای تست فوری"
-              >
-                <Zap className="w-3.5 h-3.5 text-amber-400" />
-                <span>تکمیل سریع نمونه</span>
-              </button>
-            )}
-
-            <AICloseButton
-              id="order-modal-close-btn"
-              onClick={handleModalClose}
-              title="بستن و بازگشت به صفحه قبل"
-              ariaLabel="بستن پنجره سفارش"
-              variant="cyber"
-            />
-          </div>
-        </div>
-
-        {isSuccess ? (
-          /* ================= SUCCESS STATE ================= */
-          <div className="py-6 sm:py-8 text-center flex flex-col items-center justify-center relative z-10 space-y-6 animate-in zoom-in-95 duration-300">
-            {/* Animated Celebration Icon */}
-            <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500/20 via-purple-500/20 to-indigo-500/20 border-2 border-emerald-400/60 flex items-center justify-center text-emerald-400 shadow-[0_0_40px_rgba(16,185,129,0.4)] animate-bounce">
-                <CheckCircle2 className="w-12 h-12" />
-              </div>
-              <span className="absolute -top-1 -end-1 w-6 h-6 rounded-full bg-emerald-500 text-black font-black text-xs flex items-center justify-center">
-                ✓
-              </span>
-            </div>
-
-            <div className="space-y-2 max-w-md mx-auto">
-              <h3 className="text-2xl sm:text-3xl font-black text-white">
-                سفارش شما با موفقیت ثبت شد!
-              </h3>
-              <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
-                اطلاعات سفارش در سیستم ثبت گردید و پیام بلادرنگ به ربات تلگرام و مدیریت ارسال شد.
-              </p>
-            </div>
-
-            {/* Tracking Code Chip with 1-Click Copy */}
-            <div className="p-3 sm:p-4 rounded-2xl bg-[#140e33] border border-purple-500/40 w-full max-w-md flex items-center justify-between shadow-inner">
-              <div className="text-start">
-                <span className="text-[11px] text-gray-400 block">کد رهگیری اختصاصی سفارش شما:</span>
-                <span className="font-mono text-base sm:text-lg font-black text-purple-300 tracking-wider">
-                  {submittedOrderId}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={handleCopyOrderCode}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/40 text-purple-200 text-xs font-bold transition-all cursor-pointer"
-              >
-                {copiedCode ? (
-                  <>
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>کپی شد!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    <span>کپی کد</span>
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Direct Instant Action Cards */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-purple-950/40 border border-purple-500/30 w-full max-w-md space-y-3 text-start">
-              <div className="flex items-center justify-between text-xs text-purple-200 border-b border-purple-500/20 pb-2.5">
-                <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  <span>پیام به ربات ارسال شد</span>
-                </span>
-                <span className="font-mono text-[11px] text-gray-400">سرویس: {selectedService?.title}</span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                {/* Chat with Support @Lawat_kar */}
-                <a
-                  href={`https://t.me/Lawat_kar?text=${encodeURIComponent(
-                    `سلام وقت بخیر! سفارش با کد رهگیری ${submittedOrderId} برای خدمت "${selectedService?.title}" در سایت تکویکس ثبت شد.`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-purple-600/40 transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
-                >
-                  <Send className="w-4 h-4 rotate-180" />
-                  <span>چت با پشتیبانی (@Lawat_kar)</span>
-                </a>
-
-                {/* Open Telegram Bot */}
-                <a
-                  href="https://t.me/Tekvixbot"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-purple-300 hover:text-white border border-purple-500/40 font-bold text-xs shadow-md transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
-                >
-                  <Bot className="w-4 h-4 text-purple-400" />
-                  <span>مشاهده در ربات Tekvixbot@</span>
-                </a>
-              </div>
-
-              {/* Instant Pipeline Tracking Button */}
-              {onOpenOrderTracking && (
-                <div className="pt-2 border-t border-purple-500/20">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (submittedOrderId) {
-                        onOpenOrderTracking(submittedOrderId);
-                      }
-                    }}
-                    className="w-full py-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
-                  >
-                    <Layers className="w-4 h-4 text-emerald-400" />
-                    <span>مشاهده وضعیت و پیگیری لحظه‌ای این سفارش</span>
-                  </button>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.22em] text-gray-500">
+                  <span>{brandInfo.latinName || 'Tekvix'} AI Studio</span>
+                  <span className="h-1 w-1 rounded-full bg-emerald-400" />
+                  <span className="text-emerald-300">Online</span>
                 </div>
-              )}
+                <h2 className="mt-1 truncate text-lg font-black sm:text-xl">شروع یک پروژه جدید</h2>
+              </div>
             </div>
 
-            {/* Close Button & Timer */}
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={handleModalClose}
-                className="px-6 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-semibold shadow-md transition-colors cursor-pointer"
-              >
-                بستن پنجره ({countdown} ثانیه)
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* ================= ORDER FORM STATE ================= */
-          <form onSubmit={handleSubmit} className="relative z-10 space-y-4 sm:space-y-5 my-auto py-2">
-            
-            {/* Opening Promo Event Banner Indicator inside modal */}
-            {openingEventState.isCurrentlyOpen && (
-              <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/20 via-purple-600/20 to-pink-500/20 border border-amber-400/50 flex items-center justify-between gap-2.5 shadow-[0_0_20px_rgba(251,191,36,0.2)] animate-in fade-in duration-200">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 shrink-0">
-                    <Gift className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5 font-black text-amber-300 text-xs truncate">
-                      <span>🎉 ۱۰۰٪ تخفیف و رایگان (ایونت افتتاحیه)</span>
-                    </div>
-                    <p className="text-[10px] text-purple-200/90 truncate">
-                      ظرفیت باقی‌مانده: {openingEventState.remainingCapacity} از {openingEventState.config.maxWinners} سفارش اول
-                    </p>
-                  </div>
-                </div>
-                <span className="px-2.5 py-1 rounded-xl bg-amber-400 text-black text-[10px] font-black shrink-0 shadow-sm">
-                  هزینه: ۰ تومان
-                </span>
-              </div>
-            )}
-
-            {/* Google Authentication Quick Bar */}
-            {currentUser ? (
-              <div className="p-3 rounded-2xl bg-gradient-to-r from-purple-950/60 to-indigo-950/60 border border-purple-500/40 flex items-center justify-between text-xs text-purple-200">
-                <div className="flex items-center gap-2.5">
-                  <img
-                    src={currentUser.avatar}
-                    alt={currentUser.name}
-                    className="w-8 h-8 rounded-xl object-cover border border-purple-400 shadow-sm"
-                  />
-                  <div>
-                    <div className="flex items-center gap-1.5 font-bold text-white">
-                      <span>{currentUser.name}</span>
-                      <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] flex items-center gap-0.5">
-                        <ShieldCheck className="w-3 h-3" /> گوگل متصل
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-gray-400 font-mono">{currentUser.email}</span>
-                  </div>
-                </div>
-                <span className="text-[10px] text-purple-300 bg-white/5 px-2.5 py-1 rounded-lg">
-                  اطلاعات خودکار
-                </span>
-              </div>
-            ) : onOpenGoogleAuth ? (
-              <div className="p-2.5 sm:p-3 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-xs text-gray-300">
-                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                    />
-                  </svg>
-                  <span className="text-[11px] sm:text-xs">ثبت‌نام با گوگل برای پیگیری راحت‌تر</span>
-                </div>
+            <div className="flex items-center gap-2">
+              {!isSuccess && (
                 <button
                   type="button"
-                  onClick={onOpenGoogleAuth}
-                  className="px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold transition-all cursor-pointer shrink-0"
+                  onClick={handleQuickFill}
+                  className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[.04] px-3 py-2 text-[11px] font-bold text-gray-300 transition hover:border-purple-400/30 hover:bg-purple-500/10 hover:text-white"
                 >
-                  ورود با گوگل
+                  <Zap className="h-3.5 w-3.5 text-amber-300" /> نمونه سریع
+                </button>
+              )}
+              <AICloseButton
+                id="order-modal-close-btn"
+                onClick={handleModalClose}
+                title="بستن و بازگشت"
+                ariaLabel="بستن پنجره سفارش"
+                variant="cyber"
+              />
+            </div>
+          </header>
+
+          {isSuccess ? (
+            <div className="relative flex flex-1 items-center justify-center overflow-y-auto px-5 py-10 sm:px-10">
+              <div className="w-full max-w-2xl text-center">
+                <div className="mx-auto mb-7 flex h-24 w-24 items-center justify-center rounded-[30px] border border-emerald-400/40 bg-emerald-400/10 shadow-[0_0_70px_rgba(16,185,129,.18)]">
+                  <CheckCircle2 className="h-12 w-12 text-emerald-300" />
+                </div>
+                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[.2em] text-emerald-300">
+                  <BadgeCheck className="h-3.5 w-3.5" /> Request accepted
+                </span>
+                <h3 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">سفارش با موفقیت ثبت شد ✨</h3>
+                <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-gray-400">
+                  اطلاعات پروژه ثبت شد و درخواست برای تیم Tekvix ارسال شده است. برای ادامه می‌توانی از کد رهگیری استفاده کنی.
+                </p>
+
+                <div className="mx-auto mt-7 flex max-w-xl items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[.035] p-4 text-start">
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-500">کد رهگیری سفارش</span>
+                    <div className="mt-1 font-mono text-lg font-black tracking-widest text-purple-200">{submittedOrderId}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCopyOrderCode}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-purple-400/20 bg-purple-500/10 px-3 py-2 text-xs font-bold text-purple-200"
+                  >
+                    {copiedCode ? <CheckCircle2 className="h-4 w-4 text-emerald-300" /> : <Copy className="h-4 w-4" />}
+                    {copiedCode ? 'کپی شد' : 'کپی کد'}
+                  </button>
+                </div>
+
+                <div className="mx-auto mt-4 grid max-w-xl grid-cols-1 gap-3 sm:grid-cols-2">
+                  <a
+                    href={`https://t.me/Lawat_kar?text=${encodeURIComponent(`سلام وقت بخیر! سفارش با کد رهگیری ${submittedOrderId} برای خدمت "${selectedService?.title}" در سایت تکویکس ثبت شد.`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3.5 text-xs font-black text-white shadow-[0_14px_30px_rgba(124,58,237,.25)]"
+                  >
+                    <Send className="h-4 w-4 rotate-180" /> چت با پشتیبانی
+                  </a>
+                  <a
+                    href="https://t.me/Tekvixbot"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[.04] px-4 py-3.5 text-xs font-black text-gray-200"
+                  >
+                    <Bot className="h-4 w-4 text-purple-300" /> مشاهده در Tekvixbot
+                  </a>
+                  {onOpenOrderTracking && (
+                    <button
+                      type="button"
+                      onClick={() => submittedOrderId && onOpenOrderTracking(submittedOrderId)}
+                      className="sm:col-span-2 inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3.5 text-xs font-black text-emerald-200"
+                    >
+                      <Layers className="h-4 w-4" /> پیگیری این سفارش
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleModalClose}
+                  className="mt-6 inline-flex items-center gap-2 text-xs font-bold text-gray-500 transition hover:text-white"
+                >
+                  بستن پنجره ({countdown} ثانیه) <ArrowLeft className="h-4 w-4" />
                 </button>
               </div>
-            ) : null}
-
-            {/* Quick Service Categories Carousel Pills */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-300 flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <Layers className="w-3.5 h-3.5 text-purple-400" />
-                  <span>انتخاب سریع خدمت مورد نظر</span>
-                </span>
-                <span className="text-[11px] text-purple-400 font-normal">کلیک جهت تغییر</span>
-              </label>
-
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                {quickCategories.map((cat) => {
-                  const Icon = cat.icon;
-                  const isSelected = formData.serviceId === cat.id;
-                  return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => {
-                        setFormData({ ...formData, serviceId: cat.id });
-                        trackServiceClick(cat.id);
-                      }}
-                      className={`flex flex-col items-center justify-center p-2 rounded-2xl border text-center transition-all cursor-pointer group ${
-                        isSelected
-                          ? 'bg-purple-600/30 border-purple-400 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)] scale-105 font-bold'
-                          : 'bg-white/[0.03] border-white/10 text-gray-400 hover:text-white hover:bg-white/[0.08]'
-                      }`}
-                    >
-                      <Icon className={`w-4 h-4 mb-1 transition-transform group-hover:scale-110 ${isSelected ? 'text-purple-300' : 'text-gray-400'}`} />
-                      <span className="text-[10px] leading-tight line-clamp-1">{cat.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
             </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="relative flex flex-1 flex-col overflow-y-auto">
+              <div className="grid flex-1 lg:grid-cols-[minmax(0,1.08fr)_minmax(320px,.92fr)]">
+                <aside className="relative order-1 border-b border-white/10 p-5 sm:p-7 lg:order-2 lg:border-b-0 lg:border-s-0">
+                  <div className={`absolute -top-20 -end-20 h-56 w-56 rounded-full blur-3xl ${serviceVisual.glow}`} />
+                  <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-white/[.035] p-5 sm:p-6">
+                    <div className="absolute -end-12 -top-12 h-32 w-32 rounded-full border border-white/10" />
+                    <div className="absolute -end-7 -top-7 h-24 w-24 rounded-full border border-white/10" />
 
-            {/* Form Fields Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              
-              {/* Field 1: Full Name */}
-              <div>
-                <label htmlFor="modal-fullname" className="block text-xs font-medium text-gray-200 mb-1.5 flex items-center gap-1">
-                  <User className="w-3.5 h-3.5 text-purple-400" />
-                  <span>نام و نام خانوادگی</span>
-                  <span className="text-rose-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="modal-fullname"
-                  value={formData.fullName}
-                  onChange={(e) => {
-                    setFormData({ ...formData, fullName: e.target.value });
-                    if (errors.fullName) setErrors({ ...errors, fullName: undefined });
-                  }}
-                  placeholder="مثال: مهدی حاتمی"
-                  className={`w-full px-4 py-3 rounded-2xl bg-[#120c2b] border text-white placeholder:text-gray-500 text-xs sm:text-sm focus:outline-none transition-all ${
-                    errors.fullName
-                      ? 'border-rose-500 bg-rose-950/20 focus:border-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.2)]'
-                      : 'border-purple-900/40 focus:border-purple-400 focus:bg-[#181039] focus:shadow-[0_0_15px_rgba(168,85,247,0.2)]'
-                  }`}
-                />
-                {errors.fullName && (
-                  <p className="text-[11px] text-rose-400 mt-1 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    <span>{errors.fullName}</span>
-                  </p>
-                )}
+                    <div className="relative flex items-start justify-between gap-4">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-black/20 shadow-[0_0_35px_rgba(139,92,246,.16)]">
+                        <ServiceIcon className={`h-8 w-8 ${serviceVisual.accent}`} />
+                      </div>
+                      <div className="text-end">
+                        <div className={`text-[10px] font-black tracking-[.2em] ${serviceVisual.accent}`}>{serviceVisual.eyebrow}</div>
+                        {selectedService?.badge && (
+                          <span className="mt-2 inline-flex rounded-full border border-white/10 bg-white/[.05] px-2.5 py-1 text-[10px] font-bold text-gray-300">
+                            {selectedService.badge}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="relative mt-7">
+                      <p className="text-xs font-bold text-gray-500">سرویس انتخاب‌شده</p>
+                      <h3 className="mt-2 text-2xl font-black leading-tight sm:text-3xl">{selectedService?.title || 'خدمات هوش مصنوعی'}</h3>
+                      <h4 className={`mt-3 text-sm font-bold ${serviceVisual.accent}`}>{serviceVisual.headline}</h4>
+                      <p className="mt-3 text-sm leading-7 text-gray-400">{serviceVisual.description}</p>
+                    </div>
+
+                    <div className="mt-6 space-y-2.5">
+                      {serviceVisual.points.map((point) => (
+                        <div key={point} className="flex items-center gap-2 rounded-xl border border-white/[.06] bg-black/10 px-3 py-2.5 text-xs text-gray-300">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/[.06]">
+                            <CheckCircle2 className={`h-3.5 w-3.5 ${serviceVisual.accent}`} />
+                          </span>
+                          {point}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-6 grid grid-cols-2 gap-2">
+                      <div className="rounded-2xl border border-white/[.06] bg-black/10 p-3">
+                        <span className="text-[10px] text-gray-500">برآورد اولیه</span>
+                        <div className="mt-1 text-sm font-black text-white">{selectedService?.estimatedPrice || 'پس از بررسی'}</div>
+                      </div>
+                      <div className="rounded-2xl border border-white/[.06] bg-black/10 p-3">
+                        <span className="text-[10px] text-gray-500">پشتیبانی</span>
+                        <div className="mt-1 text-sm font-black text-white">سریع و مستقیم</div>
+                      </div>
+                    </div>
+                  </div>
+                </aside>
+
+                <section className="order-2 p-5 sm:p-7 lg:order-1">
+                  {openingEventState.isCurrentlyOpen && (
+                    <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/30 bg-gradient-to-r from-amber-300/10 via-purple-400/10 to-pink-400/10 p-3.5">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-300/20 bg-amber-300/10 text-amber-200">
+                          <Gift className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="truncate text-xs font-black text-amber-200">۱۰۰٪ تخفیف و رایگان — ایونت افتتاحیه</div>
+                          <p className="mt-0.5 truncate text-[10px] text-gray-400">
+                            ظرفیت: {openingEventState.remainingCapacity} از {openingEventState.config.maxWinners}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="shrink-0 rounded-lg bg-amber-300 px-2.5 py-1 text-[10px] font-black text-black">۰ تومان</span>
+                    </div>
+                  )}
+
+                  {currentUser ? (
+                    <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[.035] p-3.5">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <img src={currentUser.avatar} alt={currentUser.name} className="h-10 w-10 rounded-xl border border-purple-400/30 object-cover" />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 text-xs font-black text-white">
+                            <span className="truncate">{currentUser.name}</span>
+                            <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-300" />
+                          </div>
+                          <span className="block truncate text-[10px] text-gray-500">{currentUser.email}</span>
+                        </div>
+                      </div>
+                      <span className="shrink-0 rounded-lg bg-emerald-400/10 px-2 py-1 text-[10px] font-bold text-emerald-300">ورود فعال</span>
+                    </div>
+                  ) : onOpenGoogleAuth ? (
+                    <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[.025] p-3">
+                      <div className="flex items-center gap-2 text-[11px] text-gray-400">
+                        <Wand2 className="h-4 w-4 text-purple-300" /> ثبت‌نام با گوگل برای پیگیری راحت‌تر
+                      </div>
+                      <button type="button" onClick={onOpenGoogleAuth} className="rounded-xl border border-white/10 bg-white/[.05] px-3 py-2 text-[11px] font-bold text-white">ورود با گوگل</button>
+                    </div>
+                  ) : null}
+
+                  <div className="mb-6">
+                    <div className="mb-3 flex items-end justify-between gap-3">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-[.18em] text-gray-500">01 • SERVICE</p>
+                        <h3 className="mt-1 text-lg font-black">اول سرویس مناسب را انتخاب کن</h3>
+                      </div>
+                      <span className="hidden text-[10px] text-gray-500 sm:block">با انتخاب سرویس، پنل کناری تغییر می‌کند</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {quickCategories.map((cat) => {
+                        const Icon = cat.icon;
+                        const isSelected = formData.serviceId === cat.id;
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => handleServiceChange(cat.id)}
+                            className={`group rounded-2xl border p-3 text-start transition-all ${
+                              isSelected
+                                ? 'border-purple-400/50 bg-gradient-to-br from-purple-500/15 to-cyan-400/10 shadow-[0_0_30px_rgba(139,92,246,.12)]'
+                                : 'border-white/[.08] bg-white/[.025] hover:border-white/20 hover:bg-white/[.05]'
+                            }`}
+                          >
+                            <div className={`flex h-9 w-9 items-center justify-center rounded-xl border ${isSelected ? 'border-purple-300/30 bg-purple-400/10' : 'border-white/[.08] bg-black/10'}`}>
+                              <Icon className={`h-4 w-4 ${isSelected ? 'text-purple-200' : 'text-gray-500 group-hover:text-gray-300'}`} />
+                            </div>
+                            <div className={`mt-2 text-[11px] font-black ${isSelected ? 'text-white' : 'text-gray-400 group-hover:text-gray-200'}`}>{cat.label}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-3 rounded-2xl border border-purple-400/15 bg-purple-400/[.04] px-3.5 py-3">
+                      <div className="flex items-center gap-2">
+                        <ServiceIcon className={`h-4 w-4 ${serviceVisual.accent}`} />
+                        <span className="text-xs font-black text-white">{selectedService?.title || 'خدمت انتخاب‌شده'}</span>
+                        <span className="mr-auto text-[10px] text-gray-500">{selectedService?.categoryLabel || 'AI Service'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <div className="mb-3 flex items-end justify-between gap-3">
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-[.18em] text-gray-500">02 • PROJECT INFO</p>
+                          <h3 className="mt-1 text-lg font-black">اطلاعات پروژه</h3>
+                        </div>
+                        <span className="text-[10px] text-gray-600">موارد ستاره‌دار الزامی‌اند</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <label className="block">
+                          <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-gray-400"><User className="h-3.5 w-3.5 text-purple-300" /> نام و نام خانوادگی *</span>
+                          <input
+                            id="modal-fullname"
+                            type="text"
+                            value={formData.fullName}
+                            onChange={(e) => {
+                              setFormData({ ...formData, fullName: e.target.value });
+                              if (errors.fullName) setErrors({ ...errors, fullName: undefined });
+                            }}
+                            placeholder="مثلاً مهدی حاتمی"
+                            className={`w-full rounded-2xl border bg-white/[.03] px-4 py-3.5 text-sm text-white outline-none transition placeholder:text-gray-600 ${errors.fullName ? 'border-rose-500/70' : 'border-white/[.08] focus:border-purple-400/50 focus:bg-white/[.05]'}`}
+                          />
+                          {errors.fullName && <span className="mt-1 flex items-center gap-1 text-[10px] text-rose-400"><AlertCircle className="h-3 w-3" />{errors.fullName}</span>}
+                        </label>
+
+                        <label className="block">
+                          <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-gray-400"><Send className="h-3.5 w-3.5 rotate-180 text-cyan-300" /> آیدی تلگرام *</span>
+                          <input
+                            id="modal-contact"
+                            type="text"
+                            value={formData.telegramOrPhone}
+                            onChange={(e) => {
+                              setFormData({ ...formData, telegramOrPhone: e.target.value });
+                              if (errors.telegramOrPhone) setErrors({ ...errors, telegramOrPhone: undefined });
+                            }}
+                            placeholder="@username"
+                            className={`w-full rounded-2xl border bg-white/[.03] px-4 py-3.5 text-sm font-mono text-white outline-none transition placeholder:text-gray-600 ${errors.telegramOrPhone ? 'border-rose-500/70' : 'border-white/[.08] focus:border-cyan-400/40 focus:bg-white/[.05]'}`}
+                          />
+                          {errors.telegramOrPhone && <span className="mt-1 flex items-center gap-1 text-[10px] text-rose-400"><AlertCircle className="h-3 w-3" />{errors.telegramOrPhone}</span>}
+                        </label>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-gray-400"><Layers className="h-3.5 w-3.5 text-purple-300" /> انتخاب سرویس</span>
+                      <select
+                        id="modal-service"
+                        value={formData.serviceId}
+                        onChange={(e) => handleServiceChange(e.target.value)}
+                        className="w-full rounded-2xl border border-white/[.08] bg-white/[.03] px-4 py-3.5 text-sm text-white outline-none transition focus:border-purple-400/50"
+                      >
+                        {availableServices.map((srv) => (
+                          <option key={srv.id} value={srv.id} className="bg-[#0b0915] text-white">
+                            {srv.title}{srv.estimatedPrice ? ` — ${srv.estimatedPrice}` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-gray-400"><MessageSquare className="h-3.5 w-3.5 text-cyan-300" /> توضیحات پروژه <span className="text-gray-600">(اختیاری)</span></span>
+                      <textarea
+                        id="modal-message"
+                        rows={4}
+                        value={formData.message}
+                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                        placeholder="ایده، امکانات، سبک موردنظر، نمونه مشابه یا هر چیزی که لازم است بدانیم را بنویس..."
+                        className="w-full resize-none rounded-2xl border border-white/[.08] bg-white/[.03] px-4 py-3.5 text-sm leading-7 text-white outline-none transition placeholder:text-gray-600 focus:border-cyan-400/40 focus:bg-white/[.05]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-3 gap-2">
+                    <div className="rounded-2xl border border-white/[.06] bg-white/[.02] p-2.5 text-center"><ShieldCheck className="mx-auto h-4 w-4 text-emerald-300" /><span className="mt-1 block text-[9px] leading-4 text-gray-500">مالکیت تجاری</span></div>
+                    <div className="rounded-2xl border border-white/[.06] bg-white/[.02] p-2.5 text-center"><Clock className="mx-auto h-4 w-4 text-purple-300" /><span className="mt-1 block text-[9px] leading-4 text-gray-500">پاسخ سریع</span></div>
+                    <div className="rounded-2xl border border-white/[.06] bg-white/[.02] p-2.5 text-center"><Send className="mx-auto h-4 w-4 rotate-180 text-cyan-300" /><span className="mt-1 block text-[9px] leading-4 text-gray-500">پشتیبانی مستقیم</span></div>
+                  </div>
+                </section>
               </div>
 
-              {/* Field 2: Telegram Contact */}
-              <div>
-                <label htmlFor="modal-contact" className="block text-xs font-medium text-gray-200 mb-1.5 flex items-center gap-1">
-                  <Send className="w-3.5 h-3.5 text-purple-400 rotate-180" />
-                  <span>آیدی تلگرام</span>
-                  <span className="text-rose-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="modal-contact"
-                  value={formData.telegramOrPhone}
-                  onChange={(e) => {
-                    setFormData({ ...formData, telegramOrPhone: e.target.value });
-                    if (errors.telegramOrPhone) setErrors({ ...errors, telegramOrPhone: undefined });
-                  }}
-                  placeholder="مثال: @Lawat_kar"
-                  className={`w-full px-4 py-3 rounded-2xl bg-[#120c2b] border text-white placeholder:text-gray-500 text-xs sm:text-sm focus:outline-none transition-all font-mono ${
-                    errors.telegramOrPhone
-                      ? 'border-rose-500 bg-rose-950/20 focus:border-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.2)]'
-                      : 'border-purple-900/40 focus:border-purple-400 focus:bg-[#181039] focus:shadow-[0_0_15px_rgba(168,85,247,0.2)]'
-                  }`}
-                />
-                {errors.telegramOrPhone && (
-                  <p className="text-[11px] text-rose-400 mt-1 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    <span>{errors.telegramOrPhone}</span>
-                  </p>
-                )}
+              <div className="sticky bottom-0 border-t border-white/10 bg-[#080712]/95 px-5 py-4 backdrop-blur-xl sm:px-7">
+                <div className="mx-auto flex max-w-5xl flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400" /> با ارسال فرم، اطلاعات برای بررسی پروژه ثبت می‌شود.
+                  </div>
+                  <div className="sm:w-[360px]">
+                    <NeuralSubmitButton
+                      id="modal-submit-btn"
+                      type="submit"
+                      disabled={isSubmitting}
+                      onValidate={validate}
+                      label="شروع پروژه ✨"
+                      successLabel="درخواست با موفقیت ثبت شد ✓"
+                      className="w-full"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
+            </form>
+          )}
 
-            {/* Field 3: Service Full Dropdown */}
-            <div>
-              <label htmlFor="modal-service" className="block text-xs font-medium text-gray-200 mb-1.5 flex items-center justify-between">
-                <span className="flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                  <span>سرویس مشخص شده</span>
-                  <span className="text-rose-400">*</span>
-                </span>
-                {selectedService?.badge && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                    {selectedService.badge}
-                  </span>
-                )}
-              </label>
-              <select
-                id="modal-service"
-                value={formData.serviceId}
-                onChange={(e) => {
-                  setFormData({ ...formData, serviceId: e.target.value });
-                  trackServiceClick(e.target.value);
-                }}
-                className="w-full px-4 py-3 rounded-2xl bg-[#120c2b] border border-purple-900/40 focus:border-purple-400 text-white text-xs sm:text-sm focus:outline-none transition-all cursor-pointer"
-              >
-                {services.map((srv) => (
-                  <option key={srv.id} value={srv.id} className="bg-[#120d2c] text-white py-2">
-                    {srv.title} ({srv.categoryLabel}) {srv.estimatedPrice ? `— ${srv.estimatedPrice}` : ''}
-                  </option>
-                ))}
-              </select>
+          <footer className="border-t border-white/[.06] px-5 py-3 text-[10px] text-gray-600 sm:px-7">
+            <div className="flex items-center justify-between gap-3">
+              <span>پشتیبانی مستقیم Tekvix</span>
+              <a href="https://t.me/Lawat_kar" target="_blank" rel="noopener noreferrer" className="font-mono font-bold text-purple-300 transition hover:text-white">@Lawat_kar</a>
             </div>
-
-            {/* Field 4: Description / Message */}
-            <div>
-              <label htmlFor="modal-message" className="block text-xs font-medium text-gray-200 mb-1.5 flex items-center gap-1">
-                <MessageSquare className="w-3.5 h-3.5 text-purple-400" />
-                <span>توضیحات و نیازمندی‌های پروژه (اختیاری)</span>
-              </label>
-              <textarea
-                id="modal-message"
-                rows={2}
-                value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                placeholder="خلاصه سناریوی ویدیو، امکانات مدنظر وب‌سایت یا ربات تلگرام..."
-                className="w-full px-4 py-2.5 sm:py-3 rounded-2xl bg-[#120c2b] border border-purple-900/40 focus:border-purple-400 focus:bg-[#181039] text-white placeholder:text-gray-500 text-xs sm:text-sm focus:outline-none transition-all resize-none"
-              />
-            </div>
-
-            {/* Trust Badges */}
-            <div className="grid grid-cols-3 gap-2 py-1 text-[10px] sm:text-[11px] text-gray-400 text-center">
-              <div className="flex items-center justify-center gap-1 bg-white/[0.02] p-1.5 rounded-xl border border-white/5">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>مالکیت ۱۰۰٪ تجاری</span>
-              </div>
-              <div className="flex items-center justify-center gap-1 bg-white/[0.02] p-1.5 rounded-xl border border-white/5">
-                <Clock className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                <span>تحویل در سریع‌ترین زمان</span>
-              </div>
-              <div className="flex items-center justify-center gap-1 bg-white/[0.02] p-1.5 rounded-xl border border-white/5">
-                <Send className="w-3.5 h-3.5 text-cyan-400 shrink-0 rotate-180" />
-                <span>پشتیبانی با @Lawat_kar</span>
-              </div>
-            </div>
-
-            {/* Submit CTA Button */}
-            <div className="pt-2">
-              <NeuralSubmitButton
-                id="modal-submit-btn"
-                type="submit"
-                disabled={isSubmitting}
-                onValidate={validate}
-                label="ثبت سفارش هوشمند"
-                successLabel="درخواست شما با موفقیت ثبت شد ✓"
-                className="w-full"
-              />
-            </div>
-          </form>
-        )}
-
-        {/* Bottom Support Info */}
-        <div className="relative z-10 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-400">
-          <span>آیدی مدیریت و پشتیبانی مستقیم:</span>
-          <a
-            href="https://t.me/Lawat_kar"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-mono text-purple-300 font-bold hover:text-white flex items-center gap-1 transition-colors"
-          >
-            <span>@Lawat_kar</span>
-            <Send className="w-3 h-3 rotate-180" />
-          </a>
+          </footer>
         </div>
       </div>
     </div>
