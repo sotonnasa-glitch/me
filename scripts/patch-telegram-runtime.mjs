@@ -34,7 +34,11 @@ server = replaceOnce(
   'dispatcher credentials/signature'
 );
 
-server = server.replace(/\n\s*\/\/ Auto-recovery: if custom token fails with 401 Unauthorized, retry with verified bot token[\s\S]*?\n\s*}\n\s*}\n\n\s*const desc = data\?\.description/, `\n          const desc = data?.description`);
+// Remove only the nested custom-token retry branch; keep the surrounding Telegram error branch intact.
+server = server.replace(
+  /\n\s*\/\/ Auto-recovery: if custom token fails with 401 Unauthorized, retry with verified bot token[\s\S]*?\n\s*}\n\s*(?=const desc = data\?\.description)/,
+  ''
+);
 
 // Remove background Telegram dispatch from /api/orders; the explicit Telegram endpoint is the single delivery path.
 const orderDispatchStart = `      // Dispatch Telegram notification strictly via server environment variable\n`;
