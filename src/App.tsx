@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useState, useEffect, useRef } from 'react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { SiteDataProvider, useSiteData } from './context/SiteDataContext';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -43,7 +43,6 @@ function MainWebsite() {
   const [isGoogleAuthOpen, setIsGoogleAuthOpen] = useState(false);
   const [selectedServiceForOrder, setSelectedServiceForOrder] = useState<string | undefined>(undefined);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const scrollProgressRef = useRef<HTMLDivElement | null>(null);
 
   const handleOpenOrderTracking = (query?: string) => {
     setTrackingInitialQuery(query || '');
@@ -55,12 +54,6 @@ function MainWebsite() {
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
-          const progress = scrollableHeight > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollableHeight)) : 0;
-          if (scrollProgressRef.current) {
-            scrollProgressRef.current.style.transform = `scaleX(${progress})`;
-          }
-
           const shouldShow = window.scrollY > 300;
           setShowScrollTop((prev) => (prev !== shouldShow ? shouldShow : prev));
           ticking = false;
@@ -69,12 +62,7 @@ function MainWebsite() {
       }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleScroll, { passive: true });
-    handleScroll();
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleScroll);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleOpenAdmin = () => {
@@ -125,14 +113,6 @@ function MainWebsite() {
     >
       {/* Ultra-performant Global Background Celestial Starfield */}
       <GlobalBackgroundStars />
-
-      {/* Premium cosmic scroll progress — transform-only, no per-frame React state */}
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[2px] overflow-hidden bg-transparent" aria-hidden="true">
-        <div
-          ref={scrollProgressRef}
-          className="h-full w-full origin-left scale-x-0 bg-gradient-to-r from-cyan-300 via-purple-400 to-fuchsia-400 shadow-[0_0_10px_rgba(168,85,247,.8)] will-change-transform"
-        />
-      </div>
 
       {/* Shooting stars across the full landing page */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-[2]" aria-hidden="true">
