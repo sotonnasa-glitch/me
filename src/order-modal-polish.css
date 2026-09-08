@@ -1,0 +1,155 @@
+/* Tekvix order console — visual-only polish. No business logic or interaction hooks are changed. */
+#order-modal-backdrop {
+  padding: 12px !important;
+  background: rgba(2, 1, 12, 0.92) !important;
+  backdrop-filter: blur(14px) saturate(125%);
+}
+
+#order-modal-content {
+  width: min(100%, 920px) !important;
+  max-width: 920px !important;
+  min-height: min(94vh, 900px) !important;
+  border: 1px solid rgba(139, 92, 246, 0.32) !important;
+  border-radius: 30px !important;
+  padding: 22px !important;
+  background:
+    radial-gradient(circle at 50% -15%, rgba(124, 58, 237, 0.19), transparent 38%),
+    radial-gradient(circle at 100% 100%, rgba(14, 165, 233, 0.08), transparent 30%),
+    linear-gradient(180deg, rgba(17, 10, 39, 0.98), rgba(6, 4, 16, 0.98)) !important;
+  box-shadow:
+    0 24px 90px rgba(0, 0, 0, 0.58),
+    0 0 55px rgba(124, 58, 237, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+}
+
+#order-modal-content > .absolute.top-0 {
+  opacity: 0.5;
+}
+
+#order-modal-content > .absolute.-bottom-10 {
+  opacity: 0.38;
+}
+
+#order-modal-content > .relative.z-10.flex.items-center.justify-between {
+  padding: 4px 2px 18px !important;
+  margin-bottom: 4px;
+  border-bottom-color: rgba(139, 92, 246, 0.22) !important;
+}
+
+#order-modal-content h2 {
+  letter-spacing: -0.02em;
+}
+
+#order-modal-content form {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+#order-modal-content form input,
+#order-modal-content form textarea,
+#order-modal-content form select {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 15px !important;
+  border: 1px solid rgba(139, 92, 246, 0.24) !important;
+  background: rgba(10, 7, 28, 0.76) !important;
+  color: #f8f7ff !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.025), 0 10px 30px rgba(0,0,0,0.12) !important;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+#order-modal-content form textarea {
+  min-height: 118px;
+  resize: vertical;
+}
+
+#order-modal-content form input::placeholder,
+#order-modal-content form textarea::placeholder {
+  color: rgba(203, 196, 225, 0.58) !important;
+}
+
+#order-modal-content form input:focus,
+#order-modal-content form textarea:focus,
+#order-modal-content form select:focus {
+  outline: none;
+  border-color: rgba(168, 85, 247, 0.72) !important;
+  background: rgba(14, 9, 38, 0.94) !important;
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.10), 0 0 24px rgba(124, 58, 237, 0.12) !important;
+}
+
+#order-modal-content form label {
+  color: rgba(236, 233, 255, 0.92);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+#order-modal-content form button:not([type="submit"]) {
+  border-radius: 14px;
+}
+
+#order-modal-content form button[type="submit"] {
+  min-height: 54px;
+  border-radius: 16px;
+}
+
+/* Service/category controls: preserve their existing icons, copy and handlers while improving hierarchy. */
+#order-modal-content form button[class*="border"] {
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+#order-modal-content form button[class*="border"]:hover {
+  transform: translateY(-1px);
+}
+
+/* Success state */
+#order-modal-content .text-center .font-mono {
+  letter-spacing: 0.08em;
+}
+
+@media (min-width: 640px) {
+  #order-modal-backdrop { padding: 18px !important; }
+  #order-modal-content { padding: 28px !important; }
+}
+
+@media (max-width: 639px) {
+  #order-modal-backdrop {
+    padding: 0 !important;
+  }
+
+  #order-modal-content {
+    min-height: 100dvh !important;
+    width: 100% !important;
+    max-width: none !important;
+    border-radius: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    padding: 16px !important;
+  }
+
+  #order-modal-content > .relative.z-10.flex.items-center.justify-between {
+    padding-bottom: 14px !important;
+  }
+
+  #order-modal-content form {
+    gap: 13px;
+  }
+
+  #order-modal-content form input,
+  #order-modal-content form textarea,
+  #order-modal-content form select {
+    font-size: 16px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #order-modal-content form input,
+  #order-modal-content form textarea,
+  #order-modal-content form select,
+  #order-modal-content form button {
+    transition: none !important;
+  }
+}
