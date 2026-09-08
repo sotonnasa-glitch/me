@@ -208,14 +208,15 @@ function MainWebsite() {
       </main>
 
       {/* Floating Bottom Quick Controls (Scroll to top and jump) */}
-      <div className="fixed bottom-6 end-6 z-30 flex items-center gap-2.5 animate-in fade-in duration-300">
+      <div className="fixed bottom-6 end-6 z-30 flex items-center gap-2.5 animate-in fade-in duration-300 pb-[env(safe-area-inset-bottom)] sm:pb-0 max-sm:bottom-4 max-sm:end-4">
         {/* Quick Return to Movie / Video Page Button */}
         <button
           type="button"
           id="floating-video-jump-btn"
           onClick={() => navigateToSection('blog')}
-          className="px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-purple-950/80 hover:bg-purple-900 text-purple-200 hover:text-white border border-purple-500/40 shadow-lg backdrop-blur-xl transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer"
+          className="min-w-[44px] min-h-[44px] px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-purple-950/80 hover:bg-purple-900 text-purple-200 hover:text-white border border-purple-500/40 shadow-lg backdrop-blur-xl transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"
           title="پرش به بخش فیلم و ویدیوها"
+          aria-label="پرش به بخش فیلم و ویدیوها"
         >
           <Video className="w-4 h-4 text-purple-300 animate-pulse" />
           <span className="text-xs font-bold hidden sm:inline">فیلم‌ها</span>
@@ -226,8 +227,9 @@ function MainWebsite() {
           <button
             type="button"
             onClick={scrollToTop}
-            className="p-2.5 sm:p-3 rounded-2xl bg-[#09090b]/90 hover:bg-zinc-800 text-white border border-zinc-700/80 shadow-2xl backdrop-blur-xl transition-all duration-200 hover:scale-105 active:scale-95 group focus:outline-none cursor-pointer"
+            className="min-w-[44px] min-h-[44px] p-2.5 sm:p-3 rounded-2xl bg-[#09090b]/90 hover:bg-zinc-800 text-white border border-zinc-700/80 shadow-2xl backdrop-blur-xl transition-all duration-200 hover:scale-105 active:scale-95 group focus:outline-none cursor-pointer touch-manipulation"
             title="بازگشت به بالای صفحه"
+            aria-label="بازگشت به بالای صفحه"
           >
             <ArrowUp className="w-4 h-4 text-purple-400 group-hover:-translate-y-0.5 transition-transform" />
           </button>
