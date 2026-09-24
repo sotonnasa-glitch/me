@@ -1538,6 +1538,12 @@ ${username ? `📱 <b>یوزرنیم:</b> ${username}\n` : ''}
     });
   }
 
+  // ENAMAD domain verification endpoint
+  // Must be handled before the SPA catch-all so /71412558.txt returns plain text.
+  app.get('/71412558.txt', (_req, res) => {
+    res.type('text/plain').send('71412558');
+  });
+
   // 5. Vite Middleware or Static Production Serving
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
