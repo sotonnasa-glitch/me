@@ -773,6 +773,14 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  // Service operations
+  const addService = (newServiceData: Omit<Service, 'id'>): Service => {
+    const id = `srv-${Date.now()}`;
+    const newService: Service = { ...newServiceData, id, active: newServiceData.active ?? true };
+    setServices((prev) => [newService, ...prev]);
+    return newService;
+  };
+
   const updateService = (id: string, updated: Partial<Service>) => {
     setServices((prev) =>
       prev.map((item) => (item.id === id ? { ...item, ...updated } : item))
