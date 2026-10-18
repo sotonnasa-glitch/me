@@ -336,9 +336,9 @@ export const OpeningEventBanner: React.FC<OpeningEventBannerProps> = ({ onOpenOr
 
   const handleCtaClick = () => {
     if (currentEvent.ctaActionType === 'telegram_contact') {
-      window.open(brandInfo.telegramUrl, '_blank');
+      window.open(brandInfo.telegramUrl, '_blank', 'noopener,noreferrer');
     } else if (currentEvent.ctaActionType === 'custom_url' && currentEvent.ctaCustomUrl) {
-      window.open(currentEvent.ctaCustomUrl, '_blank');
+      window.open(currentEvent.ctaCustomUrl, '_blank', 'noopener,noreferrer');
     } else if (currentEvent.ctaActionType === 'scroll_services') {
       const el = document.getElementById('services');
       if (el) el.scrollIntoView({ behavior: 'smooth' });

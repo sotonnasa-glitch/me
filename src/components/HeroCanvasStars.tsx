@@ -39,7 +39,9 @@ export const HeroCanvasStars: React.FC = () => {
     let animId: number = 0;
     let width = 0;
     let height = 0;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let dpr = Math.min(window.devicePixelRatio || 1, window.innerWidth <= 640 ? 1.25 : window.innerWidth <= 1024 ? 1.5 : 1.75);
+    let isInView = false;
+    let isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     // Pre-rendered offscreen sprite for zero GC overhead during animation
     const spriteSize = 36;
@@ -72,7 +74,8 @@ export const HeroCanvasStars: React.FC = () => {
     offscreenSprites['white'] = createGlowSprite('rgba(255, 255, 255, 0.98)', 'rgba(168, 85, 247, 0.3)');
 
     // Star collection (Rich deep space star count)
-    const STAR_COUNT = 150;
+    const getStarCount = () => (window.innerWidth <= 640 ? 80 : window.innerWidth <= 1024 ? 115 : 150);
+    let starCount = getStarCount();
     const stars: Star[] = [];
     const colors: ('purple' | 'cyan' | 'gold' | 'white' | 'fuchsia' | 'emerald')[] = [
       'purple',
@@ -87,10 +90,10 @@ export const HeroCanvasStars: React.FC = () => {
 
     const initStars = (w: number, h: number) => {
       stars.length = 0;
-      for (let i = 0; i < STAR_COUNT; i++) {
+      for (let i = 0; i < starCount; i++) {
         // 3 tiers: micro dust, standard twinkling star, bright beacon star with diffraction spike
         const isMicro = i < 60;
-        const isBeacon = i > 135;
+        const isBeacon = i >= starCount - 15;
         const baseRadius = isMicro
           ? 0.5 + Math.random() * 0.7
           : isBeacon
@@ -153,12 +156,14 @@ export const HeroCanvasStars: React.FC = () => {
       width = rect.width || window.innerWidth || 1200;
       height = rect.height || 700;
 
+      dpr = Math.min(window.devicePixelRatio || 1, window.innerWidth <= 640 ? 1.25 : window.innerWidth <= 1024 ? 1.5 : 1.75);
       canvas.width = Math.floor(width * dpr);
       canvas.height = Math.floor(height * dpr);
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.scale(dpr, dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      if (stars.length === 0) {
+      const nextStarCount = getStarCount();
+      if (stars.length === 0 || nextStarCount !== starCount) {
+        starCount = nextStarCount;
         initStars(width, height);
       } else {
         stars.forEach((s) => {
@@ -197,18 +202,19 @@ export const HeroCanvasStars: React.FC = () => {
     window.addEventListener('mouseleave', onPointerLeave, { passive: true });
 
     const render = (now: number) => {
-      animId = requestAnimationFrame(render);
+      animId = 0;
+      if (!isReducedMotion) animId = requestAnimationFrame(render);
 
       // Delta time limiter (~60fps)
       const elapsed = now - lastFrameTime;
-      if (elapsed < 14) return;
+      if (!isReducedMotion && elapsed < 14) return;
       lastFrameTime = now;
 
       ctx.clearRect(0, 0, width, height);
 
       // Draw faint constellation lines between neighboring bright stars
       ctx.lineWidth = 0.6;
-      for (let i = 80; i < stars.length; i++) {
+      for (let i = Math.floor(stars.length * 0.55); i < stars.length; i++) {
         for (let j = i + 1; j < stars.length; j++) {
           const dx = stars[i].x - stars[j].x;
           const dy = stars[i].y - stars[j].y;
@@ -346,21 +352,80 @@ export const HeroCanvasStars: React.FC = () => {
       ctx.globalAlpha = 1;
     };
 
-    // Start render loop immediately
-    animId = requestAnimationFrame(render);
-
-    let resizeTimer: any = null;
-    const onWindowResize = () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(handleResize, 100);
+    const startAnimation = () => {
+      if (!isInView || document.hidden || animId) return;
+      animId = requestAnimationFrame(render);
     };
 
+    const stopAnimation = () => {
+      if (animId) cancelAnimationFrame(animId);
+      animId = 0;
+    };
+
+    const onVisibilityChange = () => {
+      if (document.hidden || !isInView) {
+        stopAnimation();
+      } else if (isReducedMotion) {
+        render(performance.now());
+      } else {
+        startAnimation();
+      }
+    };
+
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const onMotionPreferenceChange = (event: MediaQueryListEvent) => {
+      isReducedMotion = event.matches;
+      stopAnimation();
+      if (isInView && !document.hidden) {
+        if (isReducedMotion) render(performance.now());
+        else startAnimation();
+      }
+    };
+
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+    const onWindowResize = () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        handleResize();
+        if (isReducedMotion && isInView && !document.hidden) render(performance.now());
+        else startAnimation();
+      }, 100);
+    };
+
+    const observer = typeof IntersectionObserver !== 'undefined'
+      ? new IntersectionObserver((entries) => {
+          isInView = Boolean(entries[0]?.isIntersecting);
+          if (!isInView || document.hidden) {
+            stopAnimation();
+          } else if (isReducedMotion) {
+            render(performance.now());
+          } else {
+            startAnimation();
+          }
+        }, { rootMargin: '80px 0px', threshold: 0 })
+      : null;
+
+    observer?.observe(canvas);
+    if (!observer) {
+      isInView = true;
+      if (isReducedMotion) render(performance.now());
+      else startAnimation();
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    motionQuery.addEventListener('change', onMotionPreferenceChange);
     window.addEventListener('resize', onWindowResize, { passive: true });
 
     return () => {
-      if (animId) cancelAnimationFrame(animId);
+      stopAnimation();
+      observer?.disconnect();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      motionQuery.removeEventListener('change', onMotionPreferenceChange);
+      window.removeEventListener('mousemove', onPointerMove);
+      window.removeEventListener('touchmove', onPointerMove);
+      window.removeEventListener('mouseleave', onPointerLeave);
       window.removeEventListener('resize', onWindowResize);
-      clearTimeout(resizeTimer);
+      if (resizeTimer) clearTimeout(resizeTimer);
     };
   }, []);
 

@@ -480,6 +480,7 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({ onSelectServic
         <div className="flex items-center justify-center flex-wrap gap-2.5 sm:gap-3 mb-14">
           {filterTabs.map(tab => (
             <button
+              type="button"
               key={tab.id}
               onClick={() => setSelectedFilter(tab.id)}
               className={`px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all duration-300 focus:outline-none cursor-pointer relative overflow-hidden ${
