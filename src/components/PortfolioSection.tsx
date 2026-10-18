@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Sparkles,
   Eye,
@@ -98,6 +98,40 @@ export const PortfolioSection: React.FC<PortfolioSectionProps> = ({ onOpenOrderM
   const [activeCategory, setActiveCategory] = useState<CategoryKey>('all');
   const [selectedProject, setSelectedProject] = useState<PortfolioItem | null>(null);
 
+  // Load the decorative portal video only when this mid-page section is near view.
+  // This keeps it off the initial page load and pauses playback when scrolled away.
+  const portalVideoRef = useRef<HTMLVideoElement | null>(null);
+  useEffect(() => {
+    const video = portalVideoRef.current;
+    if (!video) return;
+
+    const startVideo = () => {
+      if (!video.src) {
+        video.src = '/assets/videos/pink-earth-portal.webm';
+        video.load();
+      }
+      void video.play().catch(() => undefined);
+    };
+
+    if (typeof IntersectionObserver === 'undefined') {
+      startVideo();
+      return () => video.pause();
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      if (entry.isIntersecting) startVideo();
+      else video.pause();
+    }, { rootMargin: '220px 0px', threshold: 0 });
+
+    observer.observe(video);
+    return () => {
+      observer.disconnect();
+      video.pause();
+    };
+  }, []);
+
   // Filter items according to active tab
   const filteredPortfolio = useMemo(() => {
     if (activeCategory === 'all') return portfolio;
@@ -137,6 +171,30 @@ export const PortfolioSection: React.FC<PortfolioSectionProps> = ({ onOpenOrderM
 
   return (
     <section id="portfolio" className="relative py-20 sm:py-28 bg-transparent overflow-hidden" dir="rtl">
+      {/* Pink portal + rising planet: a lightweight, lazy-loaded background behind the portfolio heading. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[460px] overflow-hidden"
+      >
+        <video
+          ref={portalVideoRef}
+          muted
+          autoPlay
+          loop
+          playsInline
+          preload="none"
+          tabIndex={-1}
+          className="h-full w-full object-contain"
+          style={{
+            opacity: 0.82,
+            mixBlendMode: 'screen',
+            filter: 'saturate(1.08) contrast(1.03)',
+            maskImage: 'linear-gradient(to bottom, transparent 0%, black 12%, black 64%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 12%, black 64%, transparent 100%)',
+          }}
+        />
+      </div>
+
       {/* Dynamic Cosmic Ambient Glows */}
       <div className="absolute top-1/4 start-10 w-[550px] h-[550px] bg-purple-900/15 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-10 end-10 w-[450px] h-[450px] bg-indigo-900/15 rounded-full blur-3xl pointer-events-none" />
