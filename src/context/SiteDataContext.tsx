@@ -86,7 +86,7 @@ const INITIAL_ORDERS: OrderItem[] = [
 
 const DEFAULT_TELEGRAM_SETTINGS: TelegramBotSettings = {
   botToken: '',
-  chatId: '7460143967',
+  chatId: '',
   botUsername: 'Tekvixbot',
   autoNotifyNewOrders: true,
   notifyOnStatusChange: true,
@@ -269,30 +269,19 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const [telegramSettings, setTelegramSettings] = useState<TelegramBotSettings>(() => {
     try {
-      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_telegram`);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const savedChatId = (parsed.chatId || '').trim();
-        // If saved chatId was username @Lawat_kar or empty, normalize to verified numeric ID
-        const normalizedChatId =
-          !savedChatId || savedChatId.toLowerCase() === '@lawat_kar' || savedChatId.toLowerCase() === 'lawat_kar'
-            ? DEFAULT_TELEGRAM_SETTINGS.chatId
-            : savedChatId;
-
-        const rawToken = (parsed.botToken || '').trim();
-        const safeToken =
-          rawToken === '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus' ? '' : rawToken;
-
-        return {
-          ...DEFAULT_TELEGRAM_SETTINGS,
-          ...parsed,
-          botToken: safeToken,
-          chatId: normalizedChatId,
-          botUsername: parsed.botUsername || DEFAULT_TELEGRAM_SETTINGS.botUsername,
-        };
-      }
-      return DEFAULT_TELEGRAM_SETTINGS;
+      const storageKey = `${LOCAL_STORAGE_KEY}_telegram`;
+      const saved = localStorage.getItem(storageKey);
+      const parsed = saved ? JSON.parse(saved) : {};
+      localStorage.removeItem(storageKey);
+      return {
+        ...DEFAULT_TELEGRAM_SETTINGS,
+        autoNotifyNewOrders: typeof parsed.autoNotifyNewOrders === 'boolean' ? parsed.autoNotifyNewOrders : DEFAULT_TELEGRAM_SETTINGS.autoNotifyNewOrders,
+        notifyOnStatusChange: typeof parsed.notifyOnStatusChange === 'boolean' ? parsed.notifyOnStatusChange : DEFAULT_TELEGRAM_SETTINGS.notifyOnStatusChange,
+        botToken: '',
+        chatId: '',
+      };
     } catch {
+      try { localStorage.removeItem(`${LOCAL_STORAGE_KEY}_telegram`); } catch {}
       return DEFAULT_TELEGRAM_SETTINGS;
     }
   });
@@ -595,7 +584,13 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       localStorage.setItem(`${LOCAL_STORAGE_KEY}_brand`, JSON.stringify(brandInfo));
       localStorage.setItem(`${LOCAL_STORAGE_KEY}_user`, JSON.stringify(currentUser));
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_telegram`, JSON.stringify(telegramSettings));
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_telegram`, JSON.stringify({
+        botToken: '',
+        chatId: '',
+        botUsername: telegramSettings.botUsername,
+        autoNotifyNewOrders: telegramSettings.autoNotifyNewOrders,
+        notifyOnStatusChange: telegramSettings.notifyOnStatusChange,
+      }));
       localStorage.setItem(`${LOCAL_STORAGE_KEY}_services`, JSON.stringify(services));
       localStorage.setItem(`${LOCAL_STORAGE_KEY}_orders`, JSON.stringify(orders));
       localStorage.setItem(`${LOCAL_STORAGE_KEY}_blog`, JSON.stringify(blogPosts));
@@ -696,7 +691,7 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Telegram Settings & Operations
   const updateTelegramSettings = (updated: Partial<TelegramBotSettings>) => {
-    setTelegramSettings((prev) => ({ ...prev, ...updated }));
+    setTelegramSettings((prev) => ({ ...prev, ...updated, botToken: '', chatId: '' }));
   };
 
   const sendOrderToTelegramBot = async (
@@ -706,23 +701,19 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const response = await fetch('/api/telegram/send-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          order,
-          botToken: telegramSettings.botToken,
-          chatId: telegramSettings.chatId,
-        }),
+        body: JSON.stringify({ order }),
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
+      const delivered = Boolean(response.ok && data.success && data.telegramSent);
       return {
-        success: data.success ?? true,
-        message: data.message || 'سفارش ثبت و پیام به تلگرام ارسال شد.',
-        directLink: data.directLink || data.fallbackUrl,
+        success: delivered,
+        message: data.message || (delivered ? 'اعلان سفارش به تلگرام ارسال شد.' : 'سفارش ثبت شد، اما اعلان تلگرام ارسال نشد.'),
+        directLink: data.directLink || data.fallbackUrl || `https://t.me/${brandInfo.telegramHandle.replace('@', '')}`,
       };
-    } catch (err: any) {
-      console.warn('Backend telegram notification skipped/failed:', err);
+    } catch {
       return {
-        success: true,
-        message: 'سفارش در سیستم ثبت شد.',
+        success: false,
+        message: 'سفارش ثبت شد، اما ارتباط با تلگرام برقرار نشد.',
         directLink: `https://t.me/${brandInfo.telegramHandle.replace('@', '')}`,
       };
     }
@@ -738,73 +729,48 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const response = await fetch('/api/telegram/send-consultation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          botToken: telegramSettings.botToken,
-          chatId: telegramSettings.chatId,
-        }),
+        body: JSON.stringify(data),
       });
-      const result = await response.json();
+      const result = await response.json().catch(() => ({}));
+      const delivered = Boolean(response.ok && result.success && result.telegramSent);
       return {
-        success: result.success ?? true,
-        message: result.message || 'درخواست مشاوره به ربات تلگرام ارسال شد.',
+        success: delivered,
+        message: result.message || (delivered ? 'درخواست مشاوره به تلگرام ارسال شد.' : 'ارتباط با تلگرام برقرار نشد؛ لطفاً از لینک پشتیبانی استفاده کنید.'),
         pvUrl: result.pvUrl,
         directLink: result.directLink || result.fallbackUrl || `https://t.me/${brandInfo.telegramHandle.replace('@', '')}`,
       };
-    } catch (err: any) {
-      console.warn('Telegram consultation error:', err);
+    } catch {
       return {
-        success: true,
-        message: 'درخواست شما ثبت شد.',
+        success: false,
+        message: 'ارتباط با سرور تلگرام برقرار نشد.',
         directLink: `https://t.me/${brandInfo.telegramHandle.replace('@', '')}`,
       };
     }
   };
 
-  const testTelegramBotConnection = async (
-    override?: { botToken?: string; chatId?: string }
-  ): Promise<{
+  const testTelegramBotConnection = async (): Promise<{
     success: boolean;
     message?: string;
     error?: string;
   }> => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('tekvix_admin_token') || '' : '';
-      const activeBotToken = (override?.botToken ?? telegramSettings.botToken ?? '').trim();
-      const activeChatId = (override?.chatId ?? telegramSettings.chatId ?? '').trim();
-
       const response = await fetch('/api/telegram/test-bot', {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
-          ...(token ? { 'x-admin-token': token } : {}),
         },
-        body: JSON.stringify({
-          botToken: activeBotToken,
-          chatId: activeChatId,
-        }),
+        body: JSON.stringify({}),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.success) {
-        return {
-          success: false,
-          error: data.error || 'خطا در ارسال پیام تست. لطفاً توکن و چت‌آیدی را بررسی کنید.',
-        };
+        return { success: false, error: data.error || 'خطا در ارسال پیام تست. تنظیمات محیطی سرور را بررسی کنید.' };
       }
       return { success: true, message: data.message || 'پیام تست با موفقیت ارسال شد!' };
-    } catch (err: any) {
-      return { success: false, error: err?.message || 'خطا در برقراری ارتباط با سرور' };
+    } catch {
+      return { success: false, error: 'خطا در برقراری ارتباط با سرور' };
     }
-  };
-
-  // Service operations
-  const addService = (newServiceData: Omit<Service, 'id'>): Service => {
-    const id = `srv-${Date.now()}`;
-    const newService: Service = { ...newServiceData, id, active: newServiceData.active ?? true };
-    setServices((prev) => [newService, ...prev]);
-    return newService;
   };
 
   const updateService = (id: string, updated: Partial<Service>) => {
@@ -857,7 +823,7 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       ? '۰ تومان (رایگان - جایزه افتتاحیه)'
       : targetService?.estimatedPrice || 'استعلامی';
 
-    const generatedOrderId = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
+    const generatedOrderId = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
     const newOrder: OrderItem = {
       id: generatedOrderId,
       createdAt: new Date().toISOString(),
@@ -878,11 +844,7 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...newOrder,
-        botToken: telegramSettings.botToken,
-        chatId: telegramSettings.chatId,
-      }),
+      body: JSON.stringify(newOrder),
     }).catch((err) => console.warn('Backend order sync warning:', err));
 
     // Register conversion event
@@ -1267,7 +1229,7 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const parsed = JSON.parse(jsonStr);
       if (parsed.brandInfo) setBrandInfo(parsed.brandInfo);
-      if (parsed.telegramSettings) setTelegramSettings(parsed.telegramSettings);
+      if (parsed.telegramSettings) setTelegramSettings({ ...parsed.telegramSettings, botToken: '', chatId: '' });
       if (Array.isArray(parsed.services)) setServices(parsed.services);
       if (Array.isArray(parsed.orders)) setOrders(parsed.orders);
       if (Array.isArray(parsed.blogPosts)) setBlogPosts(parsed.blogPosts);
@@ -1429,92 +1391,36 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch {}
   };
 
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
-    return Boolean(typeof window !== 'undefined' && (localStorage.getItem('tekvix_admin_token') || sessionStorage.getItem('tekvix_admin_auth') === 'true'));
-  });
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(false);
 
-  // Synchronize admin authentication state with server session on mount
+  // Verify authorization only with the HttpOnly server session cookie.
   useEffect(() => {
     let isMounted = true;
+    try {
+      localStorage.removeItem('tekvix_admin_token');
+      sessionStorage.removeItem('tekvix_admin_auth');
+    } catch {}
     const checkServerSession = async () => {
       try {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('tekvix_admin_token') || '' : '';
         const res = await fetch('/api/admin/check-session', {
           credentials: 'include',
-          headers: {
-            Accept: 'application/json',
-            ...(token ? { 'x-admin-token': token } : {}),
-          },
+          headers: { Accept: 'application/json' },
         });
-        if (res.ok) {
-          const data = await res.json();
-          if (isMounted) {
-            setIsAdminAuthenticated(Boolean(data.authenticated));
-          }
-        } else {
-          if (isMounted && !token) setIsAdminAuthenticated(false);
-        }
+        const data = await res.json().catch(() => ({}));
+        if (isMounted) setIsAdminAuthenticated(Boolean(res.ok && data.authenticated));
       } catch {
-        // keep optimistic state on network hiccup
+        if (isMounted) setIsAdminAuthenticated(false);
       }
     };
-    checkServerSession();
-    return () => {
-      isMounted = false;
-    };
+    void checkServerSession();
+    return () => { isMounted = false; };
   }, []);
 
   const verifyAdminPassword = async (
     password: string
   ): Promise<{ success: boolean; error?: string }> => {
-    if (!password) {
-      return { success: false, error: 'رمز عبور نمی‌تواند خالی باشد.' };
-    }
-    // Normalize Persian and Arabic numerals to English digits
-    const trimmed = password
-      .trim()
-      .replace(/[۰-۹]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 1728))
-      .replace(/[٠-٩]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 1584));
-
-    // Handle Persian keyboard layout transliteration
-    const persianToEnMap: Record<string, string> = {
-      'ض': 'q', 'ص': 'w', 'ث': 'e', 'ق': 'r', 'ف': 't', 'غ': 'y', 'ع': 'u', 'ه': 'i', 'خ': 'o', 'ح': 'p',
-      'ش': 'a', 'س': 's', 'ی': 'd', 'ب': 'f', 'ل': 'g', 'ا': 'h', 'ت': 'j', 'ن': 'k', 'م': 'l',
-      'ظ': 'z', 'ط': 'x', 'ز': 'c', 'ر': 'v', 'ذ': 'b', 'د': 'n', 'پ': 'm', 'ئ': 'm', 'و': ','
-    };
-    const transliterated = trimmed
-      .split('')
-      .map((ch) => persianToEnMap[ch] || ch)
-      .join('');
-
-    const isMasterKnown = [
-      'mahdi2020',
-      'mahdi',
-      'مهدی2020',
-      'مهدی۲۰۲۰',
-      'مهدی',
-      'ئشایه2020',
-      'ئشایه۲۰۲۰',
-      'پشایه2020',
-      'پشایه۲۰۲۰',
-      'مشایه2020',
-      'مشایه۲۰۲۰',
-      'tekvix',
-      'tekvix2026',
-      'tekvix2025',
-      'tekvix@admin2026!',
-      'admin',
-      'admin123',
-      '123456',
-    ].some((p) => {
-      const pNorm = p.toLowerCase();
-      return (
-        pNorm === trimmed.toLowerCase() ||
-        pNorm === transliterated.toLowerCase() ||
-        p === trimmed
-      );
-    });
-
+    const trimmed = password.trim();
+    if (!trimmed) return { success: false, error: 'رمز عبور نمی‌تواند خالی باشد.' };
     try {
       const res = await fetch('/api/admin/verify-password', {
         method: 'POST',
@@ -1523,37 +1429,12 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         body: JSON.stringify({ password: trimmed }),
       });
       const data = await res.json().catch(() => ({}));
-      if (res.ok && data.success) {
-        if (data.token && typeof window !== 'undefined') {
-          localStorage.setItem('tekvix_admin_token', data.token);
-          sessionStorage.setItem('tekvix_admin_auth', 'true');
-        }
-        setIsAdminAuthenticated(true);
-        return { success: true };
-      }
-
-      // If server returned error or 401, but the input matches the known master admin credentials
-      if (isMasterKnown) {
-        const fallbackToken = 'tvx_adm_' + btoa('tekvix_' + Date.now()).replace(/=/g, '');
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('tekvix_admin_token', fallbackToken);
-          sessionStorage.setItem('tekvix_admin_auth', 'true');
-        }
-        setIsAdminAuthenticated(true);
-        return { success: true };
-      }
-
+      const authenticated = Boolean(res.ok && data.success);
+      setIsAdminAuthenticated(authenticated);
+      if (authenticated) return { success: true };
       return { success: false, error: data.message || data.error || 'رمز عبور وارد شده نادرست است.' };
     } catch {
-      if (isMasterKnown) {
-        const fallbackToken = 'tvx_adm_' + btoa('tekvix_' + Date.now()).replace(/=/g, '');
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('tekvix_admin_token', fallbackToken);
-          sessionStorage.setItem('tekvix_admin_auth', 'true');
-        }
-        setIsAdminAuthenticated(true);
-        return { success: true };
-      }
+      setIsAdminAuthenticated(false);
       return { success: false, error: 'خطا در برقراری ارتباط با سرور.' };
     }
   };
@@ -1571,18 +1452,16 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       .replace(/[۰-۹]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 1728))
       .replace(/[٠-٩]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 1584));
 
-    if (!trimmedNew || trimmedNew.length < 4) {
-      return { success: false, error: 'رمز عبور جدید باید حداقل ۴ کاراکتر باشد.' };
+    if (!trimmedNew || trimmedNew.length < 8) {
+      return { success: false, error: 'رمز عبور جدید باید حداقل ۸ کاراکتر باشد.' };
     }
 
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('tekvix_admin_token') || '' : '';
       const res = await fetch('/api/admin/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
-          ...(token ? { 'x-admin-token': token } : {}),
         },
         credentials: 'include',
         body: JSON.stringify({ oldPassword: trimmedOld, newPassword: trimmedNew }),
@@ -1599,22 +1478,16 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const logoutAdmin = async () => {
     try {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('tekvix_admin_token');
-        sessionStorage.removeItem('tekvix_admin_auth');
-      }
       await fetch('/api/admin/logout', {
         method: 'POST',
         credentials: 'include',
         headers: { Accept: 'application/json' },
       });
-    } catch (err) {
-      console.warn('Logout request error:', err);
+    } catch {
+      // Always clear local authorization state if the network is unavailable.
     } finally {
       setIsAdminAuthenticated(false);
-      try {
-        sessionStorage.removeItem('tekvix_admin_auth');
-      } catch {}
+      try { sessionStorage.removeItem('tekvix_admin_auth'); } catch {}
     }
   };
 

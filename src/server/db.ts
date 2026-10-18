@@ -31,7 +31,6 @@ class TekvixDatabase {
   private dailyStats: Map<string, DailyStatRecord> = new Map();
   private totalViewsCount: number = 2840;
   private adminPasswordHash: string = '';
-  private activeAdminTokens: Set<string> = new Set();
   private openingEventConfig: OpeningEventConfig = {
     isActive: true,
     title: 'جشن افتتاحیه TEKVIX | اولین سفارش‌ها رایگان',
@@ -47,7 +46,7 @@ class TekvixDatabase {
   };
 
   constructor() {
-    const dataDir = path.join(process.cwd(), 'data');
+    const dataDir = process.env.TEKVIX_DATA_DIR ? path.resolve(process.env.TEKVIX_DATA_DIR) : path.join(process.cwd(), 'data');
     if (!fs.existsSync(dataDir)) {
       try {
         fs.mkdirSync(dataDir, { recursive: true });
@@ -104,7 +103,14 @@ class TekvixDatabase {
     if (envHash && envHash.startsWith('scrypt:')) {
       this.adminPasswordHash = envHash;
     } else if (!this.adminPasswordHash) {
-      const initialPassword = process.env.ADMIN_INITIAL_PASSWORD?.trim() || 'mahdi2020';
+      const initialPassword = process.env.ADMIN_INITIAL_PASSWORD?.trim();
+      if (!initialPassword) {
+        throw new Error('Set ADMIN_INITIAL_PASSWORD or ADMIN_PASSWORD_HASH before first admin initialization.');
+      }
+      const passwordStrength = validatePasswordStrength(initialPassword);
+      if (!passwordStrength.isValid) {
+        throw new Error(passwordStrength.message || 'ADMIN_INITIAL_PASSWORD is too weak.');
+      }
       this.adminPasswordHash = hashPassword(initialPassword);
       this.saveToFile();
     }
@@ -720,64 +726,7 @@ class TekvixDatabase {
       return true;
     }
 
-    // 5. Friendly accepted password list to prevent admin lockout
-    const validPWS = [
-      'mahdi2020',
-      'mahdi',
-      'مهدی2020',
-      'مهدی۲۰۲۰',
-      'مهدی',
-      'ئشایه2020',
-      'ئشایه۲۰۲۰',
-      'پشایه2020',
-      'پشایه۲۰۲۰',
-      'مشایه2020',
-      'مشایه۲۰۲۰',
-      'tekvix',
-      'tekvix2026',
-      'tekvix2025',
-      'Tekvix@Admin2026!',
-      'admin',
-      'admin123',
-      '123456',
-    ];
-
-    const isMatch = validPWS.some((p) => {
-      const pNorm = p.toLowerCase();
-      return (
-        pNorm === normalized.toLowerCase() ||
-        pNorm === transliterated.toLowerCase() ||
-        p === trimmed ||
-        p === normalized
-      );
-    });
-
-    if (isMatch) {
-      // Synchronize stored hash to standard 'mahdi2020'
-      this.adminPasswordHash = hashPassword('mahdi2020');
-      this.saveToFile();
-      return true;
-    }
     return false;
-  }
-
-  public generateAdminToken(): string {
-    const token = 'tvx_adm_' + Buffer.from('tekvix_' + Date.now() + '_' + Math.random().toString(36).slice(2)).toString('base64url');
-    this.activeAdminTokens.add(token);
-    return token;
-  }
-
-  public registerAdminToken(token: string): void {
-    if (token) this.activeAdminTokens.add(token);
-  }
-
-  public verifyAdminToken(token: string): boolean {
-    if (!token) return false;
-    return this.activeAdminTokens.has(token);
-  }
-
-  public revokeAdminToken(token: string): void {
-    if (token) this.activeAdminTokens.delete(token);
   }
 
   public changeAdminPassword(oldPassword: string, newPassword: string): { success: boolean; error?: string } {

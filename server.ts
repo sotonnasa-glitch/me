@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import path from 'path';
+import crypto from 'node:crypto';
 import session from 'express-session';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -8,20 +9,11 @@ import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import { db } from './src/server/db';
 
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
-// Helper to mask sensitive tokens for safe debug logs
-function maskToken(token: string): string {
-  if (!token || token.length < 8) return '***';
-  return `${token.slice(0, 4)}...${token.slice(-4)}`;
-}
-
-// Log initial Telegram environment configuration on startup
-console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-console.log('🤖 [TELEGRAM_STARTUP_CONFIG]');
-console.log(`• TELEGRAM_BOT_TOKEN env set: ${Boolean(process.env.TELEGRAM_BOT_TOKEN)} (${maskToken(process.env.TELEGRAM_BOT_TOKEN || '')})`);
-console.log(`• TELEGRAM_CHAT_ID env set:   ${Boolean(process.env.TELEGRAM_CHAT_ID)} (${process.env.TELEGRAM_CHAT_ID || 'not set, using default: 7460143967'})`);
-console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+// Keep secret values on the server; never print tokens or destination IDs.
+console.log('[Tekvix] Telegram token configured:', Boolean(process.env.TELEGRAM_BOT_TOKEN?.trim()));
+console.log('[Tekvix] Telegram destination configured:', Boolean(process.env.TELEGRAM_CHAT_ID?.trim()));
 
 async function startServer() {
   const app = express();
@@ -41,31 +33,28 @@ async function startServer() {
   app.use(express.json({ limit: '1mb' }));
   app.use('/logos', express.static(path.join(process.cwd(), 'public/logos')));
 
-  app.set('trust proxy', 1);
 
   // Server-side session configuration with HttpOnly and SameSite=none cookies for iframe compatibility
   app.use(
     session({
       name: 'tekvix_session',
-      secret: process.env.SESSION_SECRET || 'tekvix_sec_session_83jf02kf9481hx',
+      secret: (process.env.SESSION_SECRET || '').trim() || crypto.randomBytes(32).toString('hex'),
       resave: false,
       saveUninitialized: false,
       cookie: {
         httpOnly: true,
-        secure: true,
-        sameSite: 'none',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days session
       },
     })
   );
 
-  // Admin authentication guard middleware (supports session cookie OR x-admin-token header)
+  // Admin access is authorized only by the server-side session cookie.
   const requireAdminAuth: express.RequestHandler = (req, res, next) => {
     const isAdminSession = Boolean(req.session && (req.session as any).isAdmin);
-    const rawHeaderToken = req.headers['x-admin-token'] || req.headers['authorization']?.replace(/^Bearer\s+/i, '');
-    const hasValidToken = Boolean(rawHeaderToken && db.verifyAdminToken(String(rawHeaderToken)));
 
-    if (isAdminSession || hasValidToken) {
+    if (isAdminSession) {
       return next();
     }
     res.status(401).json({
@@ -136,9 +125,7 @@ async function startServer() {
 
   // 1.1 Admin Session Status Check (GET /api/admin/check-session)
   app.get('/api/admin/check-session', (req, res) => {
-    const rawHeaderToken = req.headers['x-admin-token'] || req.headers['authorization']?.replace(/^Bearer\s+/i, '');
-    const hasValidToken = Boolean(rawHeaderToken && db.verifyAdminToken(String(rawHeaderToken)));
-    const isAuthenticated = Boolean(req.session && (req.session as any).isAdmin) || hasValidToken;
+    const isAuthenticated = Boolean(req.session && (req.session as any).isAdmin);
     res.json({
       success: true,
       authenticated: isAuthenticated,
@@ -268,6 +255,7 @@ async function startServer() {
     try {
       // Whitelist allowed fields to prevent mass assignment
       const {
+        id,
         fullName,
         telegramOrPhone,
         serviceId,
@@ -286,6 +274,11 @@ async function startServer() {
       }
 
       // Sanitize inputs
+      const requestedOrderId = typeof id === 'string' && /^ORD-\d{4,20}(?:-\d{1,6})?$/.test(id.trim()) ? id.trim() : undefined;
+      if (requestedOrderId && db.getOrderById(requestedOrderId)) {
+        res.status(409).json({ success: false, error: 'شناسه سفارش تکراری است؛ لطفاً دوباره ثبت کنید.' });
+        return;
+      }
       const safeFullName = String(fullName).trim().slice(0, 100);
       const safeTelegramOrPhone = String(telegramOrPhone).trim().slice(0, 80);
       const safeServiceId = String(serviceId).trim().slice(0, 50);
@@ -295,6 +288,7 @@ async function startServer() {
       const safeUserEmail = userEmail ? String(userEmail).trim().slice(0, 100) : undefined;
 
       const newOrder = db.createOrder({
+        id: requestedOrderId,
         fullName: safeFullName,
         telegramOrPhone: safeTelegramOrPhone,
         serviceId: safeServiceId,
@@ -309,60 +303,12 @@ async function startServer() {
 
       console.log('\n📥 [ORDER_SUBMIT_RECEIVED]');
       console.log(`• Order ID: ${newOrder.id}`);
-      console.log(`• Customer: ${newOrder.fullName} | Contact: ${newOrder.telegramOrPhone}`);
+      console.log(`• Order submitted: ${newOrder.id}`);
       console.log(`• Service: ${newOrder.serviceTitle} | Price: ${newOrder.priceQuoted}`);
       console.log(`• Is Promo Event: ${newOrder.isPromoEvent}`);
 
-      // Dispatch Telegram notification strictly via server environment variable
-      const targetChatIds = resolveTelegramChatIds(undefined);
-      const orderId = escapeTgHtml(newOrder.id);
-      const tgName = escapeTgHtml(newOrder.fullName);
-      const rawContact = (newOrder.telegramOrPhone || '').trim();
-      const safeContact = escapeTgHtml(rawContact);
-      const tgService = escapeTgHtml(newOrder.serviceTitle);
-      const tgMsg = escapeTgHtml(newOrder.message || 'بدون توضیح');
-      const tgPrice = escapeTgHtml(newOrder.priceQuoted || 'استعلامی');
-      const directChat = getClientDirectChatUrl(rawContact);
+      // Telegram notification is sent once through /api/telegram/send-order after this order is saved.
 
-      const telegramText = `
-🚀 <b>سفارش جدید در تکویکس (Tekvix AI)</b>
-${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰۰٪ رایگان)</i>\n' : ''}
-📌 <b>کد رهگیری:</b> <code>${orderId}</code>
-👤 <b>نام مشتری:</b> <b>${tgName}</b>
-📱 <b>آیدی / شماره تماس:</b> <a href="${directChat.url}"><b>${directChat.display}</b></a> 👈 <i>(کلیک کنید)</i>
-💼 <b>سرویس انتخابی:</b> ${tgService}
-💰 <b>هزینه / برآورد:</b> ${tgPrice}
-📝 <b>توضیحات:</b>
-<i>${tgMsg}</i>
-
-⏰ <b>زمان ثبت (به وقت ایران):</b> ${getIranPersianDateTime()}
-🌐 <b>منبع:</b> وب‌سایت تکویکس
-      `.trim();
-
-      const inlineKeyboard = {
-        inline_keyboard: [
-          [
-            {
-              text: '💬 ورود مستقیم به پی‌وی مشتری (چت تلگرام)',
-              url: directChat.url,
-            },
-          ],
-          ...(directChat.waUrl
-            ? [
-                [
-                  {
-                    text: '📲 گفت‌وگو در واتساپ با مشتری',
-                    url: directChat.waUrl,
-                  },
-                ],
-              ]
-            : []),
-        ],
-      };
-
-      dispatchTelegramNotification(targetChatIds, telegramText, inlineKeyboard).catch(
-        (tgErr) => console.error('❌ [BACKGROUND_TELEGRAM_ERROR]:', tgErr)
-      );
 
       res.status(201).json({ success: true, order: newOrder });
     } catch (error: any) {
@@ -446,8 +392,6 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
         // Securely establish server-side session
         (req.session as any).isAdmin = true;
         (req.session as any).authTime = Date.now();
-        const adminToken = db.generateAdminToken();
-        db.registerAdminToken(adminToken);
 
         req.session.save((saveErr) => {
           if (saveErr) {
@@ -456,7 +400,6 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
           res.json({
             success: true,
             valid: true,
-            token: adminToken,
             message: 'ورود با موفقیت انجام شد.',
           });
         });
@@ -475,8 +418,8 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
         res.status(400).json({ success: false, message: 'رمز عبور فعلی و جدید الزامی هستند.' });
         return;
       }
-      if (typeof newPassword !== 'string' || newPassword.trim().length < 4) {
-        res.status(400).json({ success: false, message: 'رمز عبور جدید باید حداقل ۴ کاراکتر باشد.' });
+      if (typeof newPassword !== 'string' || newPassword.trim().length < 8) {
+        res.status(400).json({ success: false, message: 'رمز عبور جدید باید حداقل ۸ کاراکتر باشد.' });
         return;
       }
       const result = db.changeAdminPassword(String(oldPassword), String(newPassword));
@@ -518,12 +461,26 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
 
   app.post('/api/users', (req, res) => {
     try {
-      const { id, name, email, phone, telegram, avatar, role } = req.body;
+      const { id, name, email, phone, telegram, avatar } = req.body;
       if (!id || !name || !email) {
         res.status(400).json({ success: false, error: 'شناسه، نام و ایمیل کاربر الزامی است' });
         return;
       }
-      const user = db.upsertUser({ id, name, email, phone, telegram, avatar, role });
+      const safeId = String(id).trim().slice(0, 100);
+      const existingUser = db.getUserById(safeId);
+      if (existingUser?.role === 'admin') {
+        res.status(403).json({ success: false, error: 'تغییر حساب مدیریت از این مسیر مجاز نیست.' });
+        return;
+      }
+      const user = db.upsertUser({
+        id: safeId,
+        name: String(name).trim().slice(0, 100),
+        email: String(email).trim().slice(0, 160),
+        phone: phone ? String(phone).trim().slice(0, 40) : undefined,
+        telegram: telegram ? String(telegram).trim().slice(0, 40) : undefined,
+        avatar: avatar ? String(avatar).trim().slice(0, 500) : undefined,
+        role: 'client',
+      });
       res.json({ success: true, user });
     } catch (error: any) {
       res.status(500).json({ success: false, error: 'خطا در ثبت اطلاعات کاربر' });
@@ -866,70 +823,35 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
     };
   }
 
-  // Helper to resolve and normalize Telegram Chat IDs (maps usernames to verified chat IDs)
-  function resolveTelegramChatIds(chatIdInput: string | undefined | null): string[] {
-    const envChatId = (process.env.TELEGRAM_CHAT_ID || '').trim();
-    const defaultChatId = '7460143967';
-
-    const sourceString = [envChatId, chatIdInput].filter(Boolean).join(',');
-    if (!sourceString.trim()) {
-      return [defaultChatId];
-    }
-
-    const rawParts = sourceString
-      .split(/[,;\n]+/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-
-    if (rawParts.length === 0) {
-      return [defaultChatId];
-    }
-
-    const resolved: string[] = [];
-    for (const part of rawParts) {
-      const lower = part.toLowerCase();
-      if (lower === '@lawat_kar' || lower === 'lawat_kar') {
-        resolved.push('7460143967');
-      } else if (lower === '@tekvix' || lower === 'tekvix') {
-        resolved.push('-1003569018930');
-      } else if (/^-?\d+$/.test(part)) {
-        // Valid numeric chat ID or channel ID
-        resolved.push(part);
-      } else {
-        // Passed some other channel or username - include it
-        resolved.push(part);
-      }
-    }
-
-    // Always ensure at least defaultChatId if list is empty
-    if (resolved.length === 0) {
-      resolved.push(defaultChatId);
-    }
-
-    return Array.from(new Set(resolved));
+  // Telegram credentials and destination IDs are configured only in server environment secrets.
+  function resolveTelegramChatIds(): string[] {
+    const raw = (process.env.TELEGRAM_CHAT_ID || '').trim();
+    if (!raw) return [];
+    return Array.from(new Set(raw.split(/[,;\\n]+/).map((part) => part.trim()).filter((part) => /^-?\\d+$/.test(part))));
   }
 
-  const VERIFIED_FALLBACK_BOT_TOKEN = '8518856410:AAHIe2F0906hD4O12sNpe_YplCv9_QZ86B4';
-  const VERIFIED_BOT_TOKEN = (process.env.TELEGRAM_BOT_TOKEN || VERIFIED_FALLBACK_BOT_TOKEN).trim();
+  function getTelegramBotToken(): string {
+    const token = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
+    if (!token) throw new Error('TELEGRAM_BOT_TOKEN is not configured on the server.');
+    return token;
+  }
 
   // Robust Dispatcher to one or multiple Telegram targets with comprehensive debug logging
   async function dispatchTelegramNotification(
     chatIds: string[],
     text: string,
-    replyMarkup?: any,
-    customToken?: string
+    replyMarkup?: any
   ): Promise<{ success: boolean; deliveredTo: string[]; errors: string[]; messageIds: number[] }> {
-    let effectiveToken = (customToken || VERIFIED_BOT_TOKEN).trim();
-    if (effectiveToken === '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus' || !effectiveToken) {
-      effectiveToken = VERIFIED_BOT_TOKEN;
+    const effectiveToken = getTelegramBotToken();
+    const targets = chatIds && chatIds.length > 0 ? chatIds : resolveTelegramChatIds();
+    if (targets.length === 0) {
+      return { success: false, deliveredTo: [], errors: ['TELEGRAM_CHAT_ID is not configured or contains no numeric chat IDs.'], messageIds: [] };
     }
-
-    const targets = chatIds && chatIds.length > 0 ? chatIds : resolveTelegramChatIds(undefined);
 
     console.log('\n────────────────────────────────────────────────────────────');
     console.log('🚀 [TELEGRAM_DISPATCH_TRIGGERED]');
-    console.log(`• Token Source: ${effectiveToken === customToken ? 'Custom Token' : 'Verified Server Bot Token'} (Token: ${maskToken(effectiveToken)})`);
-    console.log(`• Targets: [${targets.join(', ')}]`);
+    console.log('• Token source: server environment');
+    console.log(`• Destination count: ${targets.length}`);
     console.log(`• Text Length: ${text.length} chars`);
     console.log(`• Has Reply Markup: ${Boolean(replyMarkup)}`);
 
@@ -972,9 +894,9 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
         } else {
           const errCode = data?.error_code || tgRes.status;
           // Auto-recovery: if custom token fails with 401 Unauthorized, retry with verified bot token
-          if (errCode === 401 && effectiveToken !== VERIFIED_BOT_TOKEN) {
+          if (errCode === 401 && effectiveToken !== getTelegramBotToken()) {
             console.warn(`🔄 [TELEGRAM_AUTH_RETRY] Token unauthorized (401). Retrying with server verified bot token for target ${target}...`);
-            const retryRes = await fetch(`https://api.telegram.org/bot${VERIFIED_BOT_TOKEN}/sendMessage`, {
+            const retryRes = await fetch(`https://api.telegram.org/bot${getTelegramBotToken()}/sendMessage`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(payload),
@@ -1017,7 +939,7 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
   // 3. Telegram Bot Order Notification API - Public submission with rate limiting
   app.post('/api/telegram/send-order', telegramPublicLimiter, async (req, res) => {
     try {
-      const { order, chatId, botToken } = req.body;
+      const { order } = req.body;
 
       if (!order) {
         console.warn('⚠️ [TELEGRAM_SEND_ORDER_REJECTED] Missing order payload');
@@ -1027,10 +949,10 @@ ${newOrder.isPromoEvent ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتت
 
       console.log('\n📤 [TELEGRAM_SEND_ORDER_CALLED]');
       console.log(`• Order ID: ${order.id || 'N/A'}`);
-      console.log(`• Customer: ${order.fullName || 'N/A'} (${order.telegramOrPhone || 'N/A'})`);
+      console.log('• Order notification payload received');
       console.log(`• Service: ${order.serviceTitle || 'N/A'}`);
 
-      const targetChatIds = resolveTelegramChatIds(chatId);
+      const targetChatIds = resolveTelegramChatIds();
 
       const orderId = escapeTgHtml(order.id || 'ORD-' + Math.floor(1000 + Math.random() * 9000));
       const fullName = escapeTgHtml(order.fullName || 'کاربر تکویکس');
@@ -1084,8 +1006,7 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
       const dispatchResult = await dispatchTelegramNotification(
         targetChatIds,
         telegramMessage,
-        inlineKeyboard,
-        botToken
+        inlineKeyboard
       );
 
       if (dispatchResult.success) {
@@ -1098,8 +1019,8 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
           message: 'پیام سفارش فوراً به ربات تلگرام ارسال شد!',
         });
       } else {
-        res.json({
-          success: true,
+        res.status(502).json({
+          success: false,
           telegramSent: false,
           telegramError: dispatchResult.errors.join(' | '),
           pvUrl: directChat.url,
@@ -1115,7 +1036,7 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
   // 3.5 Telegram Consultation & Lead Notification API (Rate limited & secure)
   app.post('/api/telegram/send-consultation', telegramPublicLimiter, async (req, res) => {
     try {
-      const { name, contactInfo, topic, message, chatId } = req.body;
+      const { name, contactInfo, topic, message } = req.body;
 
       if (!name || !contactInfo) {
         console.warn('⚠️ [TELEGRAM_SEND_CONSULTATION_REJECTED] Missing name or contact info');
@@ -1129,11 +1050,11 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
       const safeMessage = message ? String(message).trim().slice(0, 2000) : 'بدون پیام تکمیلی';
 
       console.log('\n💬 [TELEGRAM_SEND_CONSULTATION_CALLED]');
-      console.log(`• Lead Name: ${safeName}`);
-      console.log(`• Contact Info: ${safeContact}`);
-      console.log(`• Consultation Topic: ${safeTopic}`);
+      console.log('• Consultation lead received');
+      console.log('• Consultation contact received');
+      console.log('• Consultation topic length:', safeTopic.length);
 
-      const targetChatIds = resolveTelegramChatIds(chatId);
+      const targetChatIds = resolveTelegramChatIds();
 
       const fullName = escapeTgHtml(safeName);
       const contactEscaped = escapeTgHtml(safeContact);
@@ -1194,8 +1115,8 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
           message: 'درخواست مشاوره با موفقیت به ربات تلگرام ارسال شد.',
         });
       } else {
-        res.json({
-          success: true,
+        res.status(502).json({
+          success: false,
           telegramSent: false,
           telegramError: dispatchResult.errors.join(' | '),
           pvUrl: directChat.url,
@@ -1211,7 +1132,7 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
   // 4. Test Telegram Bot Connection API (GET & POST) - Admin Protected
   app.get('/api/telegram/test-bot', requireAdminAuth, async (req, res) => {
     try {
-      const targetChatIds = resolveTelegramChatIds(undefined);
+      const targetChatIds = resolveTelegramChatIds();
       const testMsg = `🔔 <b>پیام تست اتصال تکویکس (Tekvix AI) - تست وضعیت سلامت</b>\n\n✅ ربات تلگرام شما آنلاین و متصل است!\n⏰ <b>زمان تست (به وقت ایران):</b> ${getIranPersianDateTime()}`;
 
       const testInlineKeyboard = {
@@ -1251,8 +1172,8 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
 
   app.post('/api/telegram/test-bot', requireAdminAuth, async (req, res) => {
     try {
-      const { chatId, botToken } = req.body;
-      const targetChatIds = resolveTelegramChatIds(chatId);
+      // Uses server-side Telegram credentials only.
+      const targetChatIds = resolveTelegramChatIds();
 
       const testMsg = `🔔 <b>پیام تست اتصال تکویکس (Tekvix AI)</b>\n\n✅ ربات تلگرام شما با موفقیت به وب‌سایت متصل شد!\nاز این پس تمامی سفارشات و درخواست‌های مشاوره ثبت‌شده توسط کاربران، بی‌درنگ همراه با دکمه ورود مستقیم به پی‌وی به این چت ارسال می‌شوند.\n\n⏰ <b>زمان تست (به وقت ایران):</b> ${getIranPersianDateTime()}`;
 
@@ -1274,8 +1195,7 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
       const dispatchResult = await dispatchTelegramNotification(
         targetChatIds,
         testMsg,
-        testInlineKeyboard,
-        botToken
+        testInlineKeyboard
       );
 
       if (dispatchResult.success) {
@@ -1301,16 +1221,14 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
   // 4.1. Telegram Bot Live Status API (Checks BotFather token & returns bot details)
   app.get('/api/telegram/status', async (req, res) => {
     try {
-      const meRes = await fetch(`https://api.telegram.org/bot${VERIFIED_BOT_TOKEN}/getMe`);
+      const meRes = await fetch(`https://api.telegram.org/bot${getTelegramBotToken()}/getMe`);
       const meData: any = await meRes.json().catch(() => null);
-      const defaultChatId = resolveTelegramChatIds(undefined)[0] || '7460143967';
 
       if (meData?.ok) {
         res.json({
           success: true,
           online: true,
           bot: meData.result,
-          targetChatId: defaultChatId,
           pollingActive: isPollingActive,
         });
       } else {
@@ -1331,7 +1249,7 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
 
   async function sendBotMessage(chatId: string | number, text: string, replyMarkup?: any) {
     try {
-      const tgRes = await fetch(`https://api.telegram.org/bot${VERIFIED_BOT_TOKEN}/sendMessage`, {
+      const tgRes = await fetch(`https://api.telegram.org/bot${getTelegramBotToken()}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1366,7 +1284,7 @@ ${isPromo ? '🎁 <b>نوع سفارش:</b> <i>ایونت افتتاحیه (۱۰
       }
 
       // Acknowledge callback query
-      fetch(`https://api.telegram.org/bot${VERIFIED_BOT_TOKEN}/answerCallbackQuery`, {
+      fetch(`https://api.telegram.org/bot${getTelegramBotToken()}/answerCallbackQuery`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ callback_query_id: cq.id }),
@@ -1490,6 +1408,10 @@ ${username ? `📱 <b>یوزرنیم:</b> ${username}\n` : ''}
 
   async function startTelegramBotPolling() {
     if (isPollingActive) return;
+    if (!(process.env.TELEGRAM_BOT_TOKEN || '').trim()) {
+      console.info('[Tekvix] Telegram auto-responder disabled: server token is not configured.');
+      return;
+    }
     isPollingActive = true;
     console.log('🤖 [TELEGRAM_POLLING] Starting background auto-responder for @Tekvixbot...');
 
@@ -1497,7 +1419,7 @@ ${username ? `📱 <b>یوزرنیم:</b> ${username}\n` : ''}
 
     // Verify bot identity
     try {
-      const meRes = await fetch(`https://api.telegram.org/bot${VERIFIED_BOT_TOKEN}/getMe`);
+      const meRes = await fetch(`https://api.telegram.org/bot${getTelegramBotToken()}/getMe`);
       const meData: any = await meRes.json().catch(() => null);
       if (meData?.ok) {
         console.log(`✅ [TELEGRAM_BOT_READY] Bot online: @${meData.result.username} (ID: ${meData.result.id})`);
@@ -1512,7 +1434,7 @@ ${username ? `📱 <b>یوزرنیم:</b> ${username}\n` : ''}
     (async () => {
       while (isPollingActive) {
         try {
-          const pollUrl = `https://api.telegram.org/bot${VERIFIED_BOT_TOKEN}/getUpdates?offset=${offset}&timeout=25&allowed_updates=${encodeURIComponent(JSON.stringify(['message', 'callback_query']))}`;
+          const pollUrl = `https://api.telegram.org/bot${getTelegramBotToken()}/getUpdates?offset=${offset}&timeout=25&allowed_updates=${encodeURIComponent(JSON.stringify(['message', 'callback_query']))}`;
           const response = await fetch(pollUrl);
           const data: any = await response.json().catch(() => null);
 

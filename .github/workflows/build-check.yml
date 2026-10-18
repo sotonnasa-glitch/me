@@ -25,3 +25,5 @@ jobs:
         run: bun run lint
       - name: Production build
         run: bun run build
+      - name: Runtime API smoke tests
+        run: node scripts/smoke-test.mjs

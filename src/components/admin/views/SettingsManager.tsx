@@ -44,14 +44,11 @@ export const SettingsManager: React.FC = () => {
     showAnnouncement: brandInfo.showAnnouncement ?? true,
   });
 
-  const [botForm, setBotForm] = useState(() => {
-    const rawToken = (telegramSettings.botToken || '').trim();
-    return {
-      botToken: rawToken === '8518856410:AAEHtuGJHgyE6WDy2PwFVBpPiR0BgQwZfus' ? '' : rawToken,
-      chatId: telegramSettings.chatId || '7460143967',
-      autoNotifyNewOrders: telegramSettings.autoNotifyNewOrders ?? true,
-    };
-  });
+  const [botForm, setBotForm] = useState(() => ({
+    botToken: '',
+    chatId: '',
+    autoNotifyNewOrders: telegramSettings.autoNotifyNewOrders ?? true,
+  }));
 
   const [botLiveStatus, setBotLiveStatus] = useState<{
     loading: boolean;
@@ -152,7 +149,7 @@ export const SettingsManager: React.FC = () => {
     try {
       // First save the current token and chat ID
       updateTelegramSettings(botForm);
-      const res = await testTelegramBotConnection(botForm);
+      const res = await testTelegramBotConnection();
       setTestResult(res);
     } catch (err: any) {
       setTestResult({
@@ -269,75 +266,18 @@ export const SettingsManager: React.FC = () => {
                 <strong className="text-white">شروع ربات (الزامی):</strong> وارد ربات <a href="https://t.me/Tekvixbot" target="_blank" rel="noreferrer" className="text-purple-300 underline font-mono font-bold">@Tekvixbot</a> در تلگرام شوید و دکمه <span className="text-emerald-400 font-bold">Start (شروع)</span> را بزنید.
               </li>
               <li>
-                <strong className="text-white">دریافت چت‌آیدی اختصاصی شما:</strong> در همان ربات کافی است دستور <code className="bg-black/40 px-1 py-0.5 rounded text-amber-300 font-mono">/id</code> را بفرستید تا ربات بلافاصله شناسه عددی شما را نمایش دهد.
+                <strong className="text-white">شناسهٔ مقصد:</strong> دستور <code className="bg-black/40 px-1 py-0.5 rounded text-amber-300 font-mono">/id</code> را در ربات بفرستید و شناسهٔ عددی را فقط در متغیر محرمانهٔ سرور <code>TELEGRAM_CHAT_ID</code> ثبت کنید.
               </li>
               <li>
-                <strong className="text-white">توکن پیش‌فرض:</strong> توکن رسمی ربات تکویکس به طور پیش‌فرض روی سرور ست شده است و نیازی به تغییر ندارد مگر اینکه بخواهید از ربات دیگری استفاده کنید.
+                <strong className="text-white">تنظیم امن توکن:</strong> توکن فقط در متغیر محرمانهٔ سرور با نام <code>TELEGRAM_BOT_TOKEN</code> تنظیم می‌شود و نباید در مرورگر وارد شود.
               </li>
             </ol>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-medium text-zinc-300">
-                  توکن ربات تلگرام (Telegram Bot Token)
-                </label>
-                {!botForm.botToken && (
-                  <span className="text-[10px] text-emerald-400 font-mono">توکن پیش‌فرض سرور فعال است</span>
-                )}
-              </div>
-              <input
-                type="text"
-                value={botForm.botToken}
-                onChange={(e) => setBotForm({ ...botForm, botToken: e.target.value })}
-                placeholder="خالی بگذارید تا از توکن سرور (@Tekvixbot) استفاده شود"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-white font-mono focus:border-purple-500 focus:outline-none"
-              />
-              <span className="text-[10px] text-zinc-500 mt-1 block">
-                اگر خالی باشد، به صورت خودکار از توکن متغیر سرور (متصل به @Tekvixbot) استفاده می‌شود.
-              </span>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-medium text-zinc-300">
-                  شناسه چت عددی یا کانال (Chat ID) <span className="text-rose-400">*</span>
-                </label>
-                <span className="text-[10px] text-amber-400 font-mono">شناسه چت شما: 7460143967</span>
-              </div>
-              <input
-                type="text"
-                value={botForm.chatId}
-                onChange={(e) => setBotForm({ ...botForm, chatId: e.target.value })}
-                placeholder="7460143967 یا -1003569018930"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-white font-mono focus:border-purple-500 focus:outline-none"
-              />
-              <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                <span className="text-[10px] text-zinc-400">انتخاب سریع:</span>
-                <button
-                  type="button"
-                  onClick={() => setBotForm({ ...botForm, chatId: '7460143967' })}
-                  className="px-2 py-0.5 rounded-md bg-purple-950/60 border border-purple-500/30 text-purple-300 hover:text-white text-[10px] transition-colors"
-                >
-                  چت شخصی شما (7460143967)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBotForm({ ...botForm, chatId: '-1003569018930' })}
-                  className="px-2 py-0.5 rounded-md bg-purple-950/60 border border-purple-500/30 text-purple-300 hover:text-white text-[10px] transition-colors"
-                >
-                  کانال تکویکس (-1003569018930)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBotForm({ ...botForm, chatId: '7460143967, -1003569018930' })}
-                  className="px-2 py-0.5 rounded-md bg-purple-950/60 border border-purple-500/30 text-purple-300 hover:text-white text-[10px] transition-colors"
-                >
-                  ارسال همزمان به چت و کانال
-                </button>
-              </div>
-            </div>
+          <div className="rounded-2xl border border-cyan-500/20 bg-cyan-950/20 p-4 space-y-2 text-xs leading-relaxed text-zinc-300">
+            <h3 className="font-bold text-cyan-200">تنظیم امن اتصال تلگرام</h3>
+            <p>برای جلوگیری از افشای توکن، اطلاعات اتصال دیگر در مرورگر یا Local Storage وارد و ذخیره نمی‌شوند.</p>
+            <p>در تنظیمات محرمانهٔ میزبان سایت، متغیرهای <code className="text-amber-300">TELEGRAM_BOT_TOKEN</code> و <code className="text-amber-300">TELEGRAM_CHAT_ID</code> را تنظیم کنید. شناسهٔ مقصد باید عددی باشد؛ چند مقصد را با ویرگول جدا کنید.</p>
           </div>
 
           {/* Test Bot Notification Action */}

@@ -151,6 +151,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   });
   const [errors, setErrors] = useState<{ fullName?: string; telegramOrPhone?: string }>({});
   const [isSuccess, setIsSuccess] = useState(false);
+  const [telegramWarning, setTelegramWarning] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedOrderId, setSubmittedOrderId] = useState('');
   const [countdown, setCountdown] = useState(10);
@@ -216,6 +217,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
     setIsSubmitting(false);
     setCountdown(10);
     setErrors({});
+    setTelegramWarning('');
     setCopiedCode(false);
     onClose();
   };
@@ -262,11 +264,13 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       promoEventName: isPromo ? openingEventState.config.title : undefined,
     });
     setSubmittedOrderId(created.id);
+    setTelegramWarning('');
 
     try {
-      await sendOrderToTelegramBot(created);
-    } catch (err) {
-      console.warn('Telegram send ignored:', err);
+      const notification = await sendOrderToTelegramBot(created);
+      if (!notification.success) setTelegramWarning(notification.message || 'سفارش ثبت شد، اما اعلان تلگرام ارسال نشد.');
+    } catch {
+      setTelegramWarning('سفارش ثبت شد، اما اعلان تلگرام ارسال نشد.');
     } finally {
       setIsSubmitting(false);
       setIsSuccess(true);
@@ -337,8 +341,13 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                 </span>
                 <h3 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">سفارش با موفقیت ثبت شد ✨</h3>
                 <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-gray-400">
-                  اطلاعات پروژه ثبت شد و درخواست برای تیم Tekvix ارسال شده است. برای ادامه می‌توانی از کد رهگیری استفاده کنی.
+                  اطلاعات سفارش در سایت ثبت شد. برای ادامه می‌توانی از کد رهگیری استفاده کنی.
                 </p>
+                {telegramWarning && (
+                  <p role="status" className="mx-auto mt-4 max-w-xl rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-xs leading-6 text-amber-200">
+                    {telegramWarning} در صورت نیاز از دکمهٔ چت با پشتیبانی استفاده کن.
+                  </p>
+                )}
 
                 <div className="mx-auto mt-7 flex max-w-xl items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[.035] p-4 text-start">
                   <div>
