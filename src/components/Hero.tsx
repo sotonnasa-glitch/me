@@ -89,6 +89,29 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
       onPointerLeave={handlePointerLeave}
       className="relative min-h-screen pt-32 pb-20 overflow-hidden flex flex-col justify-between items-center text-center bg-transparent"
     >
+      {/* Black-hole ambience: background only; preserve the existing orb, layout and interactions. */}
+      <video
+        aria-hidden="true"
+        className="absolute inset-x-0 top-[-140px] h-full w-full object-cover pointer-events-none -z-[1]"
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="metadata"
+        tabIndex={-1}
+        style={{
+          opacity: 0.58,
+          filter: 'brightness(0.9) saturate(1.08)',
+          transform: 'rotate(180deg)',
+          objectPosition: 'center center',
+          clipPath: 'inset(5% 0 5% 0)',
+          maskImage: 'radial-gradient(ellipse at center, #000 0%, rgba(0,0,0,0.9) 40%, transparent 82%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, #000 0%, rgba(0,0,0,0.9) 40%, transparent 82%)',
+        }}
+      >
+        <source src="https://clay-portfolio.netlify.app/assets/videos/blackhole.webm" type="video/webm" />
+      </video>
+
       <div className="absolute inset-0 bg-cosmic-grid opacity-30 pointer-events-none z-0" />
       <HeroCanvasStars />
 
