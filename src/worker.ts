@@ -288,7 +288,7 @@ const ADMIN_PASSWORD_ITERATIONS = 120_000;
 function bytesToBase64Url(bytes: Uint8Array): string {
   let binary = '';
   for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replace(/=/g, '').replace(/\\+/g, '-').replace(/\\//g, '_');
+  return btoa(binary).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 
 function base64UrlToBytes(value: string): Uint8Array | null {
