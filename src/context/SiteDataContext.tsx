@@ -361,7 +361,18 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>(() => {
     try {
       const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_portfolio`);
-      return saved ? JSON.parse(saved) : DEFAULT_PORTFOLIO;
+      if (!saved) return DEFAULT_PORTFOLIO;
+
+      const parsed: PortfolioItem[] = JSON.parse(saved);
+      if (!Array.isArray(parsed)) return DEFAULT_PORTFOLIO;
+
+      // One-time portfolio migration: add the new Hosion Motion showcase to existing browsers
+      // without replacing any portfolio entries already saved by the site owner.
+      const newSample = DEFAULT_PORTFOLIO.find((item) => item.id === 'project-hosion-motion');
+      if (newSample && !parsed.some((item) => item?.id === newSample.id)) {
+        return [newSample, ...parsed];
+      }
+      return parsed;
     } catch {
       return DEFAULT_PORTFOLIO;
     }
