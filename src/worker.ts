@@ -1094,20 +1094,37 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
   if (path === '/api/telegram/test-bot' && (method === 'POST' || method === 'GET')) {
     const authError = await requireAdmin(request, env);
     if (authError) return authError;
+    const limited = rateLimit(request, 'telegram-test', 5, 15 * 60 * 1000);
+    if (limited) return limited;
     const token = env.TELEGRAM_BOT_TOKEN?.trim();
     if (!token) return json({ success: false, error: 'توکن ربات تنظیم نشده است.' }, 503);
     try {
       const response = await fetch('https://api.telegram.org/bot' + token + '/getMe');
-      const data = await response.json().catch(() => null) as { ok?: boolean; result?: { username?: string; first_name?: string } } | null;
-      if (!response.ok || data?.ok !== true) return json({ success: false, error: 'توکن ربات معتبر نیست.' }, 502);
+      const data = await response.json().catch(() => null) as {
+        ok?: boolean;
+        result?: { id?: number; is_bot?: boolean; first_name?: string; username?: string };
+      } | null;
+      if (!response.ok || data?.ok !== true || !data.result) {
+        return json({ success: false, status: 'error', error: 'توکن ربات معتبر نیست.' }, 502);
+      }
       const sent = await sendTelegram(env, '✅ اتصال ربات تلگرام TEKVIX برقرار است.');
+      if (!sent) {
+        return json({
+          success: false,
+          status: 'error',
+          telegramSent: false,
+          error: 'توکن معتبر است، اما ارسال پیام انجام نشد؛ Chat ID و شروع گفت‌وگو با ربات را بررسی کن.',
+        }, 502);
+      }
       return json({
-        success: sent,
-        message: sent ? 'پیام تست با موفقیت ارسال شد!' : 'توکن معتبر است، اما ارسال پیام انجام نشد؛ Chat ID و شروع گفت‌وگو با ربات را بررسی کن.',
+        success: true,
+        status: 'online',
+        telegramSent: true,
+        message: 'پیام تست با موفقیت ارسال شد!',
         bot: data.result,
-      }, sent ? 200 : 502);
+      });
     } catch {
-      return json({ success: false, error: 'ارتباط با تلگرام برقرار نشد.' }, 502);
+      return json({ success: false, status: 'error', error: 'ارتباط با تلگرام برقرار نشد.' }, 502);
     }
   }
 
