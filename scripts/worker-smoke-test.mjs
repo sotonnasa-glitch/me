@@ -174,6 +174,14 @@ try {
   assert.equal(assetResponse.status, 200);
   assert.ok((await assetResponse.text()).includes('static app'));
 
+  const unimplementedApi = await worker.fetch(request('/api/gemini/assistant', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ message: 'test' }),
+  }), env);
+  assert.equal(unimplementedApi.status, 404, 'Unimplemented API routes must not return the SPA HTML with status 200.');
+  assert.equal((await readJson(unimplementedApi)).success, false);
+
   console.log('✅ Cloudflare Worker API smoke tests passed (Supabase + Telegram mocked).');
 } finally {
   globalThis.fetch = originalFetch;
