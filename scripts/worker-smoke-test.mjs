@@ -226,7 +226,7 @@ try {
 
   const telegramTestPost = await worker.fetch(request('/api/telegram/test-bot', {
     method: 'POST',
-    headers: { cookie, 'content-type': 'application/json' },
+    headers: { cookie: 'tekvix_admin=' + cookie, 'content-type': 'application/json' },
     body: JSON.stringify({}),
   }), env);
   assert.equal(telegramTestPost.status, 200);
