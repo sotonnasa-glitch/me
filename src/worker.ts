@@ -11,6 +11,7 @@ interface Env {
   SUPABASE_SERVICE_ROLE_KEY?: string;
   TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_CHAT_ID?: string;
+  GEMINI_API_KEY?: string;
   TEKVIX_ADMIN_PASSWORD?: string;
 }
 
@@ -633,6 +634,154 @@ async function getOpeningEvent(env: Env): Promise<Record<string, unknown>> {
   return { config, isCurrentlyOpen: config.isActive === true && Number.isFinite(start) && Number.isFinite(end) && now >= start && now <= end };
 }
 
+const TEKVIX_GEMINI_SYSTEM_INSTRUCTION = `
+شما «دستیار فوق‌هوشمند پلتفرم تکویکس (Tekvix AI Assistant)» هستید.
+تکویکس برترین پلتفرم تخصصی ارائه خدمات هوش مصنوعی و طراحی دیجیتال به زبان فارسی است.
+
+حیطه تخصص و خدمات تکویکس:
+۱. ساخت وب‌سایت با هوش مصنوعی (طراحی اختصاصی UI/UX مدرن با React و Tailwind، اتصال به پایگاه داده، پنل ادمین هوشمند، تحویل در ۳ تا ۵ روز، قیمت از ۴.۵ میلیون تومان).
+۲. تولید تیزر و ویدیو با هوش مصنوعی (ویدیوهای تبلیغاتی 4K، سناریونویسی با هوش مصنوعی، مدل‌های پیشرفته تولید ویدیو، موشن گرافیک، تحویل ۱ تا ۲ روز، از ۲.۸ میلیون تومان).
+۳. ساخت ربات‌های پیشرفته تلگرام (ربات‌های فروشگاهی، پشتیبانی هوشمند مبتنی بر Gemini، اتصال به وب‌هوک و درگاه پرداخت، از ۳.۵ میلیون تومان).
+۴. خلق تصاویر، گرافیک و مدل‌های 3D (تولید تصویر با کیفیت 4K، بازسازی چهره، کاور موزیک، بنر شبکه‌های اجتماعی، از ۱.۲ میلیون تومان).
+۵. آهنگسازی، ترانه و صداگذاری هوش مصنوعی (تولید موزیک با کلام، نریشن اختصاصی، دوبله و افکت صوتی).
+۶. چت‌بات‌های شرکتی و اتوماسیون بیزینس با هوش مصنوعی.
+
+دستورالعمل لحن و پاسخ‌دهی:
+- پاسخ‌ها باید کاملاً فارسی، حرفه‌ای، محترمانه، پرانرژی، کاربردی و جذاب باشند.
+- اگر کاربر درباره قیمت یا زمان تحویل پرسید، محدوده تخمینی و مزایای تکویکس را با دقت توضیح دهید و کاربر را به ثبت سفارش مستقیم یا پیام به تلگرام @Lawat_kar دعوت کنید.
+- اگر کاربر ایده یا سناریو خواست (مثلاً سناریوی ویدیوی تبلیغاتی یا پرامپت)، پرامپت‌ها و سناریوهای خلاقانه با جزییات ارائه دهید.
+- برای ساختاردهی زیبا از بولت‌پوینت‌ها و ایموجی‌های مناسب استفاده کنید.
+`;
+
+function generateTekvixFallbackResponse(userMessage: string): string {
+    const text = userMessage.trim().toLowerCase();
+
+    // 1. Website Development & Admin Panel (Direct answer to screenshot question)
+    if (
+      text.includes('وب‌سایت') ||
+      text.includes('سایت') ||
+      text.includes('وبسایت') ||
+      text.includes('طراحی سایت') ||
+      text.includes('پنل ادمین') ||
+      text.includes('برنامه‌نویسی')
+    ) {
+      return `🌐 **مشاوره و شرایط طراحی وب‌سایت مدرن با هوش مصنوعی در تکویکس:**\n\n` +
+        `✅ **زمان تحویل:** بین **۳ الی ۵ روز کاری** (به‌صورت کامل و آماده لانچ)\n` +
+        `✅ **تکنولوژی‌ها:** React 19، Tailwind CSS، Node.js، دیتابیس اختصاصی، انیمیشن‌های سه‌بعدی و رابط کاربری کاملاً ریسپانسیو.\n` +
+        `✅ **امکانات پنل ادمین اختصاصی:**\n` +
+        `  • مدیریت کامل کاربران، سفارشات و تراکنش‌ها\n` +
+        `  • آنالیتیکس و نمودارهای زنده بازدید و فروش\n` +
+        `  • سیستم اعلان آنی و هماهنگی با ربات تلگرام\n` +
+        `  • امنیت پیشرفته و محافظت در برابر نفوذ\n\n` +
+        `💡 **برآورد هزینه:** طراحی پایه لندینگ‌پیج از **۴,۵۰۰,۰۰۰ تومان** و پورتال‌های کامل شرکتی/فروشگاهی همراه با پنل ادمین حدود **۶,۸۰۰,۰۰۰ تا ۹,۵۰۰,۰۰۰ تومان** می‌باشد.\n\n` +
+        `🚀 برای ثبت پروژه و دریافت مشاوره فوری، روی دکمه **«ثبت سفارش»** در پایین بزنید یا به آیدی تلگرام **@Lawat_kar** پیام دهید!`;
+    }
+
+    // 2. Video & Teaser Generation
+    if (
+      text.includes('ویدیو') ||
+      text.includes('تیزر') ||
+      text.includes('فیلم') ||
+      text.includes('انیمیشن') ||
+      text.includes('ریلز') ||
+      text.includes('موشن')
+    ) {
+      return `🎬 **تولید ویدیو و تیزرهای تبلیغاتی 4K با هوش مصنوعی:**\n\n` +
+        `✨ **خدمات ویدیویی تکویکس شامل:**\n` +
+        `  • نگارش سناریو و استوری‌بورد تبلیغاتی پرکشش و استاندارد\n` +
+        `  • رندر کاراکترها و صحنه‌های فوق‌واقع‌گرایانه با کیفیت 4K\n` +
+        `  • گویندگی و نریشن طبیعی با لهجه‌های مختلف فارسی و بین‌المللی\n` +
+        `  • موسیقی متن و افکت‌های صوتی بدون کپی‌رایت مناسب اینستاگرام و یوتیوب\n\n` +
+        `⏱ **زمان تحویل:** ۱ الی ۲ روز کاری\n` +
+        `💰 **هزینه:** از ۲,۸۰۰,۰۰۰ تومان بسته به مدت‌زمان تیزر\n\n` +
+        `📌 برای شروع ساخت تیزر، ایده یا محصول خود را بفرمایید یا از طریق دکمه ثبت سفارش اقدام کنید.`;
+    }
+
+    // 3. Telegram Bot Development
+    if (
+      text.includes('ربات') ||
+      text.includes('بات') ||
+      text.includes('تلگرام') ||
+      text.includes('bot') ||
+      text.includes('telegram')
+    ) {
+      return `🤖 **طراحی و برنامه‌نویسی ربات‌های هوشمند تلگرام در تکویکس:**\n\n` +
+        `🔹 **قابلیت‌های ربات‌های تکویکس:**\n` +
+        `  • پاسخگویی ۲۴ ساعته با هسته هوش مصنوعی Gemini و GPT\n` +
+        `  • سیستم فروشگاهی با سبد خرید و اتصال به درگاه پرداخت آنلاین\n` +
+        `  • ارسال نوتیفیکیشن‌های آنی همراه با دکمه ورود مستقیم به پی‌وی مشتری\n` +
+        `  • پنل مدیریت تحت وب یا درون تلگرامی جهت گزارش‌گیری\n\n` +
+        `⏱ **زمان تحویل:** ۳ الی ۶ روز کاری\n` +
+        `🚀 برای سفارش ربات اختصاصی کسب‌وکارتان، دکمه «ثبت سفارش» را بزنید یا به تلگرام **@Lawat_kar** پیام دهید.`;
+    }
+
+    // 4. Image, Graphic & Logo Creation
+    if (
+      text.includes('تصویر') ||
+      text.includes('عکس') ||
+      text.includes('لوگو') ||
+      text.includes('گرافیک') ||
+      text.includes('طراحی') ||
+      text.includes('بنر') ||
+      text.includes('پوستر')
+    ) {
+      return `🎨 **خلق تصاویر هنری، لوگو و هویت بصری هوش مصنوعی:**\n\n` +
+        `🔹 **خدمات گرافیک تکویکس:**\n` +
+        `  • خلق آرت‌ورک‌های فوق‌العاده با رزولوشن 4K و 8K\n` +
+        `  • طراحی لوگو و نماد برند با استایل‌های مدرن و مینیمال ۳ بعدی\n` +
+        `  • طراحی کاور موزیک، بنر تبلیغاتی، پوستر و پست‌های اینستاگرام\n` +
+        `  • تحویل فایل‌ها بدون واترمارک همراه با ادیت نهایی\n\n` +
+        `⏱ **زمان تحویل:** چند ساعت تا ۲۴ ساعت\n` +
+        `✨ آماده ثبت سفارش شما هستیم!`;
+    }
+
+    // 5. Music, Voice, Narration & Dubbing
+    if (
+      text.includes('موزیک') ||
+      text.includes('آهنگ') ||
+      text.includes('صدا') ||
+      text.includes('دوبله') ||
+      text.includes('نریشن') ||
+      text.includes('خواننده') ||
+      text.includes('ترانه')
+    ) {
+      return `🎵 **آهنگسازی، ترانه‌سرایی، نریشن و شبیه‌سازی صدا با هوش مصنوعی:**\n\n` +
+        `🔹 **امکانات بخش صوت و موسیقی تکویکس:**\n` +
+        `  • ساخت موزیک با کلام در سبک‌های پاپ، راک، رپ، سنتی و الکترونیک\n` +
+        `  • دوبله و نریشن فوق‌طبیعی متن‌ها و کتاب‌های صوتی با لحن احساسی یا حماسی\n` +
+        `  • میکس و مسترینگ حرفه‌ای با بالاترین بیت‌ریت صوتی\n` +
+        `  • حق مالکیت ۱۰۰٪ تجاری برای نشر در تمام پلتفرم‌ها\n\n` +
+        `🎧 برای شنیدن نمونه‌کارها یا سفارش موزیک اختصاصی، کافیست پیام دهید!`;
+    }
+
+    // 6. Pricing & General Inquiries
+    if (
+      text.includes('قیمت') ||
+      text.includes('هزینه') ||
+      text.includes('تعرفه') ||
+      text.includes('چقدر') ||
+      text.includes('سفارش')
+    ) {
+      return `💎 **لیست تعرفه‌های تخمینی خدمات تکویکس:**\n\n` +
+        `• 🌐 **طراحی وب‌سایت مدرن:** از ۴,۵۰۰,۰۰۰ تومان\n` +
+        `• 🎬 **تولید تیزر و ویدیوی هوش مصنوعی:** از ۲,۸۰۰,۰۰۰ تومان\n` +
+        `• 🤖 **ساخت ربات تلگرام پیشرفته:** از ۳,۵۰۰,۰۰۰ تومان\n` +
+        `• 🎨 **خلق تصاویر و بسته گرافیکی 4K:** از ۱,۲۰۰,۰۰۰ تومان\n` +
+        `• 🎵 **آهنگسازی و نریشن صوتی:** از ۱,۵۰۰,۰۰۰ تومان\n\n` +
+        `🎁 **توجه:** در ایونت افتتاحیه تکویکس، سفارشات واجد شرایط با تخفیف ویژه و هدایای اختصاصی ثبت می‌شوند.\n\n` +
+        `همین حالا می‌توانید فرم «ثبت سفارش» را لمس کنید یا مستقیماً به تلگرام **@Lawat_kar** پیام دهید.`;
+    }
+
+    // Default High-Grade Response
+    return `سلام دوست گرامی! من دستیار هوش مصنوعی **تکویکس (Tekvix AI)** هستم ✨🤖\n\n` +
+      `سوالی که پرسیدید («${userMessage}») با دقت بررسی شد.\n\n` +
+      `تیم مهندسی تکویکس آماده است تا هر ایده‌ای از **طراحی وب‌سایت مدرن**، **ساخت تیزر ویدیویی 4K**، **توسعه ربات‌های تلگرام** تا **تولید تصاویر و موزیک اختصاصی** را با بالاترین کیفیت برای شما پیاده‌سازی کند.\n\n` +
+      `📌 **چطور شروع کنیم؟**\n` +
+      `۱. با زدن دکمه **«ثبت سفارش»** در زیر، پروژه خود را در کمتر از ۱ دقیقه ثبت کنید.\n` +
+      `۲. یا برای مشاوره صوتی/متنی مستقیم با مهندسین ما، به آیدی تلگرام **@Lawat_kar** پیام دهید.`;
+  }
+
+
 async function handleApi(request: Request, env: Env): Promise<Response | null> {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -648,6 +797,63 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     });
   }
 
+
+  if (path === '/api/gemini/assistant' && method === 'POST') {
+    const limited = rateLimit(request, 'gemini-assistant', 12, 15 * 60 * 1000);
+    if (limited) return limited;
+    const body = await readJson(request);
+    const message = cleanText(body?.message, 6000);
+    if (!message) return json({ success: false, error: 'پیام نامعتبر است.' }, 400);
+
+    const fallback = () => json({
+      text: generateTekvixFallbackResponse(message),
+      success: true,
+      isFallback: true,
+    });
+
+    const apiKey = env.GEMINI_API_KEY?.trim();
+    if (!apiKey) return fallback();
+
+    const history = Array.isArray(body?.history)
+      ? body.history.slice(-6).flatMap((item: unknown) => {
+          if (!item || typeof item !== 'object') return [];
+          const entry = item as Record<string, unknown>;
+          if (entry.role !== 'user' && entry.role !== 'model') return [];
+          const text = cleanText(entry.text ?? entry.content, 6000);
+          return text ? [{ role: entry.role, parts: [{ text }] }] : [];
+        })
+      : [];
+    const contents = [...history, { role: 'user', parts: [{ text: message }] }];
+
+    try {
+      const response = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=' + encodeURIComponent(apiKey),
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            contents,
+            systemInstruction: { parts: [{ text: TEKVIX_GEMINI_SYSTEM_INSTRUCTION }] },
+            generationConfig: { temperature: 0.7 },
+          }),
+        },
+      );
+      const data = await response.json().catch(() => null) as {
+        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      } | null;
+      const generatedText = (data?.candidates?.[0]?.content?.parts || [])
+        .map((part) => typeof part.text === 'string' ? part.text : '')
+        .filter(Boolean)
+        .join('\n')
+        .trim();
+      if (response.ok && generatedText) return json({ text: generatedText, success: true });
+
+      console.error('[TEKVIX] Gemini generation failed with status', response.status);
+      return fallback();
+    } catch {
+      return fallback();
+    }
+  }
 
   if (path === '/api/admin/check-session' && method === 'GET') {
     return json({ success: true, authenticated: await isAdminRequest(request, env) });
@@ -885,7 +1091,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     }
   }
 
-  if (path === '/api/telegram/test-bot' && method === 'POST') {
+  if (path === '/api/telegram/test-bot' && (method === 'POST' || method === 'GET')) {
     const authError = await requireAdmin(request, env);
     if (authError) return authError;
     const token = env.TELEGRAM_BOT_TOKEN?.trim();
