@@ -612,6 +612,21 @@ async function buildAdminStats(env: Env) {
   };
 }
 
+
+async function getOpeningEvent(env: Env): Promise<Record<string, unknown>> {
+  const defaults = defaultOpeningConfig();
+  const response = await databaseRequest(env, 'opening_event_config?select=config&singleton_id=eq.default');
+  if (!response.ok) throw new Error('Unable to read opening event');
+  const rows = await response.json() as Array<{ config?: unknown }>;
+  const candidate = rows?.[0]?.config;
+  const config = candidate && typeof candidate === 'object' && !Array.isArray(candidate) && Object.keys(candidate as object).length
+    ? { ...defaults, ...(candidate as Record<string, unknown>) } : defaults;
+  const now = Date.now();
+  const start = Date.parse(String(config.startDate || ''));
+  const end = Date.parse(String(config.endDate || ''));
+  return { config, isCurrentlyOpen: config.isActive === true && Number.isFinite(start) && Number.isFinite(end) && now >= start && now <= end };
+}
+
 async function handleApi(request: Request, env: Env): Promise<Response | null> {
   const url = new URL(request.url);
   const path = url.pathname;
