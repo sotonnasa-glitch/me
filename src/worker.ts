@@ -887,6 +887,78 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     }
   }
 
+
+  const orderDetailMatch = path.match(/^\/api\/orders\/([^/]+)$/);
+  if (orderDetailMatch && method === 'GET') {
+    const authError = await requireAdmin(request, env);
+    if (authError) return authError;
+    let id = '';
+    try { id = decodeURIComponent(orderDetailMatch[1]); } catch { return json({ success: false, error: 'شناسه سفارش معتبر نیست.' }, 400); }
+    try {
+      const rows = await readRows<StoredOrder>(env, 'orders?select=*&id=eq.' + encodeURIComponent(id) + '&limit=1');
+      if (!rows[0]) return json({ success: false, error: 'سفارش یافت نشد.' }, 404);
+      return json({ success: true, order: storedOrderToClient(rows[0]) });
+    } catch {
+      return json({ success: false, error: 'خطا در دریافت سفارش.' }, 502);
+    }
+  }
+
+  if (orderDetailMatch && method === 'PATCH') {
+    const authError = await requireAdmin(request, env);
+    if (authError) return authError;
+    const body = await readJson(request);
+    if (!body) return json({ success: false, error: 'اطلاعات ویرایش معتبر نیست.' }, 400);
+    let id = '';
+    try { id = decodeURIComponent(orderDetailMatch[1]); } catch { return json({ success: false, error: 'شناسه سفارش معتبر نیست.' }, 400); }
+    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (body.status !== undefined) {
+      if (!['new', 'in_progress', 'completed', 'cancelled'].includes(String(body.status))) return json({ success: false, error: 'وضعیت سفارش معتبر نیست.' }, 400);
+      updates.status = body.status;
+    }
+    const fields: Array<[string, string, number]> = [
+      ['adminNotes', 'admin_notes', 2000],
+      ['fullName', 'full_name', 100],
+      ['telegramOrPhone', 'telegram_or_phone', 100],
+      ['serviceId', 'service_id', 80],
+      ['serviceTitle', 'service_title', 120],
+      ['message', 'message', 2000],
+      ['priceQuoted', 'price_quoted', 80],
+      ['promoEventName', 'promo_event_name', 150],
+      ['userEmail', 'user_email', 120],
+    ];
+    for (const [from, to, max] of fields) {
+      if (body[from] !== undefined) updates[to] = cleanText(body[from], max);
+    }
+    if (body.isPromoEvent !== undefined) updates.is_promo_event = body.isPromoEvent === true;
+    if (Object.keys(updates).length === 1) return json({ success: false, error: 'هیچ فیلد قابل ویرایشی ارسال نشده است.' }, 400);
+    try {
+      const response = await databaseRequest(env, 'orders?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH', body: updates, prefer: 'return=representation',
+      });
+      if (!response.ok) throw new Error('Update failed');
+      const rows = await response.json() as StoredOrder[];
+      if (!rows[0]) return json({ success: false, error: 'سفارش یافت نشد.' }, 404);
+      return json({ success: true, order: storedOrderToClient(rows[0]) });
+    } catch {
+      return json({ success: false, error: 'خطا در به‌روزرسانی سفارش.' }, 502);
+    }
+  }
+
+  if (orderDetailMatch && method === 'DELETE') {
+    const authError = await requireAdmin(request, env);
+    if (authError) return authError;
+    let id = '';
+    try { id = decodeURIComponent(orderDetailMatch[1]); } catch { return json({ success: false, error: 'شناسه سفارش معتبر نیست.' }, 400); }
+    try {
+      const response = await databaseRequest(env, 'orders?id=eq.' + encodeURIComponent(id), { method: 'DELETE', prefer: 'return=representation' });
+      if (!response.ok) throw new Error('Delete failed');
+      const rows = await response.json() as unknown[];
+      return json({ success: rows.length > 0 });
+    } catch {
+      return json({ success: false, error: 'خطا در حذف سفارش.' }, 502);
+    }
+  }
+
   if (path === '/api/telegram/send-order' && method === 'POST') {
     const limited = rateLimit(request, 'telegram-order', 8, 15 * 60 * 1000);
     if (limited) return limited;
