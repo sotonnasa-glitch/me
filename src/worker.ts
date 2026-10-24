@@ -759,6 +759,83 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     }
   }
 
+
+  if (path === '/api/users' && method === 'GET') {
+    const authError = await requireAdmin(request, env);
+    if (authError) return authError;
+    try {
+      const rows = await readRows<Record<string, unknown>>(env, 'user_profiles?select=*&order=created_at.desc&limit=5000');
+      const users = rows.map((row) => ({
+        id: String(row.id || ''),
+        name: String(row.name || ''),
+        email: String(row.email || ''),
+        phone: String(row.phone || ''),
+        telegram: String(row.telegram || ''),
+        avatar: String(row.avatar || ''),
+        bio: String(row.bio || ''),
+        provider: String(row.provider || 'email'),
+        role: row.role === 'admin' ? 'admin' : 'client',
+        joinedAt: String(row.created_at || ''),
+        lastLoginAt: String(row.last_login_at || ''),
+      }));
+      return json({ success: true, users, count: users.length });
+    } catch {
+      return json({ success: false, error: 'خطا در دریافت کاربران.' }, 502);
+    }
+  }
+
+  if (path === '/api/users' && method === 'POST') {
+    const limited = rateLimit(request, 'user-profile', 20, 15 * 60 * 1000);
+    if (limited) return limited;
+    const body = await readJson(request);
+    const id = cleanSingleLine(body?.id, 100);
+    const name = cleanSingleLine(body?.name, 100);
+    const email = cleanSingleLine(body?.email, 160).toLowerCase();
+    if (!id || !name || !email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+      return json({ success: false, error: 'شناسه، نام و ایمیل معتبر الزامی هستند.' }, 400);
+    }
+    try {
+      const existing = await readRows<Record<string, unknown>>(env, 'user_profiles?select=id,role& id=eq.' + encodeURIComponent(id) + '&limit=1');
+      if (existing[0]?.role === 'admin') {
+        return json({ success: false, error: 'تغییر حساب مدیریت از این مسیر مجاز نیست.' }, 403);
+      }
+      const now = new Date().toISOString();
+      const row = {
+        id,
+        auth_user_id: null,
+        name,
+        email,
+        phone: cleanSingleLine(body?.phone, 40),
+        telegram: cleanSingleLine(body?.telegram, 60),
+        avatar: cleanSingleLine(body?.avatar, 500),
+        bio: cleanText(body?.bio, 500),
+        provider: body?.provider === 'google' ? 'google' : 'email',
+        role: 'user',
+        updated_at: now,
+        last_login_at: now,
+      };
+      const response = await databaseRequest(env, 'user_profiles?on_conflict=id', {
+        method: 'POST',
+        body: row,
+        prefer: 'resolution=merge-duplicates,return=representation',
+      });
+      if (!response.ok) throw new Error('Profile write failed');
+      const rows = await response.json() as Record<string, unknown>[];
+      const saved = rows[0] || row;
+      return json({
+        success: true,
+        user: {
+          id: saved.id, name: saved.name, email: saved.email, phone: saved.phone,
+          telegram: saved.telegram, avatar: saved.avatar, bio: saved.bio,
+          provider: saved.provider, role: saved.role === 'admin' ? 'admin' : 'client',
+          joinedAt: saved.created_at || now, lastLoginAt: saved.last_login_at || now,
+        },
+      });
+    } catch {
+      return json({ success: false, error: 'خطا در ثبت اطلاعات کاربر.' }, 502);
+    }
+  }
+
   if (path === '/api/orders' && method === 'GET') {
     const authError = await requireAdmin(request, env);
     if (authError) return authError;
