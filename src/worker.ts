@@ -821,14 +821,14 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       });
       if (!response.ok) throw new Error('Profile write failed');
       const rows = await response.json() as Record<string, unknown>[];
-      const saved = rows[0] || row;
+      const saved = (rows[0] || row) as Record<string, unknown>;
       return json({
         success: true,
         user: {
           id: saved.id, name: saved.name, email: saved.email, phone: saved.phone,
           telegram: saved.telegram, avatar: saved.avatar, bio: saved.bio,
           provider: saved.provider, role: saved.role === 'admin' ? 'admin' : 'client',
-          joinedAt: saved.created_at || now, lastLoginAt: saved.last_login_at || now,
+          joinedAt: String(saved.created_at || now), lastLoginAt: String(saved.last_login_at || now),
         },
       });
     } catch {
