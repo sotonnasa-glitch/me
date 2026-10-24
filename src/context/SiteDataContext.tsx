@@ -33,56 +33,7 @@ import {
   DEFAULT_CUSTOM_EVENTS,
 } from '../data/mockData';
 
-const INITIAL_ORDERS: OrderItem[] = [
-  {
-    id: 'ord-101',
-    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-    fullName: 'رضا کمالی',
-    telegramOrPhone: '@reza_kamali',
-    serviceId: 'ai-website',
-    serviceTitle: 'ساخت وب‌سایت با هوش مصنوعی',
-    message: 'نیاز به یک لندینگ پیج تاریک برای استارتاپ کریپتو با سرعت بالا و انیمیشن‌های شیک داریم.',
-    status: 'new',
-    priceQuoted: '۵,۸۰۰,۰۰۰ تومان',
-    adminNotes: 'استعلام تازه ثبت شده — آماده بررسی و انتقال به فاز ساخت'
-  },
-  {
-    id: 'ord-102',
-    createdAt: new Date(Date.now() - 3600000 * 6).toISOString(),
-    fullName: 'مریم حسینی',
-    telegramOrPhone: '09129876543',
-    serviceId: 'ai-video',
-    serviceTitle: 'تولید ویدیو با هوش مصنوعی',
-    message: 'تیزر معرفی ۳۰ ثانیه‌ای برای پیج اینستاگرام محصولات زیبایی.',
-    status: 'new',
-    priceQuoted: '۳,۴۰۰,۰۰۰ تومان',
-    adminNotes: 'نیاز به هماهنگی سناریو در تلگرام'
-  },
-  {
-    id: 'ord-103',
-    createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-    fullName: 'سینا پارسا',
-    telegramOrPhone: '@sina_parsa_dev',
-    serviceId: 'telegram-bot',
-    serviceTitle: 'ساخت ربات تلگرام پیشرفته',
-    message: 'ربات فروشگاهی متصل به درگاه زرین‌پال و پنل مدیریت.',
-    status: 'in_progress',
-    priceQuoted: '۸,۵۰۰,۰۰۰ تومان',
-    adminNotes: 'فاز پیاده‌سازی وب‌هوک و اتصال به دیتابیس در حال اجراست'
-  },
-  {
-    id: 'ord-104',
-    createdAt: new Date(Date.now() - 3600000 * 48).toISOString(),
-    fullName: 'کیانوش ناصری',
-    telegramOrPhone: '@kian_naseri',
-    serviceId: 'image-creation',
-    serviceTitle: 'خلق تصاویر و طراحی گرافیکی',
-    message: '۱۰ تصویر سبک سایبرپانک برای کاور موزیک و بنر تبلیغاتی.',
-    status: 'completed',
-    priceQuoted: '۳,۲۰۰,۰۰۰ تومان',
-    adminNotes: 'فایل‌های نهایی با کیفیت 4K در تلگرام تحویل داده شد'
-  }
-];
+const INITIAL_ORDERS: OrderItem[] = [];
 
 const DEFAULT_TELEGRAM_SETTINGS: TelegramBotSettings = {
   botToken: '',
