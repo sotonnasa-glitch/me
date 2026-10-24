@@ -114,11 +114,17 @@ function supabaseReady(env: Env): boolean {
 }
 
 function supabaseHeaders(env: Env, prefer?: string): Headers {
+  const key = (env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
   const headers = new Headers({
-    // New Supabase sb_secret_* keys are opaque API keys, not JWT bearer tokens.
-    apikey: (env.SUPABASE_SERVICE_ROLE_KEY || '').trim(),
+    apikey: key,
     'content-type': 'application/json',
   });
+  // New sb_secret_* API keys must be sent via apikey only. Legacy service_role
+  // keys are JWTs and must also be the Authorization bearer token so PostgREST
+  // receives the service_role claim and bypasses RLS as intended.
+  if (key.startsWith('eyJ') && key.split('.').length === 3) {
+    headers.set('authorization', 'Bearer ' + key);
+  }
   if (prefer) headers.set('prefer', prefer);
   return headers;
 }
