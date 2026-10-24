@@ -323,7 +323,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     }
     // Public tracking accepts order IDs only; phone/Telegram searches can expose
     // another customer's order details.
-    if (!/^ORD-\\d{4,20}(?:-\\d{1,6})?$/i.test(query)) {
+    if (!/^ORD-\d{4,20}(?:-\d{1,6})?$/i.test(query)) {
       return json({ success: true, count: 0, orders: [] });
     }
     if (!supabaseReady(env)) return json({ success: false, error: 'سرویس رهگیری هنوز تنظیم نشده است.', orders: [] }, 503);
