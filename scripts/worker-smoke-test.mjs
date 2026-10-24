@@ -18,6 +18,13 @@ globalThis.fetch = async (input, init = {}) => {
   const url = new URL(rawUrl);
   const method = (init.method || 'GET').toUpperCase();
 
+  if (url.hostname === 'jwppdvxyeuqbdcljzybj.supabase.co') {
+    const headers = new Headers(init.headers);
+    assert.equal(headers.get('apikey'), 'eyJ.test.legacy-service-role');
+    assert.equal(headers.get('authorization'), 'Bearer eyJ.test.legacy-service-role',
+      'Legacy service_role JWT must be supplied as the bearer token.');
+  }
+
   if (url.hostname === 'jwppdvxyeuqbdcljzybj.supabase.co' && url.pathname === '/rest/v1/orders') {
     if (method === 'GET') {
       const idFilter = url.searchParams.get('id');
@@ -58,7 +65,7 @@ const env = {
     },
   },
   SUPABASE_URL: 'https://jwppdvxyeuqbdcljzybj.supabase.co',
-  SUPABASE_SERVICE_ROLE_KEY: 'test-secret-supabase-key',
+  SUPABASE_SERVICE_ROLE_KEY: 'eyJ.test.legacy-service-role',
   TELEGRAM_BOT_TOKEN: telegramToken,
   TELEGRAM_CHAT_ID: '123456',
 };
