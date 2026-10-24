@@ -56,7 +56,8 @@ globalThis.fetch = async (input, init = {}) => {
   }
 
   if (url.hostname === 'generativelanguage.googleapis.com' && url.pathname.endsWith(':generateContent')) {
-    assert.equal(url.searchParams.get('key'), geminiApiKey);
+    assert.equal(new Headers(init.headers).get('x-goog-api-key'), geminiApiKey);
+    assert.equal(url.search, '', 'Gemini API keys must not appear in request URLs.');
     geminiRequests.push(JSON.parse(init.body));
     return jsonResponse({ candidates: [{ content: { parts: [{ text: 'پاسخ آزمایشی Gemini' }] } }] });
   }
