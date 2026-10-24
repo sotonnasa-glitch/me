@@ -370,10 +370,29 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
   }
 
   if (path === '/api/telegram/status' && method === 'GET') {
-    return json({
-      success: true,
-      configured: Boolean(env.TELEGRAM_BOT_TOKEN?.trim() && env.TELEGRAM_CHAT_ID?.trim()),
-    });
+    const token = env.TELEGRAM_BOT_TOKEN?.trim();
+    if (!token) {
+      return json({ success: false, online: false, error: 'توکن ربات در تنظیمات سرور ثبت نشده است.', pollingActive: false }, 503);
+    }
+    try {
+      const response = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+      const data = await response.json().catch(() => null) as {
+        ok?: boolean;
+        result?: { id?: number; is_bot?: boolean; first_name?: string; username?: string };
+      } | null;
+      if (!response.ok || data?.ok !== true || !data.result) {
+        return json({ success: false, online: false, error: 'توکن ربات معتبر نیست یا تلگرام پاسخ موفق نداد.', pollingActive: false }, 502);
+      }
+      return json({
+        success: true,
+        online: true,
+        bot: data.result,
+        configured: Boolean(env.TELEGRAM_CHAT_ID?.trim()),
+        pollingActive: false,
+      });
+    } catch {
+      return json({ success: false, online: false, error: 'ارتباط با تلگرام برقرار نشد.', pollingActive: false }, 502);
+    }
   }
 
   if (path === '/api/analytics/event' && method === 'POST') {
