@@ -236,10 +236,33 @@ async function findOrInsertOrder(env: Env, row: OrderRow): Promise<OrderRow> {
   if (raced) return raced;
   throw new Error('Could not resolve concurrent order creation.');
 }
+async function resolveTelegramChatId(env: Env): Promise<string> {
+  const configured = env.TELEGRAM_CHAT_ID?.trim();
+  if (configured) return configured;
+  if (!supabaseReady(env)) return '';
+  try {
+    const response = await databaseRequest(
+      env,
+      'site_settings?select=value&setting_key=eq.telegram_chat_id&limit=1',
+    );
+    if (!response.ok) return '';
+    const rows = await response.json() as Array<{ value?: unknown }>;
+    const value = rows?.[0]?.value;
+    if (typeof value === 'string') return cleanSingleLine(value, 100);
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      return cleanSingleLine((value as Record<string, unknown>).chatId, 100);
+    }
+  } catch {
+    // A missing DB setting must never crash the Worker; sending will fail closed.
+  }
+  return '';
+}
+
 async function sendTelegram(env: Env, message: string): Promise<boolean> {
   const token = env.TELEGRAM_BOT_TOKEN?.trim();
-  const chatId = env.TELEGRAM_CHAT_ID?.trim();
-  if (!token || !chatId) return false;
+  if (!token) return false;
+  const chatId = await resolveTelegramChatId(env);
+  if (!chatId) return false;
 
   try {
     const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
@@ -792,7 +815,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       status: 'ok',
       service: 'tekvix-worker',
       supabaseConfigured: supabaseReady(env),
-      telegramConfigured: Boolean(env.TELEGRAM_BOT_TOKEN?.trim() && env.TELEGRAM_CHAT_ID?.trim()),
+      telegramConfigured: Boolean(env.TELEGRAM_BOT_TOKEN?.trim() && (env.TELEGRAM_CHAT_ID?.trim() || await resolveTelegramChatId(env))),
       serverTime: new Date().toISOString(),
     });
   }
@@ -1339,7 +1362,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
         success: true,
         online: true,
         bot: data.result,
-        configured: Boolean(env.TELEGRAM_CHAT_ID?.trim()),
+        configured: Boolean(await resolveTelegramChatId(env)),
         pollingActive: false,
       });
     } catch {
