@@ -84,7 +84,7 @@ try {
   assert.equal(healthData.supabaseConfigured, true);
   assert.equal(healthData.telegramConfigured, true);
 
-  const orderId = 'ORD-1700000000123-042';
+  const orderId = 'ORD-1700000000123-A1B2C3D4E5F60718293A4B5C6D7E8F90';
   const payload = {
     id: orderId,
     createdAt: '2020-01-01T00:00:00.000Z',
