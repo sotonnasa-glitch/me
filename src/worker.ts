@@ -1209,6 +1209,7 @@ export default {
       try {
         const apiResponse = await handleApi(request, env);
         if (apiResponse) return apiResponse;
+        return json({ success: false, error: 'مسیر API در نسخه Worker پیاده‌سازی نشده است.' }, 404);
       } catch {
         return json({ success: false, error: 'خطای داخلی سرویس. لطفاً دوباره تلاش کنید.' }, 500);
       }
