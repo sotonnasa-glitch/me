@@ -314,20 +314,34 @@ export const PortfolioSection: React.FC<PortfolioSectionProps> = ({ onOpenOrderM
                     {/* Cyber Neon Top Line */}
                     <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-purple-400 to-transparent group-hover:via-cyan-400 transition-colors" />
 
-                    {/* Header Row: Badge & Quick Eye Button */}
+                    {/* Header Row: Badge & Quick Actions */}
                     <div className="relative z-10 flex items-center justify-between">
                       <span className="text-xs font-bold px-3 py-1 rounded-full bg-black/70 border border-purple-400/40 text-purple-200 backdrop-blur-md shadow-sm">
                         {item.badge}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedProject(item)}
-                        className="w-8 h-8 rounded-xl bg-black/60 hover:bg-purple-600 text-white flex items-center justify-center backdrop-blur-md border border-white/10 transition-all cursor-pointer shadow-md"
-                        aria-label="مشاهده جزئیات"
-                        title="مشاهده جزئیات کامل"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {item.url && (
+                          <a
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-8 h-8 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/30 text-cyan-200 flex items-center justify-center backdrop-blur-md border border-cyan-400/30 transition-all cursor-pointer shadow-md"
+                            aria-label={`مشاهده نسخه زنده ${item.title}`}
+                            title="مشاهده نسخه زنده"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedProject(item)}
+                          className="w-8 h-8 rounded-xl bg-black/60 hover:bg-purple-600 text-white flex items-center justify-center backdrop-blur-md border border-white/10 transition-all cursor-pointer shadow-md"
+                          aria-label="مشاهده جزئیات"
+                          title="مشاهده جزئیات کامل"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
 
                     {/* Category Label and Main Title */}
@@ -475,7 +489,7 @@ export const PortfolioSection: React.FC<PortfolioSectionProps> = ({ onOpenOrderM
             )}
 
             {/* Action Buttons */}
-            <div className="relative z-10 flex items-center justify-between gap-3 pt-4 border-t border-white/10">
+            <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-white/10">
               <button
                 type="button"
                 onClick={() => setSelectedProject(null)}
@@ -483,6 +497,18 @@ export const PortfolioSection: React.FC<PortfolioSectionProps> = ({ onOpenOrderM
               >
                 بستن
               </button>
+
+              {selectedProject.url && (
+                <a
+                  href={selectedProject.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-200 border border-cyan-400/30 text-xs font-bold transition-colors flex items-center gap-2"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  <span>مشاهده نسخه زنده</span>
+                </a>
+              )}
 
               <button
                 type="button"
