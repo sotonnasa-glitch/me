@@ -803,7 +803,8 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       ? '۰ تومان (رایگان - جایزه افتتاحیه)'
       : targetService?.estimatedPrice || 'استعلامی';
 
-    const generatedOrderId = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+    const randomOrderToken = crypto.randomUUID().replace(/-/g, '').toUpperCase();
+    const generatedOrderId = `ORD-${Date.now()}-${randomOrderToken}`;
     const newOrder: OrderItem = {
       id: generatedOrderId,
       createdAt: new Date().toISOString(),
