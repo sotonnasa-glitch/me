@@ -850,10 +850,10 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
 
     try {
       const response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=' + encodeURIComponent(apiKey),
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent',
         {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
+          headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
           body: JSON.stringify({
             contents,
             systemInstruction: { parts: [{ text: TEKVIX_GEMINI_SYSTEM_INSTRUCTION }] },
