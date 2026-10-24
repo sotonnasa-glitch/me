@@ -99,12 +99,8 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
 
   // Merge context and server orders without duplicates
   const matchedFromContext = contextOrders.filter((o) => {
-    if (!cleanQuery) return false;
-    const matchId = normalizeDigits(o.id.toLowerCase()).includes(cleanQuery);
-    const contactClean = normalizeDigits((o.telegramOrPhone || '').toLowerCase()).replace(/^@/, '');
-    const matchContact = contactClean.includes(cleanQuery);
-    const matchName = normalizeDigits((o.fullName || '').toLowerCase()).includes(cleanQuery);
-    return matchId || matchContact || matchName;
+    if (!cleanQuery || !/^ord-/.test(cleanQuery)) return false;
+    return normalizeDigits(o.id.toLowerCase()) === cleanQuery;
   });
 
   const mergedOrderMap = new Map<string, OrderItem>();
