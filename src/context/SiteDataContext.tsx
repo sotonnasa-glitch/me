@@ -366,12 +366,22 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const parsed: PortfolioItem[] = JSON.parse(saved);
       if (!Array.isArray(parsed)) return DEFAULT_PORTFOLIO;
 
-      // One-time portfolio migration: add the new Hosion Motion showcase to existing browsers
-      // without replacing any portfolio entries already saved by the site owner.
+      // Keep saved portfolio content, but fill any newly introduced Hosion Motion fields.
       const newSample = DEFAULT_PORTFOLIO.find((item) => item.id === 'project-hosion-motion');
-      if (newSample && !parsed.some((item) => item?.id === newSample.id)) {
-        return [newSample, ...parsed];
+      if (!newSample) return parsed;
+
+      const existingIndex = parsed.findIndex((item) => item?.id === newSample.id);
+      if (existingIndex === -1) return [newSample, ...parsed];
+
+      const existingSample = parsed[existingIndex];
+      if (!existingSample.imageUrl || !existingSample.url) {
+        return parsed.map((item, index) =>
+          index === existingIndex
+            ? { ...item, url: item.url || newSample.url, imageUrl: item.imageUrl || newSample.imageUrl }
+            : item
+        );
       }
+
       return parsed;
     } catch {
       return DEFAULT_PORTFOLIO;
