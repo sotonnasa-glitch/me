@@ -308,6 +308,16 @@ export const PortfolioSection: React.FC<PortfolioSectionProps> = ({ onOpenOrderM
                       item.gradientTheme || 'from-purple-900/60 via-indigo-900/40 to-black'
                     } p-5 flex flex-col justify-between relative overflow-hidden border-b border-purple-900/30`}
                   >
+                    {item.imageUrl && (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.title}
+                        loading="lazy"
+                        decoding="async"
+                        className="absolute inset-0 h-full w-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-105"
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#060312]/95 via-[#07051a]/30 to-black/10 pointer-events-none" />
                     {/* Animated Cyber Grid Overlay */}
                     <div className="absolute inset-0 bg-cosmic-grid opacity-30 pointer-events-none" />
 
@@ -453,6 +463,16 @@ export const PortfolioSection: React.FC<PortfolioSectionProps> = ({ onOpenOrderM
                 {selectedProject.title}
               </h3>
             </div>
+
+            {selectedProject.imageUrl && (
+              <img
+                src={selectedProject.imageUrl}
+                alt={selectedProject.title}
+                loading="lazy"
+                decoding="async"
+                className="relative z-10 mb-6 w-full max-h-64 rounded-2xl object-cover border border-purple-500/30 shadow-xl"
+              />
+            )}
 
             {/* Description */}
             <p className="relative z-10 text-sm text-gray-200 leading-relaxed mb-6">
