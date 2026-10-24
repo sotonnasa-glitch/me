@@ -364,7 +364,8 @@ export const PORTFOLIO_ITEMS: PortfolioItem[] = [
       { label: 'رابط کاربری', value: 'Motion UI' }
     ],
     tags: ['HTML', 'CSS', 'JavaScript', 'Motion UI', 'Responsive'],
-    url: 'https://soton-motion.pages.dev'
+    url: 'https://soton-motion.pages.dev',
+    imageUrl: '/assets/portfolio/hosion-motion.webp'
   }
 ];
 
