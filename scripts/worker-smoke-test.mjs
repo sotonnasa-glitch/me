@@ -216,7 +216,7 @@ try {
 
   const cookie = await adminCookie();
   const telegramTestGet = await worker.fetch(request('/api/telegram/test-bot', {
-    headers: { cookie },
+    headers: { cookie: 'tekvix_admin=' + cookie },
   }), env);
   const telegramTestGetData = await readJson(telegramTestGet);
   assert.equal(telegramTestGet.status, 200);
