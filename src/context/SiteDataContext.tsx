@@ -190,6 +190,34 @@ const SiteDataContext = createContext<SiteDataContextType | undefined>(undefined
 
 const LOCAL_STORAGE_KEY = 'tekvix_site_data_v4';
 
+function usePersistCmsResource(
+  authenticated: boolean,
+  ready: boolean,
+  resource: string,
+  content: unknown,
+): void {
+  useEffect(() => {
+    if (!authenticated || !ready) return;
+    const timer = window.setTimeout(() => {
+      void fetch('/api/admin/content/' + resource, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ content }),
+      }).then(async (response) => {
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          console.warn('TEKVIX CMS save failed for', resource, data.error || response.status);
+        }
+      }).catch((error) => console.warn('TEKVIX CMS sync failed for', resource, error));
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [authenticated, ready, resource, content]);
+}
+
 export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [brandInfo, setBrandInfo] = useState<BrandInfo>(() => {
     try {
@@ -1373,6 +1401,50 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(false);
+  const [cmsPersistenceReady, setCmsPersistenceReady] = useState(false);
+  const adminAuthRef = React.useRef(isAdminAuthenticated);
+  adminAuthRef.current = isAdminAuthenticated;
+
+  // Public visitors receive saved site content; unpublished blog drafts are filtered by the Worker.
+  useEffect(() => {
+    let isMounted = true;
+    const loadPublicContent = async () => {
+      try {
+        const response = await fetch('/api/site-content', {
+          headers: { Accept: 'application/json' },
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!isMounted || adminAuthRef.current || !response.ok || !data.success || !data.content) return;
+        const content = data.content as Record<string, unknown>;
+        if (content.brandInfo && typeof content.brandInfo === 'object' && !Array.isArray(content.brandInfo)) {
+          setBrandInfo((previous) => ({ ...previous, ...(content.brandInfo as Partial<BrandInfo>) }));
+        }
+        if (Array.isArray(content.services)) setServices(content.services as Service[]);
+        if (Array.isArray(content.portfolio)) setPortfolio(content.portfolio as PortfolioItem[]);
+        if (Array.isArray(content.testimonials)) setTestimonials(content.testimonials as TestimonialItem[]);
+        if (Array.isArray(content.faqs)) setFaqs(content.faqs as FAQItem[]);
+        if (Array.isArray(content.blogPosts)) setBlogPosts(content.blogPosts as BlogPost[]);
+        if (Array.isArray(content.sectionsConfig)) setSectionsConfig(content.sectionsConfig as SiteSectionConfig[]);
+        if (Array.isArray(content.socialLinks)) setSocialLinks(content.socialLinks as SocialMediaLink[]);
+        if (Array.isArray(content.events)) setEvents(content.events as CustomEventCampaign[]);
+      } catch {
+        // Local/default content remains available when the server is offline.
+      }
+    };
+    void loadPublicContent();
+    return () => { isMounted = false; };
+  }, []);
+
+  usePersistCmsResource(isAdminAuthenticated, cmsPersistenceReady, 'brandInfo', brandInfo);
+  usePersistCmsResource(isAdminAuthenticated, cmsPersistenceReady, 'services', services);
+  usePersistCmsResource(isAdminAuthenticated, cmsPersistenceReady, 'portfolio', portfolio);
+  usePersistCmsResource(isAdminAuthenticated, cmsPersistenceReady, 'testimonials', testimonials);
+  usePersistCmsResource(isAdminAuthenticated, cmsPersistenceReady, 'faqs', faqs);
+  usePersistCmsResource(isAdminAuthenticated, cmsPersistenceReady, 'blogPosts', blogPosts);
+  usePersistCmsResource(isAdminAuthenticated, cmsPersistenceReady, 'sectionsConfig', sectionsConfig);
+  usePersistCmsResource(isAdminAuthenticated, cmsPersistenceReady, 'socialLinks', socialLinks);
+  usePersistCmsResource(isAdminAuthenticated, cmsPersistenceReady, 'events', events);
+
 
   // Verify authorization only with the HttpOnly server session cookie.
   useEffect(() => {
@@ -1397,10 +1469,41 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return () => { isMounted = false; };
   }, []);
 
-  // Once the server confirms an admin session, load authoritative orders from Supabase.
+  // Once the server confirms an admin session, load authoritative CMS content and orders from Supabase.
   useEffect(() => {
-    if (!isAdminAuthenticated) return;
+    if (!isAdminAuthenticated) {
+      setCmsPersistenceReady(false);
+      return;
+    }
     let isMounted = true;
+    setCmsPersistenceReady(false);
+
+    const loadServerContent = async () => {
+      try {
+        const response = await fetch('/api/admin/content', {
+          credentials: 'include',
+          headers: { Accept: 'application/json' },
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!isMounted || !response.ok || !data.success || !data.content) return;
+        const content = data.content as Record<string, unknown>;
+        if (content.brandInfo && typeof content.brandInfo === 'object' && !Array.isArray(content.brandInfo)) {
+          setBrandInfo((previous) => ({ ...previous, ...(content.brandInfo as Partial<BrandInfo>) }));
+        }
+        if (Array.isArray(content.services)) setServices(content.services as Service[]);
+        if (Array.isArray(content.portfolio)) setPortfolio(content.portfolio as PortfolioItem[]);
+        if (Array.isArray(content.testimonials)) setTestimonials(content.testimonials as TestimonialItem[]);
+        if (Array.isArray(content.faqs)) setFaqs(content.faqs as FAQItem[]);
+        if (Array.isArray(content.blogPosts)) setBlogPosts(content.blogPosts as BlogPost[]);
+        if (Array.isArray(content.sectionsConfig)) setSectionsConfig(content.sectionsConfig as SiteSectionConfig[]);
+        if (Array.isArray(content.socialLinks)) setSocialLinks(content.socialLinks as SocialMediaLink[]);
+        if (Array.isArray(content.events)) setEvents(content.events as CustomEventCampaign[]);
+        setCmsPersistenceReady(true);
+      } catch {
+        // Do not overwrite persisted content if the authoritative CMS fetch fails.
+      }
+    };
+
     const loadServerOrders = async () => {
       try {
         const response = await fetch('/api/orders', {
@@ -1424,6 +1527,7 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         // Keep the existing local view if the server cannot be reached.
       }
     };
+    void loadServerContent();
     void loadServerOrders();
     return () => { isMounted = false; };
   }, [isAdminAuthenticated]);
