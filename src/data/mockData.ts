@@ -351,6 +351,20 @@ export const PORTFOLIO_ITEMS: PortfolioItem[] = [
       { label: 'تعداد محتوا', value: '۳۰ پست و ریلز' }
     ],
     tags: ['Instagram', 'Viral Reels', 'Copywriting', 'Canva Pro']
+  },
+  {
+    id: 'project-hosion-motion',
+    title: 'Hosion Motion | لندینگ‌پیج موشن تعاملی',
+    description: 'طراحی و پیاده‌سازی یک لندینگ‌پیج مدرن با پس‌زمینه سینمایی، انیمیشن ورود، افکت‌های اسکرول، تعاملات هاور و چیدمان واکنش‌گرا.',
+    serviceCategory: 'وب‌سایت و کدنویسی',
+    badge: 'لندینگ‌پیج تعاملی',
+    gradientTheme: 'from-blue-900/70 via-indigo-900/50 to-black',
+    stats: [
+      { label: 'نوع پروژه', value: 'لندینگ‌پیج' },
+      { label: 'رابط کاربری', value: 'Motion UI' }
+    ],
+    tags: ['HTML', 'CSS', 'JavaScript', 'Motion UI', 'Responsive'],
+    url: 'https://soton-motion.pages.dev'
   }
 ];
 
