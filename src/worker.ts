@@ -642,6 +642,186 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     });
   }
 
+
+  if (path === '/api/admin/check-session' && method === 'GET') {
+    return json({ success: true, authenticated: await isAdminRequest(request, env) });
+  }
+
+  if (path === '/api/admin/password-status' && method === 'GET') {
+    try {
+      const record = await getAdminPasswordRecord(env);
+      return json({
+        success: true,
+        isProtected: record?.scheme === 'pbkdf2-sha256' || Boolean(env.TEKVIX_ADMIN_PASSWORD?.trim()),
+        authenticated: await isAdminRequest(request, env),
+      });
+    } catch {
+      return json({ success: false, error: 'خطا در بررسی وضعیت رمز مدیریت.' }, 502);
+    }
+  }
+
+  if (path === '/api/admin/verify-password' && method === 'POST') {
+    const limited = rateLimit(request, 'admin-login', 8, 15 * 60 * 1000);
+    if (limited) return limited;
+    if (!isSameOrigin(request)) return json({ success: false, valid: false, message: 'درخواست از مبدأ معتبر نیست.' }, 403);
+    const body = await readJson(request);
+    const password = typeof body?.password === 'string' ? body.password : '';
+    if (!password) return json({ success: false, valid: false, message: 'لطفاً رمز عبور را وارد کنید.' }, 400);
+    try {
+      const record = await getAdminPasswordRecord(env);
+      if (record?.scheme !== 'pbkdf2-sha256' && !env.TEKVIX_ADMIN_PASSWORD?.trim()) {
+        return json({ success: false, valid: false, message: 'رمز مدیریت هنوز تنظیم نشده است؛ ابتدا Secret با نام TEKVIX_ADMIN_PASSWORD را در Cloudflare اضافه کنید.' }, 503);
+      }
+      if (!(await verifyAdminPassword(env, password))) {
+        return json({ success: false, valid: false, message: 'رمز عبور وارد شده نادرست است.' }, 401);
+      }
+      const token = await createAdminCookie(env);
+      return new Response(JSON.stringify({ success: true, valid: true, message: 'ورود با موفقیت انجام شد.' }), {
+        status: 200,
+        headers: {
+          'content-type': 'application/json; charset=utf-8',
+          'cache-control': 'no-store',
+          'set-cookie': sessionCookie(token, ADMIN_SESSION_TTL_SECONDS),
+          'x-content-type-options': 'nosniff',
+        },
+      });
+    } catch {
+      return json({ success: false, valid: false, message: 'خطا در بررسی رمز مدیریت.' }, 502);
+    }
+  }
+
+  if (path === '/api/admin/logout' && method === 'POST') {
+    if (!isSameOrigin(request)) return json({ success: false, error: 'درخواست از مبدأ معتبر نیست.' }, 403);
+    return new Response(JSON.stringify({ success: true, message: 'خروج از پنل مدیریت با موفقیت انجام شد.' }), {
+      status: 200,
+      headers: {
+        'content-type': 'application/json; charset=utf-8',
+        'cache-control': 'no-store',
+        'set-cookie': sessionCookie('', 0),
+        'x-content-type-options': 'nosniff',
+      },
+    });
+  }
+
+  if (path === '/api/admin/change-password' && method === 'POST') {
+    const authError = await requireAdmin(request, env);
+    if (authError) return authError;
+    const body = await readJson(request);
+    const oldPassword = typeof body?.oldPassword === 'string' ? body.oldPassword : '';
+    const newPassword = typeof body?.newPassword === 'string' ? normalizeAdminPassword(body.newPassword) : '';
+    if (!oldPassword || !newPassword) return json({ success: false, message: 'رمز عبور فعلی و جدید الزامی هستند.' }, 400);
+    if (newPassword.length < 8 || newPassword.length > 256) return json({ success: false, message: 'رمز عبور جدید باید حداقل ۸ کاراکتر باشد.' }, 400);
+    try {
+      if (!(await verifyAdminPassword(env, oldPassword))) return json({ success: false, message: 'رمز عبور فعلی نادرست است.' }, 400);
+      await saveAdminPasswordRecord(env, newPassword);
+      return json({ success: true, message: 'رمز عبور پنل مدیریت با موفقیت تغییر یافت.' });
+    } catch {
+      return json({ success: false, message: 'خطا در ذخیره رمز مدیریت؛ تنظیمات پایگاه داده را بررسی کنید.' }, 502);
+    }
+  }
+
+  if (path === '/api/admin/stats' && method === 'GET') {
+    const authError = await requireAdmin(request, env);
+    if (authError) return authError;
+    try {
+      const stats = await buildAdminStats(env);
+      return json({ success: true, stats, timestamp: new Date().toISOString() });
+    } catch {
+      return json({ success: false, error: 'خطا در دریافت آمار پنل مدیریت.' }, 502);
+    }
+  }
+
+  if (path === '/api/site/stats' && method === 'GET') {
+    try {
+      const [orders, events] = await Promise.all([
+        readRows<StoredOrder>(env, 'orders?select=id,status,created_at&order=created_at.desc&limit=5000'),
+        readRows<{ id: string; event_type: string; created_at: string }>(env, 'analytics_events?select=id,event_type,created_at&limit=5000'),
+      ]);
+      const activeOrders = orders.filter((o) => o.status === 'new' || o.status === 'in_progress').length;
+      const completedOrders = orders.filter((o) => o.status === 'completed').length;
+      return json({
+        success: true,
+        stats: {
+          activeOnlineUsers: 0,
+          totalCompletedProjects: completedOrders,
+          totalSatisfiedClients: completedOrders,
+          aiModelsActive: 6,
+          platformUptime: '—',
+          averageResponseTime: '—',
+          liveOrdersCount: activeOrders,
+          totalViews: events.filter((e) => e.event_type === 'page_view').length,
+          lastUpdated: new Date().toISOString(),
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch {
+      return json({ success: false, error: 'خطا در دریافت آمار وب‌سایت.' }, 502);
+    }
+  }
+
+  if (path === '/api/orders' && method === 'GET') {
+    const authError = await requireAdmin(request, env);
+    if (authError) return authError;
+    try {
+      const rows = await readRows<StoredOrder>(env, 'orders?select=*&order=created_at.desc&limit=5000');
+      return json({ success: true, orders: rows.map(storedOrderToClient), count: rows.length });
+    } catch {
+      return json({ success: false, error: 'خطا در دریافت سفارش‌ها.' }, 502);
+    }
+  }
+
+  if (path === '/api/opening-event/config' && method === 'POST') {
+    const authError = await requireAdmin(request, env);
+    if (authError) return authError;
+    const body = await readJson(request);
+    if (!body) return json({ success: false, error: 'تنظیمات ایونت معتبر نیست.' }, 400);
+    const defaults = defaultOpeningConfig();
+    const config = {
+      isActive: typeof body.isActive === 'boolean' ? body.isActive : defaults.isActive,
+      title: cleanSingleLine(body.title, 160, String(defaults.title)),
+      subtitle: cleanText(body.subtitle, 500, String(defaults.subtitle)),
+      badgeText: cleanSingleLine(body.badgeText, 100, String(defaults.badgeText)),
+      highlightText: cleanSingleLine(body.highlightText, 160, String(defaults.highlightText)),
+      description: cleanText(body.description, 1500, String(defaults.description)),
+      startDate: typeof body.startDate === 'string' && Number.isFinite(Date.parse(body.startDate)) ? new Date(body.startDate).toISOString() : String(defaults.startDate),
+      endDate: typeof body.endDate === 'string' && Number.isFinite(Date.parse(body.endDate)) ? new Date(body.endDate).toISOString() : String(defaults.endDate),
+      maxWinners: Number.isInteger(Number(body.maxWinners)) ? Math.max(0, Math.min(1000, Number(body.maxWinners))) : Number(defaults.maxWinners),
+      termsNote: cleanText(body.termsNote, 1000, String(defaults.termsNote)),
+    };
+    if (Date.parse(config.endDate) < Date.parse(config.startDate)) return json({ success: false, error: 'زمان پایان باید بعد از زمان شروع باشد.' }, 400);
+    try {
+      const response = await databaseRequest(env, 'opening_event_config?on_conflict=singleton_id', {
+        method: 'POST',
+        body: { singleton_id: 'default', config, updated_at: new Date().toISOString() },
+        prefer: 'resolution=merge-duplicates,return=minimal',
+      });
+      if (!response.ok) throw new Error('Write failed');
+      return json({ success: true, config, event: await getOpeningEvent(env) });
+    } catch {
+      return json({ success: false, error: 'خطا در ذخیره تنظیمات ایونت افتتاحیه.' }, 502);
+    }
+  }
+
+  if (path === '/api/telegram/test-bot' && method === 'POST') {
+    const authError = await requireAdmin(request, env);
+    if (authError) return authError;
+    const token = env.TELEGRAM_BOT_TOKEN?.trim();
+    if (!token) return json({ success: false, error: 'توکن ربات تنظیم نشده است.' }, 503);
+    try {
+      const response = await fetch('https://api.telegram.org/bot' + token + '/getMe');
+      const data = await response.json().catch(() => null) as { ok?: boolean; result?: { username?: string; first_name?: string } } | null;
+      if (!response.ok || data?.ok !== true) return json({ success: false, error: 'توکن ربات معتبر نیست.' }, 502);
+      const sent = await sendTelegram(env, '✅ اتصال ربات تلگرام TEKVIX برقرار است.');
+      return json({
+        success: sent,
+        message: sent ? 'پیام تست با موفقیت ارسال شد!' : 'توکن معتبر است، اما ارسال پیام انجام نشد؛ Chat ID و شروع گفت‌وگو با ربات را بررسی کن.',
+        bot: data.result,
+      }, sent ? 200 : 502);
+    } catch {
+      return json({ success: false, error: 'ارتباط با تلگرام برقرار نشد.' }, 502);
+    }
+  }
+
   if (path === '/api/orders' && method === 'POST') {
     const limited = rateLimit(request, 'order-submit', 15, 15 * 60 * 1000);
     if (limited) return limited;
