@@ -27,3 +27,5 @@ jobs:
         run: bun run build
       - name: Runtime API smoke tests
         run: node scripts/smoke-test.mjs
+      - name: Cloudflare Worker API smoke tests
+        run: bun scripts/worker-smoke-test.mjs
