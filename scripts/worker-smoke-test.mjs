@@ -44,6 +44,12 @@ globalThis.fetch = async (input, init = {}) => {
     }
   }
 
+  if (url.hostname === 'jwppdvxyeuqbdcljzybj.supabase.co' && url.pathname === '/rest/v1/site_settings' && method === 'GET') {
+    const settingKey = url.searchParams.get('setting_key');
+    if (settingKey === 'eq.telegram_chat_id') return jsonResponse([{ value: { chatId: '123456' } }]);
+    return jsonResponse([]);
+  }
+
   if (url.hostname === 'jwppdvxyeuqbdcljzybj.supabase.co' && url.pathname === '/rest/v1/analytics_events' && method === 'POST') {
     analyticsRows.push(JSON.parse(init.body));
     return new Response(null, { status: 201 });
@@ -241,6 +247,15 @@ try {
   assert.equal(statusData.online, true);
   assert.equal(statusData.bot.username, 'tekvix_test_bot');
 
+  const chatIdFallbackResponse = await worker.fetch(request('/api/telegram/send-consultation', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name: 'fallback test', contactInfo: '@test', topic: 'test', message: 'stored chat id fallback' }),
+  }), { ...env, TELEGRAM_CHAT_ID: '' });
+  const chatIdFallbackData = await readJson(chatIdFallbackResponse);
+  assert.equal(chatIdFallbackData.telegramSent, true, 'Telegram must use the server-only DB Chat ID fallback when the preview binding is absent.');
+  assert.equal(telegramMessages.length, 4);
+
   const consultationResponse = await worker.fetch(request('/api/telegram/send-consultation', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -248,7 +263,7 @@ try {
   }), env);
   const consultationData = await readJson(consultationResponse);
   assert.equal(consultationData.telegramSent, true);
-  assert.equal(telegramMessages.length, 4);
+  assert.equal(telegramMessages.length, 5);
 
   const assetResponse = await worker.fetch(request('/'), env);
   assert.equal(assetResponse.status, 200);
