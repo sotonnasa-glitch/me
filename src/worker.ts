@@ -150,8 +150,8 @@ function makeOrderRow(input: OrderInput): OrderRow | null {
   if (!fullName || !contact || !serviceId) return null;
 
   const suppliedId = cleanSingleLine(input.id, 64);
-  if (suppliedId && !/^ORD-\d{4,20}(?:-\d{1,6})?$/.test(suppliedId)) return null;
-  const id = suppliedId || `ORD-${Date.now()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
+  if (suppliedId && !/^ORD-\d{4,20}(?:-(?:\d{1,6}|[A-Fa-f0-9]{32}))?$/.test(suppliedId)) return null;
+  const id = suppliedId || `ORD-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').toUpperCase()}`;
   const now = new Date().toISOString();
   // Public submissions always start as "new"; the browser cannot set admin status.
   const createdAt = now;
@@ -934,7 +934,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     }
     // Public tracking accepts order IDs only; phone/Telegram searches can expose
     // another customer's order details.
-    if (!/^ORD-\d{4,20}(?:-\d{1,6})?$/i.test(query)) {
+    if (!/^ORD-\d{4,20}(?:-(?:\d{1,6}|[a-f0-9]{32}))?$/i.test(query)) {
       return json({ success: true, count: 0, orders: [] });
     }
     if (!supabaseReady(env)) return json({ success: false, error: 'سرویس رهگیری هنوز تنظیم نشده است.', orders: [] }, 503);
