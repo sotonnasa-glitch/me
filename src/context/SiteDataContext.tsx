@@ -1445,6 +1445,37 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return () => { isMounted = false; };
   }, []);
 
+  // Once the server confirms an admin session, load authoritative orders from Supabase.
+  useEffect(() => {
+    if (!isAdminAuthenticated) return;
+    let isMounted = true;
+    const loadServerOrders = async () => {
+      try {
+        const response = await fetch('/api/orders', {
+          credentials: 'include',
+          headers: { Accept: 'application/json' },
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!isMounted || !response.ok || !data.success || !Array.isArray(data.orders)) return;
+        const validOrders = data.orders.filter((item: any) =>
+          item && typeof item.id === 'string' &&
+          typeof item.fullName === 'string' &&
+          typeof item.serviceId === 'string'
+        ) as OrderItem[];
+        setOrders(validOrders.map((order) => ({
+          ...order,
+          status: order.status === ('pending' as any) || order.status === ('contacted' as any)
+            ? 'new'
+            : order.status,
+        })));
+      } catch {
+        // Keep the existing local view if the server cannot be reached.
+      }
+    };
+    void loadServerOrders();
+    return () => { isMounted = false; };
+  }, [isAdminAuthenticated]);
+
   const verifyAdminPassword = async (
     password: string
   ): Promise<{ success: boolean; error?: string }> => {
