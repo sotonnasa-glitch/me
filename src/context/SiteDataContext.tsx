@@ -33,56 +33,7 @@ import {
   DEFAULT_CUSTOM_EVENTS,
 } from '../data/mockData';
 
-const INITIAL_ORDERS: OrderItem[] = [
-  {
-    id: 'ord-101',
-    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-    fullName: 'رضا کمالی',
-    telegramOrPhone: '@reza_kamali',
-    serviceId: 'ai-website',
-    serviceTitle: 'ساخت وب‌سایت با هوش مصنوعی',
-    message: 'نیاز به یک لندینگ پیج تاریک برای استارتاپ کریپتو با سرعت بالا و انیمیشن‌های شیک داریم.',
-    status: 'new',
-    priceQuoted: '۵,۸۰۰,۰۰۰ تومان',
-    adminNotes: 'استعلام تازه ثبت شده — آماده بررسی و انتقال به فاز ساخت'
-  },
-  {
-    id: 'ord-102',
-    createdAt: new Date(Date.now() - 3600000 * 6).toISOString(),
-    fullName: 'مریم حسینی',
-    telegramOrPhone: '09129876543',
-    serviceId: 'ai-video',
-    serviceTitle: 'تولید ویدیو با هوش مصنوعی',
-    message: 'تیزر معرفی ۳۰ ثانیه‌ای برای پیج اینستاگرام محصولات زیبایی.',
-    status: 'new',
-    priceQuoted: '۳,۴۰۰,۰۰۰ تومان',
-    adminNotes: 'نیاز به هماهنگی سناریو در تلگرام'
-  },
-  {
-    id: 'ord-103',
-    createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-    fullName: 'سینا پارسا',
-    telegramOrPhone: '@sina_parsa_dev',
-    serviceId: 'telegram-bot',
-    serviceTitle: 'ساخت ربات تلگرام پیشرفته',
-    message: 'ربات فروشگاهی متصل به درگاه زرین‌پال و پنل مدیریت.',
-    status: 'in_progress',
-    priceQuoted: '۸,۵۰۰,۰۰۰ تومان',
-    adminNotes: 'فاز پیاده‌سازی وب‌هوک و اتصال به دیتابیس در حال اجراست'
-  },
-  {
-    id: 'ord-104',
-    createdAt: new Date(Date.now() - 3600000 * 48).toISOString(),
-    fullName: 'کیانوش ناصری',
-    telegramOrPhone: '@kian_naseri',
-    serviceId: 'image-creation',
-    serviceTitle: 'خلق تصاویر و طراحی گرافیکی',
-    message: '۱۰ تصویر سبک سایبرپانک برای کاور موزیک و بنر تبلیغاتی.',
-    status: 'completed',
-    priceQuoted: '۳,۲۰۰,۰۰۰ تومان',
-    adminNotes: 'فایل‌های نهایی با کیفیت 4K در تلگرام تحویل داده شد'
-  }
-];
+const INITIAL_ORDERS: OrderItem[] = [];
 
 const DEFAULT_TELEGRAM_SETTINGS: TelegramBotSettings = {
   botToken: '',
@@ -238,6 +189,34 @@ interface SiteDataContextType {
 const SiteDataContext = createContext<SiteDataContextType | undefined>(undefined);
 
 const LOCAL_STORAGE_KEY = 'tekvix_site_data_v4';
+
+function usePersistCmsResource(
+  authenticated: boolean,
+  ready: boolean,
+  resource: string,
+  content: unknown,
+): void {
+  useEffect(() => {
+    if (!authenticated || !ready) return;
+    const timer = window.setTimeout(() => {
+      void fetch('/api/admin/content/' + resource, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ content }),
+      }).then(async (response) => {
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          console.warn('TEKVIX CMS save failed for', resource, data.error || response.status);
+        }
+      }).catch((error) => console.warn('TEKVIX CMS sync failed for', resource, error));
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [authenticated, ready, resource, content]);
+}
 
 export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [brandInfo, setBrandInfo] = useState<BrandInfo>(() => {
@@ -852,7 +831,8 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       ? '۰ تومان (رایگان - جایزه افتتاحیه)'
       : targetService?.estimatedPrice || 'استعلامی';
 
-    const generatedOrderId = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+    const randomOrderToken = crypto.randomUUID().replace(/-/g, '').toUpperCase();
+    const generatedOrderId = `ORD-${Date.now()}-${randomOrderToken}`;
     const newOrder: OrderItem = {
       id: generatedOrderId,
       createdAt: new Date().toISOString(),
@@ -1421,6 +1401,50 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(false);
+  const [cmsPersistenceReady, setCmsPersistenceReady] = useState(false);
+  const adminAuthRef = React.useRef(isAdminAuthenticated);
+  adminAuthRef.current = isAdminAuthenticated;
+
+  // Public visitors receive saved site content; unpublished blog drafts are filtered by the Worker.
+  useEffect(() => {
+    let isMounted = true;
+    const loadPublicContent = async () => {
+      try {
+        const response = await fetch('/api/site-content', {
+          headers: { Accept: 'application/json' },
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!isMounted || adminAuthRef.current || !response.ok || !data.success || !data.content) return;
+        const content = data.content as Record<string, unknown>;
+        if (content.brandInfo && typeof content.brandInfo === 'object' && !Array.isArray(content.brandInfo)) {
+          setBrandInfo((previous) => ({ ...previous, ...(content.brandInfo as Partial<BrandInfo>) }));
+        }
+        if (Array.isArray(content.services)) setServices(content.services as Service[]);
+        if (Array.isArray(content.portfolio)) setPortfolio(content.portfolio as PortfolioItem[]);
+        if (Array.isArray(content.testimonials)) setTestimonials(content.testimonials as TestimonialItem[]);
+        if (Array.isArray(content.faqs)) setFaqs(content.faqs as FAQItem[]);
+        if (Array.isArray(content.blogPosts)) setBlogPosts(content.blogPosts as BlogPost[]);
+        if (Array.isArray(content.sectionsConfig)) setSectionsConfig(content.sectionsConfig as SiteSectionConfig[]);
+        if (Array.isArray(content.socialLinks)) setSocialLinks(content.socialLinks as SocialMediaLink[]);
+        if (Array.isArray(content.events)) setEvents(content.events as CustomEventCampaign[]);
+      } catch {
+        // Local/default content remains available when the server is offline.
+      }
+    };
+    void loadPublicContent();
+    return () => { isMounted = false; };
+  }, []);
+
+  usePersistCmsResource(isAdminAuthenticated, cmsPersistenceReady, 'brandInfo', brandInfo);
+  usePersistCmsResource(isAdminAuthenticated, cmsPersistenceReady, 'services', services);
+  usePersistCmsResource(isAdminAuthenticated, cmsPersistenceReady, 'portfolio', portfolio);
+  usePersistCmsResource(isAdminAuthenticated, cmsPersistenceReady, 'testimonials', testimonials);
+  usePersistCmsResource(isAdminAuthenticated, cmsPersistenceReady, 'faqs', faqs);
+  usePersistCmsResource(isAdminAuthenticated, cmsPersistenceReady, 'blogPosts', blogPosts);
+  usePersistCmsResource(isAdminAuthenticated, cmsPersistenceReady, 'sectionsConfig', sectionsConfig);
+  usePersistCmsResource(isAdminAuthenticated, cmsPersistenceReady, 'socialLinks', socialLinks);
+  usePersistCmsResource(isAdminAuthenticated, cmsPersistenceReady, 'events', events);
+
 
   // Verify authorization only with the HttpOnly server session cookie.
   useEffect(() => {
@@ -1444,6 +1468,69 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     void checkServerSession();
     return () => { isMounted = false; };
   }, []);
+
+  // Once the server confirms an admin session, load authoritative CMS content and orders from Supabase.
+  useEffect(() => {
+    if (!isAdminAuthenticated) {
+      setCmsPersistenceReady(false);
+      return;
+    }
+    let isMounted = true;
+    setCmsPersistenceReady(false);
+
+    const loadServerContent = async () => {
+      try {
+        const response = await fetch('/api/admin/content', {
+          credentials: 'include',
+          headers: { Accept: 'application/json' },
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!isMounted || !response.ok || !data.success || !data.content) return;
+        const content = data.content as Record<string, unknown>;
+        if (content.brandInfo && typeof content.brandInfo === 'object' && !Array.isArray(content.brandInfo)) {
+          setBrandInfo((previous) => ({ ...previous, ...(content.brandInfo as Partial<BrandInfo>) }));
+        }
+        if (Array.isArray(content.services)) setServices(content.services as Service[]);
+        if (Array.isArray(content.portfolio)) setPortfolio(content.portfolio as PortfolioItem[]);
+        if (Array.isArray(content.testimonials)) setTestimonials(content.testimonials as TestimonialItem[]);
+        if (Array.isArray(content.faqs)) setFaqs(content.faqs as FAQItem[]);
+        if (Array.isArray(content.blogPosts)) setBlogPosts(content.blogPosts as BlogPost[]);
+        if (Array.isArray(content.sectionsConfig)) setSectionsConfig(content.sectionsConfig as SiteSectionConfig[]);
+        if (Array.isArray(content.socialLinks)) setSocialLinks(content.socialLinks as SocialMediaLink[]);
+        if (Array.isArray(content.events)) setEvents(content.events as CustomEventCampaign[]);
+        setCmsPersistenceReady(true);
+      } catch {
+        // Do not overwrite persisted content if the authoritative CMS fetch fails.
+      }
+    };
+
+    const loadServerOrders = async () => {
+      try {
+        const response = await fetch('/api/orders', {
+          credentials: 'include',
+          headers: { Accept: 'application/json' },
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!isMounted || !response.ok || !data.success || !Array.isArray(data.orders)) return;
+        const validOrders = data.orders.filter((item: any) =>
+          item && typeof item.id === 'string' &&
+          typeof item.fullName === 'string' &&
+          typeof item.serviceId === 'string'
+        ) as OrderItem[];
+        setOrders(validOrders.map((order) => ({
+          ...order,
+          status: order.status === ('pending' as any) || order.status === ('contacted' as any)
+            ? 'new'
+            : order.status,
+        })));
+      } catch {
+        // Keep the existing local view if the server cannot be reached.
+      }
+    };
+    void loadServerContent();
+    void loadServerOrders();
+    return () => { isMounted = false; };
+  }, [isAdminAuthenticated]);
 
   const verifyAdminPassword = async (
     password: string

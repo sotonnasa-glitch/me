@@ -99,12 +99,8 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
 
   // Merge context and server orders without duplicates
   const matchedFromContext = contextOrders.filter((o) => {
-    if (!cleanQuery) return false;
-    const matchId = normalizeDigits(o.id.toLowerCase()).includes(cleanQuery);
-    const contactClean = normalizeDigits((o.telegramOrPhone || '').toLowerCase()).replace(/^@/, '');
-    const matchContact = contactClean.includes(cleanQuery);
-    const matchName = normalizeDigits((o.fullName || '').toLowerCase()).includes(cleanQuery);
-    return matchId || matchContact || matchName;
+    if (!cleanQuery || !/^ord-/.test(cleanQuery)) return false;
+    return normalizeDigits(o.id.toLowerCase()) === cleanQuery;
   });
 
   const mergedOrderMap = new Map<string, OrderItem>();
@@ -217,7 +213,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                   setQuery(e.target.value);
                   setHasSearched(true);
                 }}
-                placeholder="کد رهگیری (مثلاً ORD-4777)، آیدی تلگرام (@username) یا شماره تماس..."
+                placeholder="کد رهگیری سفارش (مثلاً ORD-4777)..."
                 className="w-full ps-11 pe-9 py-3.5 rounded-2xl bg-[#140d32] border border-purple-700/50 focus:border-purple-300 focus:bg-[#1a113f] text-white placeholder:text-purple-300/40 text-xs sm:text-sm focus:outline-none transition-all shadow-inner font-sans"
               />
               <Search className="w-4 h-4 text-purple-400 absolute start-4 top-1/2 -translate-y-1/2" />
