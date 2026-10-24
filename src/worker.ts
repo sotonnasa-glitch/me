@@ -11,6 +11,7 @@ interface Env {
   SUPABASE_SERVICE_ROLE_KEY?: string;
   TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_CHAT_ID?: string;
+  TEKVIX_ADMIN_PASSWORD?: string;
 }
 
 type OrderInput = {
@@ -278,6 +279,338 @@ const defaultOpeningConfig = () => {
     termsNote: 'هر کاربر فقط یک‌بار امکان استفاده از جایزه را دارد. سفارش‌های لغوشده محاسبه نمی‌شوند.',
   };
 };
+
+const encoder = new TextEncoder();
+const ADMIN_COOKIE = 'tekvix_admin';
+const ADMIN_SESSION_TTL_SECONDS = 8 * 60 * 60;
+const ADMIN_PASSWORD_ITERATIONS = 120_000;
+
+function bytesToBase64Url(bytes: Uint8Array): string {
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/=/g, '').replace(/\\+/g, '-').replace(/\\//g, '_');
+}
+
+function base64UrlToBytes(value: string): Uint8Array | null {
+  try {
+    const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+    const binary = atob(padded);
+    return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  } catch {
+    return null;
+  }
+}
+
+function normalizeAdminPassword(value: string): string {
+  return value.trim()
+    .replace(/[۰-۹]/g, (digit) => String.fromCharCode(digit.charCodeAt(0) - 1728))
+    .replace(/[٠-٩]/g, (digit) => String.fromCharCode(digit.charCodeAt(0) - 1584));
+}
+
+async function adminSigningKey(env: Env): Promise<CryptoKey> {
+  const baseSecret = env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!baseSecret) throw new Error('Admin session signing secret unavailable.');
+  return crypto.subtle.importKey(
+    'raw',
+    encoder.encode('TEKVIX_ADMIN_SESSION_V1:' + baseSecret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign', 'verify'],
+  );
+}
+
+async function createAdminCookie(env: Env): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const payload = bytesToBase64Url(encoder.encode(JSON.stringify({ sub: 'admin', iat: now, exp: now + ADMIN_SESSION_TTL_SECONDS })));
+  const key = await adminSigningKey(env);
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(payload));
+  return payload + '.' + bytesToBase64Url(new Uint8Array(signature));
+}
+
+function getCookie(request: Request, name: string): string | null {
+  const raw = request.headers.get('cookie') || '';
+  for (const part of raw.split(';')) {
+    const index = part.indexOf('=');
+    if (index < 0) continue;
+    if (part.slice(0, index).trim() === name) return part.slice(index + 1).trim();
+  }
+  return null;
+}
+
+async function isAdminRequest(request: Request, env: Env): Promise<boolean> {
+  const token = getCookie(request, ADMIN_COOKIE);
+  if (!token || token.length > 2048) return false;
+  const splitAt = token.lastIndexOf('.');
+  if (splitAt <= 0) return false;
+  const payload = token.slice(0, splitAt);
+  const signature = base64UrlToBytes(token.slice(splitAt + 1));
+  if (!signature) return false;
+  try {
+    const key = await adminSigningKey(env);
+    const valid = await crypto.subtle.verify('HMAC', key, signature, encoder.encode(payload));
+    if (!valid) return false;
+    const bytes = base64UrlToBytes(payload);
+    if (!bytes) return false;
+    const session = JSON.parse(new TextDecoder().decode(bytes)) as { sub?: string; exp?: number };
+    return session.sub === 'admin' && Number.isFinite(session.exp) && Number(session.exp) > Math.floor(Date.now() / 1000);
+  } catch {
+    return false;
+  }
+}
+
+function adminCookieHeaders(value: string): Headers {
+  return new Headers({
+    'content-type': 'application/json; charset=utf-8',
+    'cache-control': 'no-store',
+    'set-cookie': value,
+    'x-content-type-options': 'nosniff',
+  });
+}
+
+function sessionCookie(value: string, maxAge: number): string {
+  return `${ADMIN_COOKIE}=${value}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${maxAge}`;
+}
+
+function isSameOrigin(request: Request): boolean {
+  const origin = request.headers.get('origin');
+  return !origin || origin === new URL(request.url).origin;
+}
+
+async function getAdminPasswordRecord(env: Env): Promise<Record<string, unknown> | null> {
+  const response = await databaseRequest(env, 'site_settings?select=value&setting_key=eq.admin_password_hash&limit=1');
+  if (!response.ok) throw new Error('Could not read administrator password configuration.');
+  const rows = await response.json() as Array<{ value?: unknown }>;
+  const value = rows?.[0]?.value;
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null;
+}
+
+async function verifyPbkdf2Password(password: string, record: Record<string, unknown>): Promise<boolean> {
+  if (record.scheme !== 'pbkdf2-sha256' || typeof record.salt !== 'string' || typeof record.hash !== 'string') return false;
+  const iterationInput = Number(record.iterations);
+  const iterations = Number.isInteger(iterationInput) && iterationInput >= 100_000 && iterationInput <= 500_000
+    ? iterationInput
+    : 0;
+  const salt = base64UrlToBytes(record.salt);
+  const expected = base64UrlToBytes(record.hash);
+  if (!iterations || !salt || !expected || expected.length !== 32) return false;
+  try {
+    const key = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
+    const result = new Uint8Array(await crypto.subtle.deriveBits(
+      { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+      key,
+      256,
+    ));
+    let diff = result.length ^ expected.length;
+    for (let i = 0; i < Math.min(result.length, expected.length); i++) diff |= result[i] ^ expected[i];
+    return diff === 0;
+  } catch {
+    return false;
+  }
+}
+
+async function verifyAdminPassword(env: Env, rawPassword: string): Promise<boolean> {
+  const password = normalizeAdminPassword(rawPassword);
+  if (!password || password.length > 256) return false;
+  const record = await getAdminPasswordRecord(env);
+  if (record?.scheme === 'pbkdf2-sha256') return verifyPbkdf2Password(password, record);
+  const configuredPassword = env.TEKVIX_ADMIN_PASSWORD;
+  return Boolean(configuredPassword && password === configuredPassword.trim());
+}
+
+async function saveAdminPasswordRecord(env: Env, password: string): Promise<void> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = new Uint8Array(await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations: ADMIN_PASSWORD_ITERATIONS, hash: 'SHA-256' },
+    key,
+    256,
+  ));
+  const value = {
+    scheme: 'pbkdf2-sha256',
+    iterations: ADMIN_PASSWORD_ITERATIONS,
+    salt: bytesToBase64Url(salt),
+    hash: bytesToBase64Url(bits),
+  };
+  const response = await databaseRequest(env, 'site_settings?on_conflict=setting_key', {
+    method: 'POST',
+    body: { setting_key: 'admin_password_hash', value, updated_at: new Date().toISOString() },
+    prefer: 'resolution=merge-duplicates,return=minimal',
+  });
+  if (!response.ok) throw new Error('Could not save administrator password configuration.');
+}
+
+async function requireAdmin(request: Request, env: Env): Promise<Response | null> {
+  if (!(await isAdminRequest(request, env))) {
+    return json({ success: false, error: 'دسترسی غیرمجاز؛ ابتدا وارد پنل مدیریت شوید.', requireLogin: true }, 401);
+  }
+  if (!isSameOrigin(request)) return json({ success: false, error: 'درخواست از مبدأ معتبر نیست.' }, 403);
+  return null;
+}
+
+type StoredOrder = {
+  id: string; full_name: string; telegram_or_phone: string; service_id: string;
+  service_title: string; message: string; status: 'new'|'in_progress'|'completed'|'cancelled';
+  price_quoted: string; is_promo_event: boolean; promo_event_name: string|null;
+  user_email: string|null; admin_notes: string|null; created_at: string; updated_at: string;
+};
+
+function storedOrderToClient(row: StoredOrder) {
+  return {
+    id: row.id, fullName: row.full_name, telegramOrPhone: row.telegram_or_phone,
+    serviceId: row.service_id, serviceTitle: row.service_title, message: row.message,
+    status: row.status, priceQuoted: row.price_quoted, isPromoEvent: row.is_promo_event,
+    promoEventName: row.promo_event_name || undefined, userEmail: row.user_email || undefined,
+    adminNotes: row.admin_notes || undefined, createdAt: row.created_at, updatedAt: row.updated_at,
+  };
+}
+
+async function readRows<T>(env: Env, tableAndQuery: string): Promise<T[]> {
+  const response = await databaseRequest(env, tableAndQuery);
+  if (!response.ok) throw new Error('Database read failed with status ' + response.status);
+  const rows = await response.json() as T[];
+  return Array.isArray(rows) ? rows : [];
+}
+
+function normalizeDigits(value: string): string {
+  return value.replace(/[۰-۹]/g, (digit) => String.fromCharCode(digit.charCodeAt(0) - 1728))
+    .replace(/[٠-٩]/g, (digit) => String.fromCharCode(digit.charCodeAt(0) - 1584));
+}
+
+function parseQuotedPrice(value: unknown): number {
+  const digits = normalizeDigits(String(value ?? '')).replace(/[^0-9]/g, '');
+  const numeric = Number(digits);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function dateKey(value: string): string {
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date.toISOString().slice(0, 10) : '';
+}
+
+async function buildAdminStats(env: Env) {
+  const [orders, events, users] = await Promise.all([
+    readRows<StoredOrder>(env, 'orders?select=*&order=created_at.desc&limit=5000'),
+    readRows<Record<string, unknown>>(env, 'analytics_events?select=*&order=created_at.desc&limit=5000'),
+    readRows<{ id: string }>(env, 'user_profiles?select=id&limit=5000'),
+  ]);
+  const statusCounts = {
+    new: orders.filter((o) => o.status === 'new').length,
+    in_progress: orders.filter((o) => o.status === 'in_progress').length,
+    completed: orders.filter((o) => o.status === 'completed').length,
+    cancelled: orders.filter((o) => o.status === 'cancelled').length,
+  };
+  const totalRevenue = orders.reduce((sum, order) => sum + parseQuotedPrice(order.price_quoted), 0);
+  const completedRevenue = orders.filter((o) => o.status === 'completed').reduce((sum, order) => sum + parseQuotedPrice(order.price_quoted), 0);
+  const views = events.filter((e) => e.event_type === 'page_view');
+  const serviceEvents = new Map<string, number>();
+  for (const event of events) {
+    const service = typeof event.service_id === 'string' ? event.service_id : '';
+    if (service) serviceEvents.set(service, (serviceEvents.get(service) || 0) + 1);
+  }
+  const orderByDate = new Map<string, number>();
+  const revenueByDate = new Map<string, number>();
+  for (const order of orders) {
+    const day = dateKey(order.created_at);
+    if (day) {
+      orderByDate.set(day, (orderByDate.get(day) || 0) + 1);
+      revenueByDate.set(day, (revenueByDate.get(day) || 0) + parseQuotedPrice(order.price_quoted));
+    }
+  }
+  const viewsByDate = new Map<string, number>();
+  for (const event of views) {
+    const day = dateKey(String(event.created_at || ''));
+    if (day) viewsByDate.set(day, (viewsByDate.get(day) || 0) + 1);
+  }
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - index));
+    const key = date.toISOString().slice(0, 10);
+    return {
+      date: key, day: index === 6 ? 'امروز' : key,
+      views: viewsByDate.get(key) || 0,
+      mobile: events.filter((e) => e.event_type === 'page_view' && dateKey(String(e.created_at || '')) === key && e.device === 'mobile').length,
+      desktop: events.filter((e) => e.event_type === 'page_view' && dateKey(String(e.created_at || '')) === key && e.device === 'desktop').length,
+      tablet: events.filter((e) => e.event_type === 'page_view' && dateKey(String(e.created_at || '')) === key && e.device === 'tablet').length,
+      orders: orderByDate.get(key) || 0,
+      revenue: revenueByDate.get(key) || 0,
+    };
+  });
+  const recentEvents = events.slice(0, 10).map((e) => ({
+    id: String(e.id || ''), eventType: String(e.event_type || 'unknown'),
+    path: String(e.path || '/'), serviceId: typeof e.service_id === 'string' ? e.service_id : undefined,
+    device: String(e.device || 'unknown'), referrer: typeof e.referrer === 'string' ? e.referrer : undefined,
+    value: Number(e.value) || 0, createdAt: String(e.created_at || new Date().toISOString()),
+    metadata: e.metadata && typeof e.metadata === 'object' ? e.metadata : undefined,
+  }));
+  const deviceCounts = ['mobile','desktop','tablet','unknown'].map((device) => {
+    const count = views.filter((event) => event.device === device).length;
+    return { name: device, value: count, count, color: ({ mobile: '#22d3ee', desktop: '#a78bfa', tablet: '#34d399', unknown: '#94a3b8' } as Record<string,string>)[device] };
+  });
+  const now = Date.now();
+  const monthly = Array.from({ length: 4 }, (_, idx) => {
+    const start = now - (3 - idx) * 7 * 24 * 60 * 60 * 1000;
+    const end = start + 7 * 24 * 60 * 60 * 1000;
+    const periodEvents = events.filter((e) => {
+      const time = Date.parse(String(e.created_at || ''));
+      return Number.isFinite(time) && time >= start && time < end;
+    });
+    const periodOrders = orders.filter((o) => {
+      const time = Date.parse(o.created_at);
+      return Number.isFinite(time) && time >= start && time < end;
+    });
+    return {
+      name: 'هفته ' + (idx + 1),
+      views: periodEvents.filter((e) => e.event_type === 'page_view').length,
+      mobile: periodEvents.filter((e) => e.event_type === 'page_view' && e.device === 'mobile').length,
+      desktop: periodEvents.filter((e) => e.event_type === 'page_view' && e.device === 'desktop').length,
+      orders: periodOrders.length,
+      revenue: periodOrders.reduce((sum,o)=>sum+parseQuotedPrice(o.price_quoted),0),
+    };
+  });
+  const quarterly = Array.from({ length: 3 }, (_, idx) => {
+    const start = now - (2 - idx) * 30 * 24 * 60 * 60 * 1000;
+    const end = start + 30 * 24 * 60 * 60 * 1000;
+    const periodEvents = events.filter((e) => {
+      const time = Date.parse(String(e.created_at || ''));
+      return Number.isFinite(time) && time >= start && time < end;
+    });
+    const periodOrders = orders.filter((o) => {
+      const time = Date.parse(o.created_at);
+      return Number.isFinite(time) && time >= start && time < end;
+    });
+    return {
+      name: 'بازه ' + (idx + 1),
+      views: periodEvents.filter((e) => e.event_type === 'page_view').length,
+      mobile: periodEvents.filter((e) => e.event_type === 'page_view' && e.device === 'mobile').length,
+      desktop: periodEvents.filter((e) => e.event_type === 'page_view' && e.device === 'desktop').length,
+      orders: periodOrders.length,
+      revenue: periodOrders.reduce((sum,o)=>sum+parseQuotedPrice(o.price_quoted),0),
+    };
+  });
+  const servicePerformance = Array.from(serviceEvents.entries()).map(([id, inquiries]) => ({
+    id, name: id, fullTitle: id, views: events.filter((e)=>e.service_id===id && e.event_type==='service_click').length,
+    inquiries, revenue: orders.filter((o)=>o.service_id===id).reduce((sum,o)=>sum+parseQuotedPrice(o.price_quoted),0),
+    conversionRate: inquiries ? Math.round(orders.filter((o)=>o.service_id===id).length / inquiries * 10000) / 100 : 0,
+  })).slice(0, 20);
+
+  return {
+    totalUsers: users.length,
+    activeUsers: users.length,
+    totalOrders: orders.length,
+    ordersByStatus: statusCounts,
+    totalRevenue,
+    completedRevenue,
+    conversionRate: views.length ? Math.round(orders.length / views.length * 10000) / 100 : 0,
+    dailyTrend: days,
+    monthlyTrend: monthly,
+    quarterlyTrend: quarterly,
+    servicePerformance,
+    deviceBreakdown: deviceCounts,
+    recentEvents,
+    lastUpdated: new Date().toISOString(),
+  };
+}
 
 async function handleApi(request: Request, env: Env): Promise<Response | null> {
   const url = new URL(request.url);
