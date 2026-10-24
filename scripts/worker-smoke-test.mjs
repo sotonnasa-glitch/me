@@ -5,7 +5,9 @@ const worker = workerModule.default;
 const dbOrders = new Map();
 const analyticsRows = [];
 const telegramMessages = [];
+const geminiRequests = [];
 const telegramToken = 'test-token-never-return-this';
+const geminiApiKey = 'test-gemini-api-key-never-return-this';
 
 const jsonResponse = (value, status = 200) => new Response(JSON.stringify(value), {
   status,
@@ -47,6 +49,12 @@ globalThis.fetch = async (input, init = {}) => {
     return new Response(null, { status: 201 });
   }
 
+  if (url.hostname === 'generativelanguage.googleapis.com' && url.pathname.endsWith(':generateContent')) {
+    assert.equal(url.searchParams.get('key'), geminiApiKey);
+    geminiRequests.push(JSON.parse(init.body));
+    return jsonResponse({ candidates: [{ content: { parts: [{ text: 'پاسخ آزمایشی Gemini' }] } }] });
+  }
+
   if (url.hostname === 'api.telegram.org' && url.pathname.endsWith('/getMe')) {
     return jsonResponse({ ok: true, result: { id: 123, is_bot: true, first_name: 'TEKVIX test', username: 'tekvix_test_bot' } });
   }
@@ -68,6 +76,7 @@ const env = {
   SUPABASE_SERVICE_ROLE_KEY: 'eyJ.test.legacy-service-role',
   TELEGRAM_BOT_TOKEN: telegramToken,
   TELEGRAM_CHAT_ID: '123456',
+  GEMINI_API_KEY: geminiApiKey,
 };
 
 const request = (url, init = {}) => new Request('https://tekvix.ir' + url, {
@@ -75,6 +84,20 @@ const request = (url, init = {}) => new Request('https://tekvix.ir' + url, {
   headers: { 'cf-connecting-ip': '192.0.2.' + (Math.floor(Math.random() * 200) + 1), ...(init.headers || {}) },
 });
 const readJson = async (response) => response.json();
+const base64Url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+async function adminCookie() {
+  const now = Math.floor(Date.now() / 1000);
+  const payload = base64Url(new TextEncoder().encode(JSON.stringify({ sub: 'admin', iat: now, exp: now + 3600 })));
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode('TEKVIX_ADMIN_SESSION_V1:' + env.SUPABASE_SERVICE_ROLE_KEY),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signature = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload)));
+  return payload + '.' + base64Url(signature);
+}
 
 try {
   const health = await worker.fetch(request('/api/health'), env);
@@ -156,6 +179,63 @@ try {
   assert.equal('fullName' in analyticsRows[0].metadata, false);
   assert.equal('password' in analyticsRows[0].metadata, false);
 
+  const geminiResponse = await worker.fetch(request('/api/gemini/assistant', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      message: 'سلام',
+      history: [{ role: 'user', text: 'سلام قبلی' }, { role: 'model', text: 'سلام!' }],
+    }),
+  }), env);
+  const geminiData = await readJson(geminiResponse);
+  assert.equal(geminiResponse.status, 200);
+  assert.equal(geminiData.success, true);
+  assert.equal(geminiData.text, 'پاسخ آزمایشی Gemini');
+  assert.equal(geminiRequests.length, 1);
+  assert.equal(geminiRequests[0].contents.length, 3);
+  assert.equal(geminiRequests[0].systemInstruction.parts.length, 1);
+  assert.ok(!JSON.stringify(geminiData).includes(geminiApiKey), 'Gemini API key must never be returned to clients.');
+
+  const fallbackResponse = await worker.fetch(request('/api/gemini/assistant', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ message: 'قیمت طراحی سایت چقدر است؟' }),
+  }), { ...env, GEMINI_API_KEY: '' });
+  const fallbackData = await readJson(fallbackResponse);
+  assert.equal(fallbackResponse.status, 200);
+  assert.equal(fallbackData.success, true);
+  assert.equal(fallbackData.isFallback, true);
+  assert.ok(fallbackData.text.includes('۴,۵۰۰,۰۰۰'));
+
+  const invalidGemini = await worker.fetch(request('/api/gemini/assistant', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ message: '' }),
+  }), env);
+  assert.equal(invalidGemini.status, 400);
+
+  const cookie = await adminCookie();
+  const telegramTestGet = await worker.fetch(request('/api/telegram/test-bot', {
+    headers: { cookie },
+  }), env);
+  const telegramTestGetData = await readJson(telegramTestGet);
+  assert.equal(telegramTestGet.status, 200);
+  assert.equal(telegramTestGetData.success, true);
+  assert.equal(telegramTestGetData.telegramSent, true);
+  assert.equal(telegramMessages.length, 2);
+
+  const telegramTestPost = await worker.fetch(request('/api/telegram/test-bot', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({}),
+  }), env);
+  assert.equal(telegramTestPost.status, 200);
+  assert.equal((await readJson(telegramTestPost)).success, true);
+  assert.equal(telegramMessages.length, 3);
+
+  const unauthorizedTelegramTest = await worker.fetch(request('/api/telegram/test-bot'), env);
+  assert.equal(unauthorizedTelegramTest.status, 401, 'Telegram test endpoint must require admin authentication.');
+
   const statusResponse = await worker.fetch(request('/api/telegram/status'), env);
   const statusData = await readJson(statusResponse);
   assert.equal(statusData.online, true);
@@ -168,7 +248,7 @@ try {
   }), env);
   const consultationData = await readJson(consultationResponse);
   assert.equal(consultationData.telegramSent, true);
-  assert.equal(telegramMessages.length, 2);
+  assert.equal(telegramMessages.length, 4);
 
   const assetResponse = await worker.fetch(request('/'), env);
   assert.equal(assetResponse.status, 200);
