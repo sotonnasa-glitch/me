@@ -28,6 +28,7 @@ export interface PortfolioItem {
     value: string;
   }[];
   tags: string[];
+  url?: string;
 }
 
 export interface FeatureTab {
