@@ -791,11 +791,11 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     const id = cleanSingleLine(body?.id, 100);
     const name = cleanSingleLine(body?.name, 100);
     const email = cleanSingleLine(body?.email, 160).toLowerCase();
-    if (!id || !name || !email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+    if (!id || !name || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return json({ success: false, error: 'شناسه، نام و ایمیل معتبر الزامی هستند.' }, 400);
     }
     try {
-      const existing = await readRows<Record<string, unknown>>(env, 'user_profiles?select=id,role& id=eq.' + encodeURIComponent(id) + '&limit=1');
+      const existing = await readRows<Record<string, unknown>>(env, 'user_profiles?select=id,role&id=eq.' + encodeURIComponent(id) + '&limit=1');
       if (existing[0]?.role === 'admin') {
         return json({ success: false, error: 'تغییر حساب مدیریت از این مسیر مجاز نیست.' }, 403);
       }
