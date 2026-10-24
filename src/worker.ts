@@ -888,7 +888,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     }
   }
 
-  const cmsWriteMatch = path.match(/^\\/api\\/admin\\/content\\/([A-Za-z]+)$/);
+  const cmsWriteMatch = path.match(/^\/api\/admin\/content\/([A-Za-z]+)$/);
   if (cmsWriteMatch && method === 'PUT') {
     const authError = await requireAdmin(request, env);
     if (authError) return authError;
