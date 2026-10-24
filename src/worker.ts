@@ -146,11 +146,9 @@ function makeOrderRow(input: OrderInput): OrderRow | null {
   if (suppliedId && !/^ORD-\d{4,20}(?:-\d{1,6})?$/.test(suppliedId)) return null;
   const id = suppliedId || `ORD-${Date.now()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
   const now = new Date().toISOString();
-  const suppliedCreatedAt = typeof input.createdAt === 'string' ? Date.parse(input.createdAt) : NaN;
-  const createdAt = Number.isFinite(suppliedCreatedAt) ? new Date(suppliedCreatedAt).toISOString() : now;
-  const status = input.status === 'in_progress' || input.status === 'completed' || input.status === 'cancelled'
-    ? input.status
-    : 'new';
+  // Public submissions always start as "new"; the browser cannot set admin status.
+  const createdAt = now;
+  const status = 'new' as const;
 
   return {
     id,
@@ -189,14 +187,28 @@ function orderToClient(row: OrderRow) {
   };
 }
 
-async function saveOrder(env: Env, row: OrderRow): Promise<OrderRow> {
-  const response = await databaseRequest(env, 'orders?on_conflict=id', {
+async function findOrder(env: Env, id: string): Promise<OrderRow | null> {
+  const response = await databaseRequest(
+    env,
+    'orders?select=*&id=eq.' + encodeURIComponent(id) + '&limit=1',
+  );
+  if (!response.ok) {
+    console.error('[TEKVIX] Supabase order read failed with status', response.status);
+    throw new Error('Database read failed.');
+  }
+  const data = await response.json() as OrderRow[];
+  return Array.isArray(data) && data[0] ? data[0] : null;
+}
+
+async function insertOrder(env: Env, row: OrderRow): Promise<OrderRow | null> {
+  const response = await databaseRequest(env, 'orders', {
     method: 'POST',
     body: row,
-    prefer: 'resolution=merge-duplicates,return=representation',
+    prefer: 'return=representation',
   });
+  // Another request may have inserted this client-generated ID first.
+  if (response.status === 409) return null;
   if (!response.ok) {
-    // Do not log or return request payloads, contact details, or secret values.
     console.error('[TEKVIX] Supabase order write failed with status', response.status);
     throw new Error('Database write failed.');
   }
@@ -205,6 +217,17 @@ async function saveOrder(env: Env, row: OrderRow): Promise<OrderRow> {
   return data[0];
 }
 
+async function findOrInsertOrder(env: Env, row: OrderRow): Promise<OrderRow> {
+  const existing = await findOrder(env, row.id);
+  if (existing) return existing;
+  const inserted = await insertOrder(env, row);
+  if (inserted) return inserted;
+  // Resolve a race where the /api/orders request and Telegram notification
+  // arrive at nearly the same time, without overwriting the first saved record.
+  const raced = await findOrder(env, row.id);
+  if (raced) return raced;
+  throw new Error('Could not resolve concurrent order creation.');
+}
 async function sendTelegram(env: Env, message: string): Promise<boolean> {
   const token = env.TELEGRAM_BOT_TOKEN?.trim();
   const chatId = env.TELEGRAM_CHAT_ID?.trim();
@@ -282,7 +305,8 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     if (!row) return json({ success: false, error: 'نام، راه ارتباطی و خدمت الزامی‌اند؛ کد سفارش نیز باید معتبر باشد.' }, 400);
 
     try {
-      const saved = await saveOrder(env, row);
+      const saved = await insertOrder(env, row);
+      if (!saved) return json({ success: false, error: 'شناسه سفارش تکراری است؛ لطفاً دوباره ثبت کنید.' }, 409);
       return json({ success: true, order: orderToClient(saved) }, 201);
     } catch {
       return json({ success: false, error: 'ثبت سفارش در پایگاه داده انجام نشد. لطفاً دوباره تلاش کنید.' }, 502);
@@ -302,9 +326,9 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     if (!row) return json({ success: false, telegramSent: false, message: 'اطلاعات اصلی سفارش ناقص است.' }, 400);
 
     try {
-      // The order endpoint and this endpoint use the same ID, so concurrent calls
-      // update the same database row rather than creating duplicates.
-      const saved = await saveOrder(env, row);
+      // Save only if the order does not already exist. This avoids overwriting
+      // server-side fields when the two frontend requests arrive concurrently.
+      const saved = await findOrInsertOrder(env, row);
       const telegramSent = await sendTelegram(env, orderMessage(saved));
       return json({
         success: true,
