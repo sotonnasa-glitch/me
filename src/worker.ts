@@ -313,6 +313,52 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     }
   }
 
+  if (path.startsWith('/api/orders/track/') && method === 'GET') {
+    const encodedQuery = path.slice('/api/orders/track/'.length);
+    let query = '';
+    try {
+      query = decodeURIComponent(encodedQuery).trim();
+    } catch {
+      return json({ success: false, error: 'کد رهگیری معتبر نیست.', orders: [] }, 400);
+    }
+    // Public tracking accepts order IDs only; phone/Telegram searches can expose
+    // another customer's order details.
+    if (!/^ORD-\\d{4,20}(?:-\\d{1,6})?$/i.test(query)) {
+      return json({ success: true, count: 0, orders: [] });
+    }
+    if (!supabaseReady(env)) return json({ success: false, error: 'سرویس رهگیری هنوز تنظیم نشده است.', orders: [] }, 503);
+    try {
+      const response = await databaseRequest(
+        env,
+        'orders?select=id,service_title,status,created_at,price_quoted,is_promo_event&id=eq.' + encodeURIComponent(query.toUpperCase()) + '&limit=1',
+      );
+      if (!response.ok) {
+        console.error('[TEKVIX] Order tracking read failed with status', response.status);
+        return json({ success: false, error: 'خطا در رهگیری سفارش.', orders: [] }, 502);
+      }
+      const rows = await response.json() as Array<{
+        id: string;
+        service_title: string;
+        status: string;
+        created_at: string;
+        price_quoted: string;
+        is_promo_event: boolean;
+      }>;
+      const orders = (Array.isArray(rows) ? rows : []).map((row) => ({
+        id: row.id,
+        serviceTitle: row.service_title,
+        status: row.status,
+        createdAt: row.created_at,
+        priceQuoted: row.price_quoted,
+        isPromoEvent: row.is_promo_event,
+        contactMasked: '',
+      }));
+      return json({ success: true, count: orders.length, orders });
+    } catch {
+      return json({ success: false, error: 'خطا در رهگیری سفارش.', orders: [] }, 502);
+    }
+  }
+
   if (path === '/api/telegram/send-order' && method === 'POST') {
     const limited = rateLimit(request, 'telegram-order', 8, 15 * 60 * 1000);
     if (limited) return limited;
