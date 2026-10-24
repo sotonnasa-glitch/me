@@ -4,6 +4,7 @@ const workerModule = await import('../src/worker.ts');
 const worker = workerModule.default;
 const dbOrders = new Map();
 const analyticsRows = [];
+const cmsContent = new Map();
 const telegramMessages = [];
 const geminiRequests = [];
 const telegramToken = 'test-token-never-return-this';
@@ -44,10 +45,21 @@ globalThis.fetch = async (input, init = {}) => {
     }
   }
 
-  if (url.hostname === 'jwppdvxyeuqbdcljzybj.supabase.co' && url.pathname === '/rest/v1/site_settings' && method === 'GET') {
-    const settingKey = url.searchParams.get('setting_key');
-    if (settingKey === 'eq.telegram_chat_id') return jsonResponse([{ value: { chatId: '123456' } }]);
-    return jsonResponse([]);
+  if (url.hostname === 'jwppdvxyeuqbdcljzybj.supabase.co' && url.pathname === '/rest/v1/site_settings') {
+    if (method === 'GET') {
+      const settingKey = url.searchParams.get('setting_key');
+      if (settingKey === 'eq.telegram_chat_id') return jsonResponse([{ value: { chatId: '123456' } }]);
+      if (settingKey?.startsWith('eq.cms_')) {
+        const value = cmsContent.get(settingKey.slice(3));
+        return jsonResponse(value === undefined ? [] : [{ value }]);
+      }
+      return jsonResponse([]);
+    }
+    if (method === 'POST') {
+      const row = JSON.parse(init.body);
+      cmsContent.set(row.setting_key, row.value);
+      return new Response(null, { status: 201 });
+    }
   }
 
   if (url.hostname === 'jwppdvxyeuqbdcljzybj.supabase.co' && url.pathname === '/rest/v1/analytics_events' && method === 'POST') {
@@ -242,6 +254,48 @@ try {
 
   const unauthorizedTelegramTest = await worker.fetch(request('/api/telegram/test-bot'), env);
   assert.equal(unauthorizedTelegramTest.status, 401, 'Telegram test endpoint must require admin authentication.');
+
+  const unauthorizedCmsWrite = await worker.fetch(request('/api/admin/content/services', {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ content: [{ id: 'test' }] }),
+  }), env);
+  assert.equal(unauthorizedCmsWrite.status, 401, 'CMS writes must require admin authentication.');
+
+  const cmsServices = [{ id: 'ai-website', title: 'Service persisted in Supabase', active: true }];
+  const cmsWrite = await worker.fetch(request('/api/admin/content/services', {
+    method: 'PUT',
+    headers: { cookie: 'tekvix_admin=' + cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ content: cmsServices }),
+  }), env);
+  assert.equal(cmsWrite.status, 200);
+  assert.equal((await readJson(cmsWrite)).success, true);
+
+  const cmsBlogs = [
+    { id: 'published-post', title: 'Visible post', published: true },
+    { id: 'draft-post', title: 'Private draft', published: false },
+  ];
+  const cmsBlogWrite = await worker.fetch(request('/api/admin/content/blogPosts', {
+    method: 'PUT',
+    headers: { cookie: 'tekvix_admin=' + cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ content: cmsBlogs }),
+  }), env);
+  assert.equal(cmsBlogWrite.status, 200);
+
+  const publicCmsResponse = await worker.fetch(request('/api/site-content'), env);
+  const publicCms = await readJson(publicCmsResponse);
+  assert.equal(publicCmsResponse.status, 200);
+  assert.equal(publicCms.content.services[0].title, 'Service persisted in Supabase');
+  assert.deepEqual(publicCms.content.blogPosts.map((post) => post.id), ['published-post']);
+  assert.ok(!JSON.stringify(publicCms).includes('Private draft'), 'Public CMS response must not expose unpublished blog drafts.');
+
+  const adminCmsResponse = await worker.fetch(request('/api/admin/content', {
+    headers: { cookie: 'tekvix_admin=' + cookie },
+  }), env);
+  const adminCms = await readJson(adminCmsResponse);
+  assert.equal(adminCmsResponse.status, 200);
+  assert.equal(adminCms.content.blogPosts.length, 2, 'Admin CMS must retain drafts.');
+  assert.equal(adminCms.content.blogPosts[1].published, false);
 
   const statusResponse = await worker.fetch(request('/api/telegram/status'), env);
   const statusData = await readJson(statusResponse);
