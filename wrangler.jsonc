@@ -3,6 +3,9 @@
   "name": "tekvix",
   "main": "./src/worker.ts",
   "compatibility_date": "2026-09-09",
+  "vars": {
+    "SUPABASE_URL": "https://jwppdvxyeuqbdcljzybj.supabase.co"
+  },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
