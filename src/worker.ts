@@ -49,6 +49,15 @@ type OrderRow = {
 
 const rateWindows = new Map<string, { count: number; expiresAt: number }>();
 const MAX_BODY_LENGTH = 24_000;
+const CMS_RESOURCES = [
+  'brandInfo', 'services', 'portfolio', 'testimonials', 'faqs',
+  'blogPosts', 'sectionsConfig', 'socialLinks', 'events',
+] as const;
+type CmsResource = typeof CMS_RESOURCES[number];
+const CMS_ARRAY_RESOURCES = new Set<CmsResource>([
+  'services', 'portfolio', 'testimonials', 'faqs', 'blogPosts',
+  'sectionsConfig', 'socialLinks', 'events',
+]);
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -70,12 +79,12 @@ function cleanSingleLine(value: unknown, maxLength: number, fallback = ''): stri
   return cleanText(value, maxLength, fallback).replace(/[\r\n\t]+/g, ' ').trim().slice(0, maxLength) || fallback;
 }
 
-async function readJson(request: Request): Promise<Record<string, unknown> | null> {
+async function readJson(request: Request, maxLength = MAX_BODY_LENGTH): Promise<Record<string, unknown> | null> {
   const contentLength = Number(request.headers.get('content-length') || 0);
-  if (contentLength > MAX_BODY_LENGTH) return null;
+  if (contentLength > maxLength) return null;
   try {
     const raw = await request.text();
-    if (raw.length > MAX_BODY_LENGTH) return null;
+    if (raw.length > maxLength) return null;
     const value: unknown = JSON.parse(raw);
     return value && typeof value === 'object' && !Array.isArray(value)
       ? value as Record<string, unknown>
@@ -805,10 +814,110 @@ function generateTekvixFallbackResponse(userMessage: string): string {
   }
 
 
+function isCmsResource(value: string): value is CmsResource {
+  return (CMS_RESOURCES as readonly string[]).includes(value);
+}
+
+function cmsSettingKey(resource: CmsResource): string {
+  return 'cms_' + resource;
+}
+
+async function readCmsContent(env: Env, resource: CmsResource): Promise<unknown | undefined> {
+  const rows = await readRows<{ value?: unknown }>(
+    env,
+    'site_settings?select=value&setting_key=eq.' + encodeURIComponent(cmsSettingKey(resource)) + '&limit=1',
+  );
+  return rows[0]?.value;
+}
+
+async function readAllCmsContent(env: Env, publicOnly: boolean): Promise<Record<string, unknown>> {
+  const content: Record<string, unknown> = {};
+  const entries = await Promise.all(CMS_RESOURCES.map(async (resource) => ({
+    resource,
+    value: await readCmsContent(env, resource),
+  })));
+  for (const { resource, value } of entries) {
+    if (value === undefined || value === null) continue;
+    if (publicOnly && resource === 'blogPosts' && Array.isArray(value)) {
+      // Public visitors must never receive unpublished draft posts.
+      content[resource] = value.filter((post) =>
+        post && typeof post === 'object' && (post as Record<string, unknown>).published !== false
+      );
+    } else {
+      content[resource] = value;
+    }
+  }
+  return content;
+}
+
+async function saveCmsContent(env: Env, resource: CmsResource, content: unknown): Promise<void> {
+  const response = await databaseRequest(env, 'site_settings?on_conflict=setting_key', {
+    method: 'POST',
+    body: {
+      setting_key: cmsSettingKey(resource),
+      value: content,
+      updated_at: new Date().toISOString(),
+    },
+    prefer: 'resolution=merge-duplicates,return=minimal',
+  });
+  if (!response.ok) throw new Error('CMS content save failed with status ' + response.status);
+}
+
 async function handleApi(request: Request, env: Env): Promise<Response | null> {
   const url = new URL(request.url);
   const path = url.pathname;
   const method = request.method.toUpperCase();
+
+  if (path === '/api/site-content' && method === 'GET') {
+    if (!supabaseReady(env)) return json({ success: true, content: {} });
+    try {
+      return json({ success: true, content: await readAllCmsContent(env, true) });
+    } catch {
+      return json({ success: false, error: 'خطا در دریافت محتوای سایت.' }, 502);
+    }
+  }
+
+  if (path === '/api/admin/content' && method === 'GET') {
+    const authError = await requireAdmin(request, env);
+    if (authError) return authError;
+    if (!supabaseReady(env)) return json({ success: false, error: 'پایگاه داده هنوز تنظیم نشده است.' }, 503);
+    try {
+      return json({ success: true, content: await readAllCmsContent(env, false) });
+    } catch {
+      return json({ success: false, error: 'خطا در دریافت محتوای پنل مدیریت.' }, 502);
+    }
+  }
+
+  const cmsWriteMatch = path.match(/^\\/api\\/admin\\/content\\/([A-Za-z]+)$/);
+  if (cmsWriteMatch && method === 'PUT') {
+    const authError = await requireAdmin(request, env);
+    if (authError) return authError;
+    const limited = rateLimit(request, 'admin-cms-write', 180, 15 * 60 * 1000);
+    if (limited) return limited;
+    if (!supabaseReady(env)) return json({ success: false, error: 'پایگاه داده هنوز تنظیم نشده است.' }, 503);
+    const resourceName = cmsWriteMatch[1];
+    if (!isCmsResource(resourceName)) return json({ success: false, error: 'نوع محتوای درخواستی پشتیبانی نمی‌شود.' }, 404);
+    const body = await readJson(request, 250_000);
+    if (!body || !Object.prototype.hasOwnProperty.call(body, 'content')) {
+      return json({ success: false, error: 'محتوای ارسالی معتبر نیست یا بیش از حد بزرگ است.' }, 400);
+    }
+    const content = body.content;
+    if (CMS_ARRAY_RESOURCES.has(resourceName) && !Array.isArray(content)) {
+      return json({ success: false, error: 'محتوا باید یک آرایه معتبر باشد.' }, 400);
+    }
+    if (resourceName === 'brandInfo' && (!content || typeof content !== 'object' || Array.isArray(content))) {
+      return json({ success: false, error: 'اطلاعات برند معتبر نیست.' }, 400);
+    }
+    if (Array.isArray(content) && content.length > 2000) {
+      return json({ success: false, error: 'تعداد آیتم‌های محتوا بیش از حد مجاز است.' }, 400);
+    }
+    try {
+      await saveCmsContent(env, resourceName, content);
+      return json({ success: true, resource: resourceName, updatedAt: new Date().toISOString() });
+    } catch {
+      return json({ success: false, error: 'ذخیره محتوا در پایگاه داده انجام نشد.' }, 502);
+    }
+  }
 
   if (path === '/api/health' && method === 'GET') {
     return json({
