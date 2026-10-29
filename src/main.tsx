@@ -6,6 +6,7 @@ import App from './App.tsx';
 import './index.css';
 import './order-modal-polish.css';
 import './homepage-premium.css';
+import './halloween-theme.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
