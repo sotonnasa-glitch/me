@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 const workerSource = await readFile(new URL('../src/worker.ts', import.meta.url), 'utf8');
 const tick = String.fromCharCode(96);
 const opening = 'const HALLOWEEN_PUMPKIN_INJECTION = String.raw' + tick;
-const closing = tick + ';\n\nfunction isHalloweenPumpkinWindowActive';
+const closing = tick + '\n\nfunction isHalloweenPumpkinWindowActive';
 const start = workerSource.indexOf(opening);
 assert.notEqual(start, -1, 'Worker must define the seasonal HTML injection.');
 const bodyStart = start + opening.length;
