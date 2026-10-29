@@ -1558,7 +1558,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
   return null;
 }
 
-const HALLOWEEN_PUMPKIN_INJECTION = String.raw\`<style id="tekvix-living-pumpkin-style">
+const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-style">
 #hero-section .tk-halloween-pumpkin-host {
   border-radius: 47% 53% 48% 49% / 43% 47% 53% 55% !important;
   background:
@@ -1722,7 +1722,7 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw\`<style id="tekvix-living-pumpkin
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", startPumpkin, { once: true });
   else startPumpkin();
 })();
-</script>\`
+</script>`
 
 function isHalloweenPumpkinWindowActive(date: Date = new Date()): boolean {
   const month = date.getUTCMonth();
@@ -1739,8 +1739,8 @@ async function serveSeasonalAsset(request: Request, env: Env): Promise<Response>
     return response;
   }
   const html = await response.clone().text();
-  if (!/<\\/body>/i.test(html)) return response;
-  const enhancedHtml = html.replace(/<\\/body>/i, HALLOWEEN_PUMPKIN_INJECTION + '</body>');
+  if (!/<\/body>/i.test(html)) return response;
+  const enhancedHtml = html.replace(/<\/body>/i, HALLOWEEN_PUMPKIN_INJECTION + '</body>');
   if (enhancedHtml === html) return response;
   const responseHeaders = new Headers(response.headers);
   responseHeaders.delete('content-length');
