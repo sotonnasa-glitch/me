@@ -1764,7 +1764,8 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
   pointer-events: none;
   contain: layout paint;
 }
-.tk-haunted-3d-ready .tk-tekvix-living-pumpkin { display: none !important; }
+.tk-haunted-3d-ready .tk-tekvix-living-pumpkin,
+.tk-haunted-3d-ready .halloween-pumpkin-overlay { display: none !important; }
 .tk-haunted-3d-layer canvas {
   display: block;
   width: 100%;
