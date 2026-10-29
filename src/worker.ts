@@ -1722,7 +1722,475 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", startPumpkin, { once: true });
   else startPumpkin();
 })();
-</script>`
+<style id="tekvix-haunted-world-style">
+/* Replace the stray sci-fi props with a balanced, low-noise Halloween scene. */
+.halloween-mode .page-ship,
+.halloween-mode .page-meteor,
+.halloween-mode #hero-section .hero-meteor {
+  display: none !important;
+  opacity: 0 !important;
+}
+.halloween-mode #hero-section [class*="border-cyan-400"] {
+  border-color: rgba(126, 98, 192, .22) !important;
+}
+.halloween-mode #hero-section .animate-orbit,
+.halloween-mode #hero-section .animate-orbit-reverse {
+  opacity: .56;
+}
+.halloween-mode #hero-section .animate-pulse-slow {
+  animation-duration: 9s !important;
+  opacity: .28;
+}
+.halloween-mode #hero-section .animate-cosmic-corona {
+  background: radial-gradient(circle, rgba(255, 111, 35, .18), rgba(124, 58, 237, .12) 52%, transparent 74%) !important;
+}
+.tk-haunted-world-stage { position: relative !important; isolation: isolate; }
+.tk-haunted-3d-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  overflow: visible;
+  pointer-events: none;
+  contain: layout paint;
+}
+.tk-haunted-3d-layer canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.tk-haunt-fallback {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  overflow: visible;
+  pointer-events: none;
+  perspective: 700px;
+  transform-style: preserve-3d;
+}
+.tk-haunt-prop {
+  position: absolute;
+  display: block;
+  font-size: clamp(27px, 7vw, 54px);
+  line-height: 1;
+  filter: drop-shadow(0 0 13px rgba(166, 104, 255, .55));
+  transform-style: preserve-3d;
+  will-change: transform;
+  user-select: none;
+}
+.tk-haunt-ghost { top: 18%; left: 5%; animation: tk-haunt-drift-a 5.6s ease-in-out infinite; }
+.tk-haunt-demon { top: 18%; right: 5%; font-size: clamp(29px, 7.4vw, 56px); filter: drop-shadow(0 0 13px rgba(255, 66, 45, .72)); animation: tk-haunt-drift-b 4.8s ease-in-out infinite; }
+.tk-haunt-bat-a { top: 4%; left: 36%; font-size: clamp(22px, 5vw, 38px); animation: tk-haunt-bat-a 6.5s ease-in-out infinite; }
+.tk-haunt-bat-b { top: 48%; right: 2%; font-size: clamp(22px, 4.5vw, 33px); animation: tk-haunt-bat-b 7.2s ease-in-out infinite; }
+.tk-haunt-skull { bottom: 9%; left: 14%; font-size: clamp(25px, 6vw, 44px); filter: drop-shadow(0 0 12px rgba(255, 133, 50, .52)); animation: tk-haunt-drift-b 5.9s ease-in-out infinite; }
+.tk-haunt-castle { bottom: 7%; right: 12%; font-size: clamp(24px, 5.5vw, 42px); filter: drop-shadow(0 0 11px rgba(145, 97, 225, .62)); animation: tk-haunt-drift-a 7s ease-in-out infinite; }
+@keyframes tk-haunt-drift-a {
+  0%,100% { transform: translate3d(0,0,0) rotateY(-18deg) rotateZ(-4deg); }
+  50% { transform: translate3d(0,-10px,18px) rotateY(18deg) rotateZ(4deg); }
+}
+@keyframes tk-haunt-drift-b {
+  0%,100% { transform: translate3d(0,0,0) rotateY(20deg) rotateZ(4deg); }
+  50% { transform: translate3d(0,-8px,14px) rotateY(-20deg) rotateZ(-5deg); }
+}
+@keyframes tk-haunt-bat-a {
+  0%,100% { transform: translate3d(-5px,0,0) rotateY(-25deg) rotateZ(-8deg); }
+  50% { transform: translate3d(28px,15px,25px) rotateY(25deg) rotateZ(8deg); }
+}
+@keyframes tk-haunt-bat-b {
+  0%,100% { transform: translate3d(0,0,0) rotateY(25deg) rotateZ(7deg); }
+  50% { transform: translate3d(-24px,-12px,16px) rotateY(-25deg) rotateZ(-7deg); }
+}
+@media (max-width: 640px) {
+  .halloween-mode #hero-section .animate-orbit,
+  .halloween-mode #hero-section .animate-orbit-reverse { opacity: .44; }
+  .tk-haunt-prop { text-shadow: 0 4px 10px rgba(0,0,0,.75); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tk-haunt-prop { animation: none !important; }
+}
+</style>
+<script>
+(function () {
+  if (window.__tekvixHauntedWorldInstalled) return;
+  window.__tekvixHauntedWorldInstalled = true;
+  var current = new Date();
+  var active = (current.getMonth() === 9 && current.getDate() >= 29) ||
+    (current.getMonth() === 10 && current.getDate() <= 2);
+  if (!active) return;
+
+  function installFallback(stage) {
+    var fallback = document.createElement('div');
+    fallback.className = 'tk-haunt-fallback';
+    fallback.setAttribute('aria-hidden', 'true');
+    fallback.innerHTML =
+      '<span class="tk-haunt-prop tk-haunt-ghost">👻</span>' +
+      '<span class="tk-haunt-prop tk-haunt-demon">😈</span>' +
+      '<span class="tk-haunt-prop tk-haunt-bat-a">🦇</span>' +
+      '<span class="tk-haunt-prop tk-haunt-bat-b">🦇</span>' +
+      '<span class="tk-haunt-prop tk-haunt-skull">💀</span>' +
+      '<span class="tk-haunt-prop tk-haunt-castle">🏰</span>';
+    stage.appendChild(fallback);
+    return fallback;
+  }
+
+  function material(THREE, color, emissive, emissiveIntensity, roughness) {
+    return new THREE.MeshStandardMaterial({
+      color: color,
+      emissive: emissive || 0x000000,
+      emissiveIntensity: emissiveIntensity || 0,
+      roughness: roughness === undefined ? 0.52 : roughness,
+      metalness: 0.12
+    });
+  }
+
+  function makeGhost(THREE) {
+    var group = new THREE.Group();
+    var cloth = new THREE.MeshStandardMaterial({
+      color: 0xe9e1ff, emissive: 0x6040b8, emissiveIntensity: 0.38,
+      roughness: 0.3, metalness: 0.06, transparent: true, opacity: 0.91, side: THREE.DoubleSide
+    });
+    var dome = new THREE.Mesh(new THREE.SphereGeometry(0.34, 18, 14), cloth);
+    dome.scale.set(1, 1.04, 0.78);
+    dome.position.y = 0.18;
+    group.add(dome);
+    var skirt = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.62, 20, 5), cloth);
+    skirt.position.y = -0.21;
+    skirt.scale.z = 0.8;
+    group.add(skirt);
+    for (var i = 0; i < 5; i++) {
+      var angle = Math.PI * (i / 4);
+      var hem = new THREE.Mesh(new THREE.SphereGeometry(0.095, 9, 7), cloth);
+      hem.position.set(Math.cos(angle) * 0.25, -0.48 + (i % 2 ? 0.06 : -0.015), Math.sin(angle) * 0.16);
+      hem.scale.set(1.08, 0.84, 0.9);
+      group.add(hem);
+    }
+    var socket = material(THREE, 0x1c1026, 0x08030e, 0.15, 0.3);
+    [-0.115, 0.115].forEach(function (x) {
+      var eye = new THREE.Mesh(new THREE.SphereGeometry(0.052, 10, 8), socket);
+      eye.scale.set(0.9, 1.28, 0.4);
+      eye.position.set(x, 0.2, 0.285);
+      group.add(eye);
+    });
+    var mouth = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), socket);
+    mouth.scale.set(0.7, 1.25, 0.36);
+    mouth.position.set(0, 0.07, 0.3);
+    group.add(mouth);
+    var glow = new THREE.PointLight(0x9c7cff, 0.68, 2.2);
+    glow.position.set(0, 0.08, 0.5);
+    group.add(glow);
+    group.position.set(-2.24, 0.48, 0.45);
+    group.scale.setScalar(0.82);
+    return group;
+  }
+
+  function makeDemonSkull(THREE) {
+    var group = new THREE.Group();
+    var bone = material(THREE, 0xd8cce5, 0x32183f, 0.34, 0.42);
+    var face = new THREE.Mesh(new THREE.SphereGeometry(0.34, 18, 14), bone);
+    face.scale.set(0.86, 0.94, 0.74);
+    face.position.y = 0.06;
+    group.add(face);
+    var jaw = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.2, 0.28), bone);
+    jaw.position.set(0, -0.21, 0.12);
+    group.add(jaw);
+    var socket = material(THREE, 0x160712, 0x070108, 0.1, 0.25);
+    var ember = new THREE.MeshStandardMaterial({ color: 0xff643f, emissive: 0xff2815, emissiveIntensity: 1.65, roughness: 0.28 });
+    [-0.135, 0.135].forEach(function (x) {
+      var eye = new THREE.Mesh(new THREE.SphereGeometry(0.095, 10, 8), socket);
+      eye.scale.set(1.1, 0.88, 0.45);
+      eye.position.set(x, 0.105, 0.26);
+      group.add(eye);
+      var shine = new THREE.Mesh(new THREE.SphereGeometry(0.033, 8, 6), ember);
+      shine.position.set(x, 0.1, 0.31);
+      group.add(shine);
+    });
+    var nose = new THREE.Mesh(new THREE.ConeGeometry(0.052, 0.13, 5), socket);
+    nose.rotation.x = Math.PI;
+    nose.position.set(0, -0.015, 0.28);
+    group.add(nose);
+    var teeth = material(THREE, 0xffe7b0, 0x9a451c, 0.42, 0.32);
+    for (var i = 0; i < 4; i++) {
+      var tooth = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.085, 0.06), teeth);
+      tooth.position.set(-0.13 + i * 0.087, -0.2, 0.28);
+      group.add(tooth);
+    }
+    var horn = material(THREE, 0x3a142f, 0x9d142a, 0.62, 0.38);
+    [-1, 1].forEach(function (side) {
+      var hornMesh = new THREE.Mesh(new THREE.ConeGeometry(0.087, 0.25, 8), horn);
+      hornMesh.position.set(side * 0.23, 0.34, 0);
+      hornMesh.rotation.z = side * -0.32;
+      group.add(hornMesh);
+    });
+    var aura = new THREE.PointLight(0xff3d2e, 0.72, 2.1);
+    aura.position.set(0, 0.1, 0.48);
+    group.add(aura);
+    group.position.set(2.25, 0.28, 0.38);
+    group.scale.setScalar(0.78);
+    return group;
+  }
+
+  function makeBat(THREE, scale, x, y, z) {
+    var shape = new THREE.Shape();
+    shape.moveTo(0, 0.06);
+    shape.quadraticCurveTo(-0.22, 0.24, -0.48, 0.34);
+    shape.lineTo(-0.4, 0.05);
+    shape.lineTo(-0.72, 0.17);
+    shape.quadraticCurveTo(-0.68, -0.13, -0.35, -0.13);
+    shape.lineTo(-0.1, -0.31);
+    shape.lineTo(0, -0.21);
+    shape.lineTo(0.1, -0.31);
+    shape.lineTo(0.35, -0.13);
+    shape.quadraticCurveTo(0.68, -0.13, 0.72, 0.17);
+    shape.lineTo(0.4, 0.05);
+    shape.lineTo(0.48, 0.34);
+    shape.quadraticCurveTo(0.22, 0.24, 0, 0.06);
+    var wingMaterial = new THREE.MeshStandardMaterial({
+      color: 0x21102f, emissive: 0x6731a0, emissiveIntensity: 0.48,
+      roughness: 0.42, metalness: 0.22, side: THREE.DoubleSide
+    });
+    var bat = new THREE.Group();
+    var wings = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, {
+      depth: 0.045, bevelEnabled: true, bevelThickness: 0.018, bevelSize: 0.012, bevelSegments: 2, steps: 1
+    }), wingMaterial);
+    wings.position.z = -0.02;
+    bat.add(wings);
+    var body = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 8), material(THREE, 0x21102f, 0x4b1f76, 0.55, 0.42));
+    body.scale.set(0.72, 1.3, 0.8);
+    body.position.set(0, -0.035, 0.07);
+    bat.add(body);
+    var eyes = new THREE.MeshStandardMaterial({ color: 0xffb05e, emissive: 0xff5c20, emissiveIntensity: 1.25 });
+    [-0.035, 0.035].forEach(function (eyeX) {
+      var eye = new THREE.Mesh(new THREE.SphereGeometry(0.018, 6, 5), eyes);
+      eye.position.set(eyeX, 0.015, 0.16);
+      bat.add(eye);
+    });
+    bat.position.set(x, y, z);
+    bat.scale.setScalar(scale);
+    return bat;
+  }
+
+  function makeCastle(THREE) {
+    var castle = new THREE.Group();
+    var stone = material(THREE, 0x160d25, 0x5b2577, 0.58, 0.68);
+    var shadowStone = material(THREE, 0x0c0718, 0x2b194b, 0.38, 0.72);
+    function tower(x, y, width, height, mat) {
+      var body = new THREE.Mesh(new THREE.BoxGeometry(width, height, 0.22), mat);
+      body.position.set(x, y, 0);
+      castle.add(body);
+      var roof = new THREE.Mesh(new THREE.ConeGeometry(width * 0.68, height * 0.4, 5), stone);
+      roof.position.set(x, y + height / 2 + height * 0.19, 0);
+      roof.rotation.y = Math.PI / 5;
+      castle.add(roof);
+      var slit = new THREE.Mesh(new THREE.BoxGeometry(width * 0.12, height * 0.3, 0.03), material(THREE, 0xffa15c, 0xff5b23, 1.15, 0.3));
+      slit.position.set(x, y + height * 0.06, 0.13);
+      castle.add(slit);
+    }
+    tower(-0.32, 0.02, 0.26, 0.78, stone);
+    tower(0, -0.08, 0.46, 0.58, shadowStone);
+    tower(0.33, 0.1, 0.25, 0.88, stone);
+    var gate = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.26, 0.05), material(THREE, 0x05030b, 0x000000, 0, 0.95));
+    gate.position.set(0, -0.22, 0.15);
+    castle.add(gate);
+    castle.position.set(0, -1.8, -0.7);
+    castle.scale.setScalar(0.92);
+    return castle;
+  }
+
+  function makeCandle(THREE, x, y, scale) {
+    var group = new THREE.Group();
+    var wax = material(THREE, 0xd9c7a7, 0x3c1c4a, 0.18, 0.72);
+    var body = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.31, 9), wax);
+    group.add(body);
+    var flame = new THREE.Mesh(new THREE.ConeGeometry(0.065, 0.19, 8), new THREE.MeshStandardMaterial({
+      color: 0xffc36d, emissive: 0xff6a20, emissiveIntensity: 1.6, roughness: 0.3
+    }));
+    flame.position.y = 0.235;
+    group.add(flame);
+    var light = new THREE.PointLight(0xff8536, 0.64, 1.45);
+    light.position.y = 0.23;
+    group.add(light);
+    group.position.set(x, y, -0.2);
+    group.scale.setScalar(scale);
+    return { group: group, flame: flame, light: light };
+  }
+
+  function mount3D(THREE, stage, fallback) {
+    var width = Math.max(1, stage.clientWidth);
+    var height = Math.max(1, stage.clientHeight);
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(39, width / height, 0.1, 40);
+    camera.position.set(0, 0, 8);
+    var renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        alpha: true, antialias: window.innerWidth > 640, powerPreference: 'low-power'
+      });
+    } catch (error) {
+      fallback.classList.add('tk-haunt-fallback-ready');
+      return;
+    }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 640 ? 1.2 : 1.55));
+    renderer.setSize(width, height, false);
+    renderer.setClearColor(0x000000, 0);
+    if (renderer.outputColorSpace && THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
+    var layer = document.createElement('div');
+    layer.className = 'tk-haunted-3d-layer';
+    layer.setAttribute('aria-hidden', 'true');
+    layer.appendChild(renderer.domElement);
+    stage.appendChild(layer);
+
+    scene.add(new THREE.HemisphereLight(0xc7b3ff, 0x1a071f, 1.35));
+    var moon = new THREE.DirectionalLight(0xe0d9ff, 1.55);
+    moon.position.set(-3, 4, 6);
+    scene.add(moon);
+    var ember = new THREE.PointLight(0xff6a2d, 1.7, 6);
+    ember.position.set(0, -0.1, 2);
+    scene.add(ember);
+
+    var ghost = makeGhost(THREE);
+    scene.add(ghost);
+    var demon = makeDemonSkull(THREE);
+    scene.add(demon);
+    var bats = [
+      makeBat(THREE, 0.52, -0.95, 1.42, 0.35),
+      makeBat(THREE, 0.39, 1.18, 1.34, -0.15),
+      makeBat(THREE, 0.3, -1.63, -0.72, 0.25)
+    ];
+    bats.forEach(function (bat) { scene.add(bat); });
+    scene.add(makeCastle(THREE));
+    var candles = [
+      makeCandle(THREE, -2.75, -1.18, 0.78),
+      makeCandle(THREE, 2.72, -1.22, 0.72)
+    ];
+    candles.forEach(function (candle) { scene.add(candle.group); });
+
+    var moteCount = window.innerWidth < 640 ? 48 : 78;
+    var motePositions = new Float32Array(moteCount * 3);
+    for (var i = 0; i < moteCount; i++) {
+      motePositions[i * 3] = (Math.random() - 0.5) * 6.6;
+      motePositions[i * 3 + 1] = (Math.random() - 0.5) * 4.9;
+      motePositions[i * 3 + 2] = -0.8 - Math.random() * 1.8;
+    }
+    var moteGeometry = new THREE.BufferGeometry();
+    moteGeometry.setAttribute('position', new THREE.BufferAttribute(motePositions, 3));
+    var motes = new THREE.Points(moteGeometry, new THREE.PointsMaterial({
+      color: 0xffaa67, size: 0.035, transparent: true, opacity: 0.72, sizeAttenuation: true
+    }));
+    scene.add(motes);
+
+    try {
+      renderer.render(scene, camera);
+      fallback.remove();
+    } catch (error) {
+      layer.remove();
+      renderer.dispose();
+      fallback.classList.add('tk-haunt-fallback-ready');
+      return;
+    }
+
+    var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var visible = !('IntersectionObserver' in window);
+    var frame = 0;
+    var startedAt = 0;
+    function draw(timestamp) {
+      frame = 0;
+      if (document.hidden || !visible) return;
+      if (!reducedMotion) {
+        if (!startedAt) startedAt = timestamp;
+        var t = timestamp * 0.001;
+        ghost.position.y = 0.48 + Math.sin(t * 1.15) * 0.11;
+        ghost.rotation.y = Math.sin(t * 0.72) * 0.3;
+        ghost.rotation.z = Math.sin(t * 1.35) * 0.045;
+        demon.position.y = 0.28 + Math.sin(t * 1.3 + 1.4) * 0.075;
+        demon.rotation.y = Math.sin(t * 0.9) * 0.22;
+        bats.forEach(function (bat, index) {
+          bat.position.x += Math.sin(t * (0.42 + index * 0.08) + index) * 0.0018;
+          bat.position.y += Math.sin(t * 2.1 + index * 1.7) * 0.0022;
+          bat.rotation.z = Math.sin(t * 3.2 + index) * 0.13;
+          bat.rotation.y = Math.sin(t * 1.1 + index) * 0.25;
+        });
+        candles.forEach(function (candle, index) {
+          candle.flame.scale.y = 0.78 + Math.sin(t * 8 + index * 2) * 0.14;
+          candle.light.intensity = 0.48 + Math.sin(t * 9 + index) * 0.18;
+        });
+        motes.rotation.y = t * 0.025;
+        motes.rotation.z = Math.sin(t * 0.18) * 0.05;
+      }
+      renderer.render(scene, camera);
+      if (!reducedMotion) frame = window.requestAnimationFrame(draw);
+    }
+    function resume() {
+      if (!reducedMotion && !frame && visible && !document.hidden) frame = window.requestAnimationFrame(draw);
+      else if (reducedMotion) renderer.render(scene, camera);
+    }
+    if ('IntersectionObserver' in window) {
+      var observer = new IntersectionObserver(function (entries) {
+        visible = entries.some(function (entry) { return entry.isIntersecting; });
+        if (visible) resume();
+        else if (frame) { window.cancelAnimationFrame(frame); frame = 0; }
+      }, { rootMargin: '160px' });
+      observer.observe(stage);
+    }
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) resume();
+      else if (frame) { window.cancelAnimationFrame(frame); frame = 0; }
+    });
+    var resizeObserver;
+    if ('ResizeObserver' in window) {
+      resizeObserver = new ResizeObserver(function () {
+        var nextWidth = Math.max(1, stage.clientWidth);
+        var nextHeight = Math.max(1, stage.clientHeight);
+        camera.aspect = nextWidth / nextHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(nextWidth, nextHeight, false);
+        if (reducedMotion) renderer.render(scene, camera);
+      });
+      resizeObserver.observe(stage);
+    } else {
+      window.addEventListener('resize', function () {
+        var nextWidth = Math.max(1, stage.clientWidth);
+        var nextHeight = Math.max(1, stage.clientHeight);
+        camera.aspect = nextWidth / nextHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(nextWidth, nextHeight, false);
+      }, { passive: true });
+    }
+    if (reducedMotion) renderer.render(scene, camera);
+    else resume();
+  }
+
+  function applyHauntedWorld() {
+    var hero = document.querySelector('#hero-section');
+    var orb = hero && hero.querySelector('.animate-orb-breathe');
+    if (!orb || !orb.parentElement) return false;
+    var stage = orb.parentElement;
+    if (stage.querySelector('.tk-haunted-3d-layer') || stage.querySelector('.tk-haunt-fallback')) return true;
+    stage.classList.add('tk-haunted-world-stage');
+    var fallback = installFallback(stage);
+    window.setTimeout(function () { if (fallback.isConnected) fallback.classList.add('tk-haunt-fallback-ready'); }, 1200);
+    import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js')
+      .then(function (THREE) {
+        if (fallback.isConnected && stage.isConnected) mount3D(THREE, stage, fallback);
+      })
+      .catch(function () { fallback.classList.add('tk-haunt-fallback-ready'); });
+    return true;
+  }
+
+  function boot() {
+    var root = document.getElementById('root');
+    if (root && root.firstElementChild) root.firstElementChild.classList.add('halloween-mode');
+    if (applyHauntedWorld()) return;
+    if (!window.MutationObserver || !document.documentElement) return;
+    var observer = new MutationObserver(function () {
+      if (applyHauntedWorld()) observer.disconnect();
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    window.setTimeout(function () { observer.disconnect(); }, 30000);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+  else boot();
+})();
+</script></script>`
 
 function isHalloweenPumpkinWindowActive(date: Date = new Date()): boolean {
   const month = date.getUTCMonth();
