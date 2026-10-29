@@ -2283,13 +2283,59 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
     var stage = orb.parentElement;
     if (stage.querySelector('.tk-haunted-3d-layer') || stage.querySelector('.tk-haunt-fallback')) return true;
     stage.classList.add('tk-haunted-world-stage');
-    var fallback = installFallback(stage);
-    window.setTimeout(function () { if (fallback.isConnected) fallback.classList.add('tk-haunt-fallback-ready'); }, 1200);
+    var fallback = stage.querySelector('.tk-haunt-fallback') || installFallback(stage);
+    window.__tekvixHauntStatus = { state: 'loading-three', stageConnected: stage.isConnected, time: Date.now() };
+    window.setTimeout(function () {
+      var currentStage = document.querySelector('#hero-section .animate-orb-breathe');
+      currentStage = currentStage && currentStage.parentElement;
+      var currentFallback = currentStage && currentStage.querySelector('.tk-haunt-fallback');
+      if (currentFallback && !currentStage.querySelector('.tk-haunted-3d-layer')) {
+        currentFallback.classList.add('tk-haunt-fallback-ready');
+        window.__tekvixHauntStatus = {
+          state: 'fallback-visible',
+          reason: 'three-scene-not-mounted-yet',
+          stageConnected: currentStage.isConnected,
+          time: Date.now()
+        };
+      }
+    }, 1800);
     import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js')
       .then(function (THREE) {
-        if (fallback.isConnected && stage.isConnected) mount3D(THREE, stage, fallback);
+        // React may rerender the Hero while the remote module downloads. Resolve the
+        // stage again at mount time instead of using a potentially stale DOM node.
+        var currentHero = document.querySelector('#hero-section');
+        var currentOrb = currentHero && currentHero.querySelector('.animate-orb-breathe');
+        var currentStage = currentOrb && currentOrb.parentElement;
+        if (!currentStage || !currentStage.isConnected) {
+          window.__tekvixHauntStatus = { state: 'mount-target-missing', time: Date.now() };
+          throw new Error('Halloween hero stage is no longer connected');
+        }
+        currentStage.classList.add('tk-haunted-world-stage');
+        var currentFallback = currentStage.querySelector('.tk-haunt-fallback') || installFallback(currentStage);
+        if (currentStage.querySelector('.tk-haunted-3d-layer')) {
+          window.__tekvixHauntStatus = { state: 'already-mounted', time: Date.now() };
+          currentFallback.remove();
+          return;
+        }
+        window.__tekvixHauntStatus = { state: 'mounting-three-scene', stageConnected: currentStage.isConnected, time: Date.now() };
+        try {
+          mount3D(THREE, currentStage, currentFallback);
+          var mounted = !!currentStage.querySelector('.tk-haunted-3d-layer');
+          window.__tekvixHauntStatus = { state: mounted ? 'three-scene-mounted' : 'fallback-after-render', mounted: mounted, time: Date.now() };
+          if (!mounted && currentFallback.isConnected) currentFallback.classList.add('tk-haunt-fallback-ready');
+        } catch (error) {
+          currentFallback.classList.add('tk-haunt-fallback-ready');
+          window.__tekvixHauntStatus = { state: 'mount-error', error: String(error), time: Date.now() };
+        }
       })
-      .catch(function () { fallback.classList.add('tk-haunt-fallback-ready'); });
+      .catch(function (error) {
+        var currentHero = document.querySelector('#hero-section');
+        var currentOrb = currentHero && currentHero.querySelector('.animate-orb-breathe');
+        var currentStage = currentOrb && currentOrb.parentElement;
+        var currentFallback = currentStage && currentStage.querySelector('.tk-haunt-fallback');
+        if (currentFallback) currentFallback.classList.add('tk-haunt-fallback-ready');
+        window.__tekvixHauntStatus = { state: 'import-error', error: String(error), time: Date.now() };
+      });
     return true;
   }
 
