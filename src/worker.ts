@@ -1784,19 +1784,56 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
 .tk-haunt-prop {
   position: absolute;
   display: block;
-  font-size: clamp(27px, 7vw, 54px);
-  line-height: 1;
+  width: clamp(34px, 8vw, 58px);
+  height: clamp(38px, 9vw, 64px);
   filter: drop-shadow(0 0 13px rgba(166, 104, 255, .55));
   transform-style: preserve-3d;
   will-change: transform;
   user-select: none;
+  contain: layout style;
 }
-.tk-haunt-ghost { top: 18%; left: 5%; animation: tk-haunt-drift-a 5.6s ease-in-out infinite; }
-.tk-haunt-demon { top: 18%; right: 5%; font-size: clamp(29px, 7.4vw, 56px); filter: drop-shadow(0 0 13px rgba(255, 66, 45, .72)); animation: tk-haunt-drift-b 4.8s ease-in-out infinite; }
-.tk-haunt-bat-a { top: 4%; left: 36%; font-size: clamp(22px, 5vw, 38px); animation: tk-haunt-bat-a 6.5s ease-in-out infinite; }
-.tk-haunt-bat-b { top: 48%; right: 2%; font-size: clamp(22px, 4.5vw, 33px); animation: tk-haunt-bat-b 7.2s ease-in-out infinite; }
-.tk-haunt-skull { bottom: 9%; left: 14%; font-size: clamp(25px, 6vw, 44px); filter: drop-shadow(0 0 12px rgba(255, 133, 50, .52)); animation: tk-haunt-drift-b 5.9s ease-in-out infinite; }
-.tk-haunt-castle { bottom: 7%; right: 12%; font-size: clamp(24px, 5.5vw, 42px); filter: drop-shadow(0 0 11px rgba(145, 97, 225, .62)); animation: tk-haunt-drift-a 7s ease-in-out infinite; }
+.tk-haunt-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.tk-haunt-ghost { top: 18%; left: 5%; width: clamp(34px, 8.5vw, 61px); height: clamp(42px, 10vw, 70px); animation: tk-haunt-drift-a 5.6s ease-in-out infinite; }
+.tk-haunt-demon { top: 18%; right: 5%; width: clamp(36px, 8.9vw, 64px); height: clamp(38px, 9.2vw, 66px); filter: drop-shadow(0 0 13px rgba(255, 66, 45, .72)); animation: tk-haunt-drift-b 4.8s ease-in-out infinite; }
+.tk-haunt-bat-a { top: 4%; left: 36%; width: clamp(34px, 8vw, 56px); height: clamp(21px, 4.8vw, 34px); animation: tk-haunt-bat-a 6.5s ease-in-out infinite; }
+.tk-haunt-bat-b { top: 48%; right: 2%; width: clamp(29px, 6.8vw, 48px); height: clamp(20px, 4.5vw, 32px); animation: tk-haunt-bat-b 7.2s ease-in-out infinite; }
+.tk-haunt-skull { bottom: 9%; left: 14%; width: clamp(31px, 7.4vw, 53px); height: clamp(31px, 7.4vw, 53px); filter: drop-shadow(0 0 12px rgba(255, 133, 50, .52)); animation: tk-haunt-drift-b 5.9s ease-in-out infinite; }
+.tk-haunt-castle { bottom: 7%; right: 12%; width: clamp(38px, 9vw, 65px); height: clamp(34px, 8.2vw, 59px); filter: drop-shadow(0 0 11px rgba(145, 97, 225, .62)); animation: tk-haunt-drift-a 7s ease-in-out infinite; }
+.tk-bat-wing {
+  transform-box: fill-box;
+  animation: tk-bat-flap .42s ease-in-out infinite alternate;
+}
+.tk-bat-wing-left { transform-origin: 100% 80%; }
+.tk-bat-wing-right { transform-origin: 0% 80%; animation-delay: -.21s; }
+.tk-haunt-ghost-art { animation: tk-ghost-glow 3.2s ease-in-out infinite; }
+.tk-haunt-demon-art { animation: tk-demon-glow 2.4s ease-in-out infinite; }
+.tk-haunt-skull-art { animation: tk-skull-glow 4.2s ease-in-out infinite; }
+.tk-haunt-castle-art { animation: tk-castle-glow 5.8s ease-in-out infinite; }
+@keyframes tk-bat-flap {
+  from { transform: rotate(-18deg) scaleY(.88); }
+  to { transform: rotate(20deg) scaleY(1.08); }
+}
+@keyframes tk-ghost-glow {
+  0%,100% { filter: drop-shadow(0 0 4px rgba(185,235,255,.35)); }
+  50% { filter: drop-shadow(0 0 14px rgba(185,235,255,.9)); }
+}
+@keyframes tk-demon-glow {
+  0%,100% { filter: drop-shadow(0 0 5px rgba(255,65,90,.35)); }
+  50% { filter: drop-shadow(0 0 16px rgba(255,65,90,.95)); }
+}
+@keyframes tk-skull-glow {
+  0%,100% { filter: drop-shadow(0 0 4px rgba(255,175,90,.28)); }
+  50% { filter: drop-shadow(0 0 13px rgba(255,175,90,.85)); }
+}
+@keyframes tk-castle-glow {
+  0%,100% { filter: brightness(.82) drop-shadow(0 0 6px rgba(145,97,225,.4)); }
+  50% { filter: brightness(1.24) drop-shadow(0 0 16px rgba(145,97,225,.95)); }
+}
 @keyframes tk-haunt-drift-a {
   0%,100% { transform: translate3d(0,0,0) rotateY(-18deg) rotateZ(-4deg); }
   50% { transform: translate3d(0,-10px,18px) rotateY(18deg) rotateZ(4deg); }
@@ -1836,12 +1873,57 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
     fallback.className = 'tk-haunt-fallback';
     fallback.setAttribute('aria-hidden', 'true');
     fallback.innerHTML =
-      '<span class="tk-haunt-prop tk-haunt-ghost">👻</span>' +
-      '<span class="tk-haunt-prop tk-haunt-demon">😈</span>' +
-      '<span class="tk-haunt-prop tk-haunt-bat-a">🦇</span>' +
-      '<span class="tk-haunt-prop tk-haunt-bat-b">🦇</span>' +
-      '<span class="tk-haunt-prop tk-haunt-skull">💀</span>' +
-      '<span class="tk-haunt-prop tk-haunt-castle">🏰</span>';
+      '<span class="tk-haunt-prop tk-haunt-ghost">' +
+        '<svg class="tk-haunt-svg tk-haunt-ghost-art" viewBox="0 0 100 110" aria-hidden="true" focusable="false">' +
+          '<defs><linearGradient id="tkGhostShell" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#c8c9ff"/><stop offset="1" stop-color="#7a71ba"/></linearGradient><radialGradient id="tkGhostCore"><stop stop-color="#b3f7ff" stop-opacity=".7"/><stop offset="1" stop-color="#b3f7ff" stop-opacity="0"/></radialGradient></defs>' +
+          '<ellipse cx="50" cy="54" rx="38" ry="48" fill="url(#tkGhostCore)"/>' +
+          '<path d="M50 8C28 8 15 26 15 49V94L29 82L39 95L50 84L62 95L73 82L86 94V49C86 26 72 8 50 8Z" fill="url(#tkGhostShell)" stroke="#f4f1ff" stroke-width="2.5"/>' +
+          '<path d="M26 45C30 25 42 18 53 18" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".72"/>' +
+          '<ellipse cx="38" cy="51" rx="6" ry="9" fill="#17112e"/><ellipse cx="63" cy="51" rx="6" ry="9" fill="#17112e"/>' +
+          '<circle cx="39" cy="48" r="2" fill="#9df8ff"/><circle cx="64" cy="48" r="2" fill="#9df8ff"/>' +
+          '<path d="M43 68Q50 75 58 67" fill="none" stroke="#35244f" stroke-width="4" stroke-linecap="round"/>' +
+          '<path d="M20 79L29 72M73 72L82 79" stroke="#fff" stroke-width="2" opacity=".65"/>' +
+        '</svg></span>' +
+      '<span class="tk-haunt-prop tk-haunt-demon">' +
+        '<svg class="tk-haunt-svg tk-haunt-demon-art" viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+          '<path d="M23 35L10 8L36 23L64 23L90 8L77 38" fill="#79263d" stroke="#ff8068" stroke-width="3" stroke-linejoin="round"/>' +
+          '<path d="M50 18C25 18 16 35 18 54L24 77L39 88L61 88L76 77L82 54C84 35 75 18 50 18Z" fill="#b9a3ad" stroke="#f6d8e6" stroke-width="3"/>' +
+          '<path d="M26 44L43 37L40 55L26 52Z" fill="#210c25" stroke="#ff4f66" stroke-width="2"/><path d="M74 44L57 37L60 55L74 52Z" fill="#210c25" stroke="#ff4f66" stroke-width="2"/>' +
+          '<path d="M31 45L39 43L35 49Z" fill="#ffb45d"/><path d="M69 45L61 43L65 49Z" fill="#ffb45d"/>' +
+          '<path d="M46 57L54 57L50 66Z" fill="#442039"/>' +
+          '<path d="M31 70L69 70L63 84L56 77L50 85L44 77L37 84Z" fill="#2a1029" stroke="#f6d8e6" stroke-width="2"/>' +
+          '<path d="M40 71L44 79L48 71M53 71L57 79L61 71" fill="#fff0d5"/>' +
+        '</svg></span>' +
+      '<span class="tk-haunt-prop tk-haunt-bat-a">' +
+        '<svg class="tk-haunt-svg tk-haunt-bat-art" viewBox="0 0 100 60" aria-hidden="true" focusable="false">' +
+          '<path class="tk-bat-wing tk-bat-wing-left" d="M49 29C35 8 20 8 5 3L12 20L1 25L21 34L27 47L43 39L50 49Z" fill="#24122f" stroke="#b49aff" stroke-width="2.3" stroke-linejoin="round"/>' +
+          '<path class="tk-bat-wing tk-bat-wing-right" d="M51 29C65 8 80 8 95 3L88 20L99 25L79 34L73 47L57 39L50 49Z" fill="#24122f" stroke="#b49aff" stroke-width="2.3" stroke-linejoin="round"/>' +
+          '<path d="M42 27L43 14L50 22L57 14L58 27L57 44L50 52L43 44Z" fill="#5b347a" stroke="#d9caff" stroke-width="2"/>' +
+          '<circle cx="46" cy="32" r="2.2" fill="#ff6d94"/><circle cx="54" cy="32" r="2.2" fill="#ff6d94"/>' +
+        '</svg></span>' +
+      '<span class="tk-haunt-prop tk-haunt-bat-b">' +
+        '<svg class="tk-haunt-svg tk-haunt-bat-art" viewBox="0 0 100 60" aria-hidden="true" focusable="false">' +
+          '<path class="tk-bat-wing tk-bat-wing-left" d="M49 29C35 8 20 8 5 3L12 20L1 25L21 34L27 47L43 39L50 49Z" fill="#24122f" stroke="#ff9b70" stroke-width="2.3" stroke-linejoin="round"/>' +
+          '<path class="tk-bat-wing tk-bat-wing-right" d="M51 29C65 8 80 8 95 3L88 20L99 25L79 34L73 47L57 39L50 49Z" fill="#24122f" stroke="#ff9b70" stroke-width="2.3" stroke-linejoin="round"/>' +
+          '<path d="M42 27L43 14L50 22L57 14L58 27L57 44L50 52L43 44Z" fill="#6f263f" stroke="#ffd2b3" stroke-width="2"/>' +
+          '<circle cx="46" cy="32" r="2.2" fill="#ffbe63"/><circle cx="54" cy="32" r="2.2" fill="#ffbe63"/>' +
+        '</svg></span>' +
+      '<span class="tk-haunt-prop tk-haunt-skull">' +
+        '<svg class="tk-haunt-svg tk-haunt-skull-art" viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+          '<path d="M50 8C25 8 13 26 16 48C17 61 25 70 34 76L34 90L66 90L66 76C75 70 83 61 84 48C87 26 75 8 50 8Z" fill="#e4d9c6" stroke="#fff0d6" stroke-width="3"/>' +
+          '<path d="M22 42L36 36L42 51L34 60L23 55Z" fill="#201126" stroke="#9f81bc" stroke-width="2"/><path d="M78 42L64 36L58 51L66 60L77 55Z" fill="#201126" stroke="#9f81bc" stroke-width="2"/>' +
+          '<path d="M44 58L50 49L56 58L50 63Z" fill="#35203a"/>' +
+          '<path d="M37 72L63 72L63 90L37 90Z" fill="#211329"/>' +
+          '<path d="M43 73V86M50 73V88M57 73V86" stroke="#fff1d6" stroke-width="3"/>' +
+          '<path d="M33 23Q50 15 67 23" fill="none" stroke="#fff8ec" stroke-width="4" stroke-linecap="round" opacity=".8"/>' +
+        '</svg></span>' +
+      '<span class="tk-haunt-prop tk-haunt-castle">' +
+        '<svg class="tk-haunt-svg tk-haunt-castle-art" viewBox="0 0 110 100" aria-hidden="true" focusable="false">' +
+          '<path d="M8 90V48H20V32H35V48H43V20H58V38H72V29H88V47H101V90Z" fill="#2b1946" stroke="#aa8ee8" stroke-width="3" stroke-linejoin="round"/>' +
+          '<path d="M39 90V65Q55 42 71 65V90Z" fill="#100c21" stroke="#8b72ce" stroke-width="3"/>' +
+          '<path d="M16 60H26V72H16ZM82 60H92V72H82ZM46 36H53V46H46ZM76 39H83V49H76Z" fill="#ffbd69"/>' +
+          '<path d="M5 90H105" stroke="#d6c3ff" stroke-width="4" stroke-linecap="round"/>' +
+        '</svg></span>';
     stage.appendChild(fallback);
     return fallback;
   }
