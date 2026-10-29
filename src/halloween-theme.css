@@ -437,17 +437,18 @@
 }
 
 .halloween-pumpkin-body {
-  fill: url(#tekvix-pumpkin-skin);
-  stroke: #ff9c43;
+  fill: #ff842e;
+  stroke: #ffb15c;
   stroke-width: 2.2;
+  filter: drop-shadow(0 0 12px rgba(255, 95, 34, .42));
 }
 
 .halloween-pumpkin-rib {
   fill: none;
-  stroke: url(#tekvix-pumpkin-rib);
+  stroke: #bc482b;
   stroke-width: 12;
   stroke-linecap: round;
-  opacity: .82;
+  opacity: .62;
 }
 
 .halloween-pumpkin-rib-side {
@@ -463,8 +464,8 @@
 }
 
 .halloween-pumpkin-stem {
-  fill: url(#tekvix-pumpkin-stem);
-  stroke: #a5a95d;
+  fill: #5d7137;
+  stroke: #b5bf69;
   stroke-width: 1.8;
   stroke-linejoin: round;
 }

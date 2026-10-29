@@ -1594,11 +1594,11 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
   filter: drop-shadow(0 9px 14px rgba(0,0,0,.55));
   animation: tk-pumpkin-alive 4.7s ease-in-out 1.2s infinite;
 }
-.tk-pumpkin-eye-cut { fill: #190613; stroke: #40101d; stroke-width: 2.4; stroke-linejoin: round; filter: url(#tkPumpkinGlow); animation: tk-pumpkin-flicker 4.4s ease-in-out infinite; }
+.tk-pumpkin-eye-cut { fill: #190613; stroke: #40101d; stroke-width: 2.4; stroke-linejoin: round; filter: drop-shadow(0 0 8px rgba(255, 96, 38, .86)); animation: tk-pumpkin-flicker 4.4s ease-in-out infinite; }
 .tk-pumpkin-eye-glint { fill: #fff0b7; filter: drop-shadow(0 0 5px #ffbd58); }
-.tk-pumpkin-mouth-cut { fill: #170511; stroke: #3b0d20; stroke-width: 3; stroke-linejoin: round; filter: url(#tkPumpkinGlow); }
+.tk-pumpkin-mouth-cut { fill: #170511; stroke: #3b0d20; stroke-width: 3; stroke-linejoin: round; filter: drop-shadow(0 0 7px rgba(255, 80, 28, .62)); }
 .tk-pumpkin-teeth { fill: #ffe1a0; stroke: #fff0c3; stroke-width: 1.1; stroke-linejoin: round; filter: drop-shadow(0 0 4px rgba(255,132,40,.8)); }
-.tk-pumpkin-rib { fill: none; stroke: url(#tkPumpkinRib); stroke-width: 12; stroke-linecap: round; opacity: .82; }
+.tk-pumpkin-rib { fill: none; stroke: #bd482b; stroke-width: 12; stroke-linecap: round; opacity: .82; }
 .tk-pumpkin-rib.thin { stroke-width: 7; opacity: .66; }
 .tk-pumpkin-aura {
   position: absolute;
