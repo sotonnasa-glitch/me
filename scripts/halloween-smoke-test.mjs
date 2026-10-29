@@ -12,23 +12,27 @@ const bodyEnd = workerSource.indexOf(closing, bodyStart);
 assert.notEqual(bodyEnd, -1, 'Seasonal HTML injection must have a proper template boundary.');
 const html = workerSource.slice(bodyStart, bodyEnd);
 
-assert.ok(html.includes('tekvix-living-pumpkin-style'), 'The existing living pumpkin style must remain.');
-assert.ok(html.includes('tk-tekvix-living-pumpkin'), 'The living pumpkin SVG overlay must remain.');
-assert.ok(html.includes('tekvix-haunted-world-style'), 'The new Halloween scene stylesheet must be injected.');
-assert.ok(html.includes('three@0.160.0/build/three.module.js'), 'The scene must use a pinned Three.js module.');
-assert.ok(html.includes('function makeGhost(THREE)'), 'A 3D ghost model must be created.');
-assert.ok(html.includes('function makeDemonSkull(THREE)'), 'A 3D horned demon skull must be created.');
-assert.ok(html.includes('function makeBat(THREE'), '3D bats must be created.');
-assert.ok(html.includes('function makeCastle(THREE)'), 'A 3D haunted castle must be created.');
-assert.ok(html.includes('function makeCandle(THREE'), 'Floating candle props must be created.');
-assert.ok(html.includes('tk-haunt-fallback'), 'A fallback must show if WebGL or the CDN is unavailable.');
-assert.ok(html.includes('prefers-reduced-motion: reduce'), 'Motion-reduction preferences must be respected.');
-assert.ok(html.includes('IntersectionObserver'), 'The scene must pause when outside the viewport.');
-assert.ok(html.includes('visibilitychange'), 'The scene must pause when the tab is hidden.');
-assert.ok(html.includes('.halloween-mode .page-ship'), 'Old spaceship decorations must be suppressed in Halloween mode.');
-assert.ok(html.includes('batBasePositions[index].x +'), 'Bat flight positions must remain bounded over time.');
+for (const [needle, description] of [
+  ['tekvix-living-pumpkin-style', 'The existing living pumpkin style must remain.'],
+  ['tk-tekvix-living-pumpkin', 'The living pumpkin SVG overlay must remain.'],
+  ['tekvix-haunted-world-style', 'The new Halloween scene stylesheet must be injected.'],
+  ['three@0.160.0/build/three.module.js', 'The scene must use a pinned Three.js module.'],
+  ['function makeGhost(THREE)', 'A 3D ghost model must be created.'],
+  ['function makeDemonSkull(THREE)', 'A 3D horned demon skull must be created.'],
+  ['function makeBat(THREE', '3D bats must be created.'],
+  ['function makeCastle(THREE)', 'A 3D haunted castle must be created.'],
+  ['function makeCandle(THREE', 'Floating candle props must be created.'],
+  ['tk-haunt-fallback', 'A fallback must show if WebGL or the CDN is unavailable.'],
+  ['prefers-reduced-motion: reduce', 'Motion-reduction preferences must be respected.'],
+  ['IntersectionObserver', 'The scene must pause when outside the viewport.'],
+  ['visibilitychange', 'The scene must pause when the tab is hidden.'],
+  ['.halloween-mode .page-ship', 'Old spaceship decorations must be suppressed in Halloween mode.'],
+  ['batBasePositions[index].x +', 'Bat flight positions must remain bounded over time.'],
+]) {
+  assert.ok(html.includes(needle), description);
+}
 
-const scriptBodies = [...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)].map((match) => match[1]);
+const scriptBodies = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1]);
 assert.equal(scriptBodies.length, 2, 'The seasonal injection should have two ordered inline scripts.');
 for (const [index, script] of scriptBodies.entries()) {
   assert.doesNotThrow(() => new Function(script), 'Injected script ' + (index + 1) + ' must be syntactically valid.');
