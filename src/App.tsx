@@ -29,6 +29,11 @@ import { UniversalBackButton } from './components/common/UniversalBackButton';
 
 function MainWebsite() {
   const { sectionsConfig, newOrdersCount, currentUser, navigateToSection, isAdminAuthenticated } = useSiteData();
+  // Seasonal visual layer: enabled locally from Oct 29 through Nov 2, 2026.
+  const isHalloweenTheme = (() => {
+    const now = new Date();
+    return now >= new Date(2026, 9, 29) && now < new Date(2026, 10, 3);
+  })();
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAdminAuthOpen, setIsAdminAuthOpen] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
@@ -88,8 +93,35 @@ function MainWebsite() {
   }
 
   return (
-    <div className="min-h-screen bg-[#05050d] text-gray-200 selection:bg-purple-600 selection:text-white font-sans antialiased overflow-x-hidden relative" dir="rtl">
+    <div className={`min-h-screen bg-[#05050d] text-gray-200 selection:bg-purple-600 selection:text-white font-sans antialiased overflow-x-hidden relative ${isHalloweenTheme ? 'halloween-mode' : ''}`} dir="rtl">
       <GlobalBackgroundStars />
+
+      {isHalloweenTheme && (
+        <>
+          <div className="halloween-atmosphere" aria-hidden="true">
+            <span className="halloween-mist halloween-mist-one" />
+            <span className="halloween-mist halloween-mist-two" />
+            <span className="halloween-web halloween-web-left" />
+            <span className="halloween-web halloween-web-right" />
+            <span className="halloween-bat halloween-bat-one">
+              <svg viewBox="0 0 64 36" role="presentation"><path d="M32 27c-4-7-9-10-16-8 1-6-3-11-11-13 2 5 1 9-3 12 9-1 17 3 22 10-1-5 2-9 8-11 6 2 9 6 8 11 5-7 13-11 22-10-4-3-5-7-3-12-8 2-12 7-11 13-7-2-12 1-16 8Z" /></svg>
+            </span>
+            <span className="halloween-bat halloween-bat-two">
+              <svg viewBox="0 0 64 36" role="presentation"><path d="M32 27c-4-7-9-10-16-8 1-6-3-11-11-13 2 5 1 9-3 12 9-1 17 3 22 10-1-5 2-9 8-11 6 2 9 6 8 11 5-7 13-11 22-10-4-3-5-7-3-12-8 2-12 7-11 13-7-2-12 1-16 8Z" /></svg>
+            </span>
+            <span className="halloween-ember halloween-ember-one" />
+            <span className="halloween-ember halloween-ember-two" />
+            <span className="halloween-ember halloween-ember-three" />
+          </div>
+          <div className="halloween-season-pill" aria-hidden="true">
+            <span className="halloween-pill-dot" />
+            <span className="halloween-pill-brand">TEKVIX</span>
+            <span className="halloween-pill-divider" />
+            <span className="halloween-pill-mode">HAUNTED MODE</span>
+            <span className="halloween-pill-date">31 OCT</span>
+          </div>
+        </>
+      )}
 
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-[2]" aria-hidden="true">
         <span className="page-meteor page-meteor-1" />
