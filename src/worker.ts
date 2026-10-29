@@ -1759,10 +1759,12 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
   position: absolute;
   inset: 0;
   z-index: 20;
+
   overflow: visible;
   pointer-events: none;
   contain: layout paint;
 }
+.tk-haunted-3d-ready .tk-tekvix-living-pumpkin { display: none !important; }
 .tk-haunted-3d-layer canvas {
   display: block;
   width: 100%;
@@ -1851,6 +1853,102 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
       roughness: roughness === undefined ? 0.52 : roughness,
       metalness: 0.12
     });
+  }
+
+  function makePumpkin(THREE) {
+    var group = new THREE.Group();
+    var skin = new THREE.MeshStandardMaterial({
+      color: 0xff7a18, emissive: 0x571800, emissiveIntensity: 0.38,
+      roughness: 0.58, metalness: 0.02
+    });
+    var ribMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffae4a, emissive: 0x6b2100, emissiveIntensity: 0.28,
+      roughness: 0.72, metalness: 0.02
+    });
+    var darkCut = new THREE.MeshStandardMaterial({
+      color: 0x180813, emissive: 0x5a170d, emissiveIntensity: 0.3,
+      roughness: 0.46, metalness: 0.02, side: THREE.DoubleSide
+    });
+    var toothMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffd17b, emissive: 0xff6818, emissiveIntensity: 0.42,
+      roughness: 0.42, metalness: 0.04, side: THREE.DoubleSide
+    });
+    var mainBody = new THREE.Mesh(new THREE.SphereGeometry(1, 28, 22), skin);
+    mainBody.scale.set(1.04, 0.82, 0.66);
+    group.add(mainBody);
+
+    for (var i = 0; i < 7; i++) {
+      var x = -0.78 + i * 0.26;
+      var fullness = Math.sqrt(Math.max(0.2, 1 - (x * x) / 1.03));
+      var lobe = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 12), skin);
+      lobe.scale.set(0.76, 0.84 * fullness, 0.68 * fullness);
+      lobe.position.set(x, 0, 0.005);
+      group.add(lobe);
+    }
+
+    for (var ridgeIndex = -2; ridgeIndex <= 2; ridgeIndex++) {
+      var ridgeX = ridgeIndex * 0.29;
+      var ridgeRatio = Math.abs(ridgeX) / 1.04;
+      var frontZ = 0.66 * Math.sqrt(Math.max(0.15, 1 - ridgeRatio * ridgeRatio));
+      var curve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(ridgeX * 0.7, 0.68, frontZ * 0.62),
+        new THREE.Vector3(ridgeX, 0.39, frontZ * 0.92 + 0.015),
+        new THREE.Vector3(ridgeX, 0.0, frontZ + 0.022),
+        new THREE.Vector3(ridgeX, -0.36, frontZ * 0.92 + 0.015),
+        new THREE.Vector3(ridgeX * 0.7, -0.65, frontZ * 0.62)
+      ]);
+      group.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 18, 0.018, 5, false), ribMaterial));
+    }
+
+    var stemMaterial = new THREE.MeshStandardMaterial({
+      color: 0x53652b, emissive: 0x182307, emissiveIntensity: 0.18,
+      roughness: 0.76, metalness: 0
+    });
+    var stem = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.16, 0.38, 10), stemMaterial);
+    stem.position.set(0.02, 0.91, 0.02);
+    stem.rotation.z = -0.16;
+    group.add(stem);
+    var leafShape = new THREE.Shape();
+    leafShape.moveTo(0.04, 0.9);
+    leafShape.quadraticCurveTo(0.34, 1.1, 0.49, 0.91);
+    leafShape.quadraticCurveTo(0.26, 0.81, 0.04, 0.9);
+    var leaf = new THREE.Mesh(new THREE.ShapeGeometry(leafShape), new THREE.MeshStandardMaterial({
+      color: 0x778a37, emissive: 0x202e0b, emissiveIntensity: 0.2,
+      roughness: 0.65, side: THREE.DoubleSide
+    }));
+    leaf.position.z = 0.035;
+    group.add(leaf);
+
+    function face(points, z, material) {
+      var shape = new THREE.Shape();
+      shape.moveTo(points[0][0], points[0][1]);
+      for (var p = 1; p < points.length; p++) shape.lineTo(points[p][0], points[p][1]);
+      shape.closePath();
+      var mesh = new THREE.Mesh(new THREE.ShapeGeometry(shape), material);
+      mesh.position.z = z;
+      group.add(mesh);
+      return mesh;
+    }
+    face([[-0.65, 0.28], [-0.25, 0.45], [-0.23, 0.08]], 0.605, darkCut);
+    face([[0.65, 0.28], [0.25, 0.45], [0.23, 0.08]], 0.605, darkCut);
+    face([[-0.09, 0.02], [0.09, 0.02], [0, -0.18]], 0.62, darkCut);
+    face([
+      [-0.62, -0.22], [-0.42, -0.29], [-0.24, -0.25], [-0.08, -0.36],
+      [0, -0.3], [0.08, -0.36], [0.24, -0.25], [0.42, -0.29],
+      [0.62, -0.22], [0.48, -0.49], [0.29, -0.6], [0, -0.66],
+      [-0.29, -0.6], [-0.48, -0.49]
+    ], 0.515, darkCut);
+    face([[-0.42, -0.29], [-0.23, -0.25], [-0.15, -0.4]], 0.535, toothMaterial);
+    face([[-0.08, -0.36], [0, -0.3], [0.08, -0.36], [0.02, -0.46]], 0.54, toothMaterial);
+    face([[0.24, -0.25], [0.42, -0.29], [0.15, -0.4]], 0.535, toothMaterial);
+    face([[-0.25, -0.52], [-0.08, -0.45], [0, -0.53], [0.09, -0.45], [0.25, -0.52], [0.12, -0.58], [0, -0.6], [-0.12, -0.58]], 0.53, toothMaterial);
+
+    var glow = new THREE.PointLight(0xff6a24, 0.58, 3.0);
+    glow.position.set(0, 0.02, 0.95);
+    group.add(glow);
+    group.position.set(0, 0, 0.25);
+    group.scale.setScalar(1.05);
+    return group;
   }
 
   function makeGhost(THREE) {
@@ -2057,6 +2155,8 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
     ember.position.set(0, -0.1, 2);
     scene.add(ember);
 
+    var pumpkin = makePumpkin(THREE);
+    scene.add(pumpkin);
     var ghost = makeGhost(THREE);
     scene.add(ghost);
     var demon = makeDemonSkull(THREE);
@@ -2093,6 +2193,7 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
 
     try {
       renderer.render(scene, camera);
+      stage.classList.add('tk-haunted-3d-ready');
       fallback.remove();
     } catch (error) {
       layer.remove();
@@ -2111,6 +2212,9 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
       if (!reducedMotion) {
         if (!startedAt) startedAt = timestamp;
         var t = timestamp * 0.001;
+        pumpkin.position.y = Math.sin(t * 0.82) * 0.035;
+        pumpkin.rotation.y = Math.sin(t * 0.55) * 0.075;
+        pumpkin.rotation.z = Math.sin(t * 0.9) * 0.018;
         ghost.position.y = 0.48 + Math.sin(t * 1.15) * 0.11;
         ghost.rotation.y = Math.sin(t * 0.72) * 0.3;
         ghost.rotation.z = Math.sin(t * 1.35) * 0.045;
