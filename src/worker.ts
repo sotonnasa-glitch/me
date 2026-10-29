@@ -2058,6 +2058,9 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
       makeBat(THREE, 0.3, -1.63, -0.72, 0.25)
     ];
     bats.forEach(function (bat) { scene.add(bat); });
+    var batBasePositions = bats.map(function (bat) {
+      return { x: bat.position.x, y: bat.position.y };
+    });
     scene.add(makeCastle(THREE));
     var candles = [
       makeCandle(THREE, -2.75, -1.18, 0.78),
@@ -2105,8 +2108,8 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
         demon.position.y = 0.28 + Math.sin(t * 1.3 + 1.4) * 0.075;
         demon.rotation.y = Math.sin(t * 0.9) * 0.22;
         bats.forEach(function (bat, index) {
-          bat.position.x += Math.sin(t * (0.42 + index * 0.08) + index) * 0.0018;
-          bat.position.y += Math.sin(t * 2.1 + index * 1.7) * 0.0022;
+          bat.position.x = batBasePositions[index].x + Math.sin(t * (0.42 + index * 0.08) + index) * 0.13;
+          bat.position.y = batBasePositions[index].y + Math.sin(t * 2.1 + index * 1.7) * 0.08;
           bat.rotation.z = Math.sin(t * 3.2 + index) * 0.13;
           bat.rotation.y = Math.sin(t * 1.1 + index) * 0.25;
         });
