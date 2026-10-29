@@ -1745,6 +1745,15 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
 .halloween-mode #hero-section .animate-cosmic-corona {
   background: radial-gradient(circle, rgba(255, 111, 35, .18), rgba(124, 58, 237, .12) 52%, transparent 74%) !important;
 }
+/* Halloween art direction: remove the old sci-fi props that collide with the hero copy. */
+.halloween-mode .page-ship { display: none !important; }
+.halloween-mode #hero-section .animate-orbit,
+.halloween-mode #hero-section .animate-orbit-reverse {
+  opacity: .28 !important;
+  border-color: rgba(255, 147, 72, .14) !important;
+}
+.halloween-mode #hero-section .animate-orbit > div { opacity: .42; }
+.halloween-mode #hero-section .hero-meteor { opacity: .35; }
 .tk-haunted-world-stage { position: relative !important; isolation: isolate; }
 .tk-haunted-3d-layer {
   position: absolute;
