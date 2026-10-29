@@ -1798,21 +1798,22 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
   height: 100%;
   overflow: visible;
 }
-.tk-haunt-ghost { top: 18%; left: 5%; width: clamp(34px, 8.5vw, 61px); height: clamp(42px, 10vw, 70px); animation: tk-haunt-drift-a 5.6s ease-in-out infinite; }
-.tk-haunt-demon { top: 18%; right: 5%; width: clamp(36px, 8.9vw, 64px); height: clamp(38px, 9.2vw, 66px); filter: drop-shadow(0 0 13px rgba(255, 66, 45, .72)); animation: tk-haunt-drift-b 4.8s ease-in-out infinite; }
+.tk-haunt-ghost { top: 18%; left: 5%; width: clamp(34px, 8.5vw, 61px); height: clamp(42px, 10vw, 70px); animation: tk-haunt-ghost-flight 4.8s ease-in-out infinite; }
+.tk-haunt-demon { top: 18%; right: 5%; width: clamp(36px, 8.9vw, 64px); height: clamp(38px, 9.2vw, 66px); filter: drop-shadow(0 0 13px rgba(255, 66, 45, .72)); animation: tk-haunt-demon-flight 4.1s ease-in-out infinite; }
 .tk-haunt-bat-a { top: 4%; left: 36%; width: clamp(34px, 8vw, 56px); height: clamp(21px, 4.8vw, 34px); animation: tk-haunt-bat-a 6.5s ease-in-out infinite; }
 .tk-haunt-bat-b { top: 48%; right: 2%; width: clamp(29px, 6.8vw, 48px); height: clamp(20px, 4.5vw, 32px); animation: tk-haunt-bat-b 7.2s ease-in-out infinite; }
-.tk-haunt-skull { bottom: 9%; left: 14%; width: clamp(31px, 7.4vw, 53px); height: clamp(31px, 7.4vw, 53px); filter: drop-shadow(0 0 12px rgba(255, 133, 50, .52)); animation: tk-haunt-drift-b 5.9s ease-in-out infinite; }
-.tk-haunt-castle { bottom: 7%; right: 12%; width: clamp(38px, 9vw, 65px); height: clamp(34px, 8.2vw, 59px); filter: drop-shadow(0 0 11px rgba(145, 97, 225, .62)); animation: tk-haunt-drift-a 7s ease-in-out infinite; }
+.tk-haunt-skull { bottom: 9%; left: 14%; width: clamp(31px, 7.4vw, 53px); height: clamp(31px, 7.4vw, 53px); filter: drop-shadow(0 0 12px rgba(255, 133, 50, .52)); animation: tk-haunt-skull-drift 5.2s ease-in-out infinite; }
+.tk-haunt-castle { bottom: 7%; right: 12%; width: clamp(38px, 9vw, 65px); height: clamp(34px, 8.2vw, 59px); filter: drop-shadow(0 0 11px rgba(145, 97, 225, .62)); animation: tk-haunt-castle-drift 6.4s ease-in-out infinite; }
 .tk-bat-wing {
   transform-box: fill-box;
   animation: tk-bat-flap .42s ease-in-out infinite alternate;
 }
 .tk-bat-wing-left { transform-origin: 100% 80%; }
 .tk-bat-wing-right { transform-origin: 0% 80%; animation-delay: -.21s; }
-.tk-haunt-ghost-art { animation: tk-ghost-glow 3.2s ease-in-out infinite; }
-.tk-haunt-demon-art { animation: tk-demon-glow 2.4s ease-in-out infinite; }
-.tk-haunt-skull-art { animation: tk-skull-glow 4.2s ease-in-out infinite; }
+.tk-haunt-ghost-art { transform-origin: 50% 50%; animation: tk-ghost-glow 3.2s ease-in-out infinite, tk-ghost-tilt 4.3s ease-in-out infinite; }
+.tk-haunt-demon-art { transform-origin: 50% 55%; animation: tk-demon-glow 2.4s ease-in-out infinite, tk-demon-nod 3.5s ease-in-out infinite; }
+.tk-haunt-skull-art { transform-origin: 50% 55%; animation: tk-skull-glow 4.2s ease-in-out infinite, tk-skull-tilt 4.8s ease-in-out infinite; }
+.tk-haunt-castle-art path:nth-of-type(3) { animation: tk-castle-windows 1.9s steps(2, end) infinite; }
 .tk-haunt-castle-art { animation: tk-castle-glow 5.8s ease-in-out infinite; }
 @keyframes tk-bat-flap {
   from { transform: rotate(-18deg) scaleY(.88); }
@@ -1834,6 +1835,46 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
   0%,100% { filter: brightness(.82) drop-shadow(0 0 6px rgba(145,97,225,.4)); }
   50% { filter: brightness(1.24) drop-shadow(0 0 16px rgba(145,97,225,.95)); }
 }
+@keyframes tk-haunt-ghost-flight {
+  0%,100% { transform: translate3d(0,0,0) rotate(-4deg) scale(1); }
+  25% { transform: translate3d(11px,-9px,0) rotate(2deg) scale(1.035); }
+  55% { transform: translate3d(22px,-19px,0) rotate(6deg) scale(1.07); }
+  78% { transform: translate3d(7px,-11px,0) rotate(-2deg) scale(1.025); }
+}
+@keyframes tk-haunt-demon-flight {
+  0%,100% { transform: translate3d(0,0,0) rotate(3deg) scale(1); }
+  30% { transform: translate3d(-9px,-13px,0) rotate(-3deg) scale(1.035); }
+  62% { transform: translate3d(-19px,-5px,0) rotate(-7deg) scale(1.065); }
+  82% { transform: translate3d(-5px,-10px,0) rotate(1deg) scale(1.025); }
+}
+@keyframes tk-haunt-skull-drift {
+  0%,100% { transform: translate3d(0,0,0) rotate(-2deg); }
+  35% { transform: translate3d(9px,-12px,0) rotate(5deg); }
+  68% { transform: translate3d(-7px,-17px,0) rotate(-6deg); }
+}
+@keyframes tk-haunt-castle-drift {
+  0%,100% { transform: translate3d(0,0,0) rotate(0deg) scale(1); }
+  40% { transform: translate3d(-8px,-8px,0) rotate(-2deg) scale(1.035); }
+  75% { transform: translate3d(5px,-4px,0) rotate(2deg) scale(1.015); }
+}
+@keyframes tk-ghost-tilt {
+  0%,100% { transform: rotate(-3deg) scale(1); }
+  50% { transform: rotate(4deg) scale(1.035); }
+}
+@keyframes tk-demon-nod {
+  0%,100% { transform: rotate(2deg) translateY(0); }
+  40% { transform: rotate(-4deg) translateY(-2px); }
+  70% { transform: rotate(3deg) translateY(1px); }
+}
+@keyframes tk-skull-tilt {
+  0%,100% { transform: rotate(-4deg); }
+  50% { transform: rotate(5deg) translateY(-2px); }
+}
+@keyframes tk-castle-windows {
+  0%,100% { opacity: .72; }
+  48% { opacity: 1; filter: drop-shadow(0 0 5px rgba(255,189,105,.85)); }
+  52% { opacity: .38; }
+}
 @keyframes tk-haunt-drift-a {
   0%,100% { transform: translate3d(0,0,0) rotateY(-18deg) rotateZ(-4deg); }
   50% { transform: translate3d(0,-10px,18px) rotateY(18deg) rotateZ(4deg); }
@@ -1854,6 +1895,12 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
   .halloween-mode #hero-section .animate-orbit,
   .halloween-mode #hero-section .animate-orbit-reverse { opacity: .44; }
   .tk-haunt-prop { text-shadow: 0 4px 10px rgba(0,0,0,.75); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tk-haunt-prop,
+  .tk-haunt-svg,
+  .tk-bat-wing,
+  .tk-haunt-castle-art path:nth-of-type(3) { animation: none !important; }
 }
 @media (prefers-reduced-motion: reduce) {
   .tk-haunt-prop { animation: none !important; }
@@ -2295,19 +2342,19 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
       if (!reducedMotion) {
         if (!startedAt) startedAt = timestamp;
         var t = timestamp * 0.001;
-        pumpkin.position.y = Math.sin(t * 0.82) * 0.035;
-        pumpkin.rotation.y = Math.sin(t * 0.55) * 0.075;
-        pumpkin.rotation.z = Math.sin(t * 0.9) * 0.018;
-        ghost.position.y = 0.48 + Math.sin(t * 1.15) * 0.11;
-        ghost.rotation.y = Math.sin(t * 0.72) * 0.3;
-        ghost.rotation.z = Math.sin(t * 1.35) * 0.045;
-        demon.position.y = 0.28 + Math.sin(t * 1.3 + 1.4) * 0.075;
-        demon.rotation.y = Math.sin(t * 0.9) * 0.22;
+        pumpkin.position.y = Math.sin(t * 0.82) * 0.065;
+        pumpkin.rotation.y = Math.sin(t * 0.55) * 0.14;
+        pumpkin.rotation.z = Math.sin(t * 0.9) * 0.035;
+        ghost.position.y = 0.48 + Math.sin(t * 1.15) * 0.16;
+        ghost.rotation.y = Math.sin(t * 0.72) * 0.45;
+        ghost.rotation.z = Math.sin(t * 1.35) * 0.09;
+        demon.position.y = 0.28 + Math.sin(t * 1.3 + 1.4) * 0.12;
+        demon.rotation.y = Math.sin(t * 0.9) * 0.34;
         bats.forEach(function (bat, index) {
-          bat.position.x = batBasePositions[index].x + Math.sin(t * (0.42 + index * 0.08) + index) * 0.13;
-          bat.position.y = batBasePositions[index].y + Math.sin(t * 2.1 + index * 1.7) * 0.08;
-          bat.rotation.z = Math.sin(t * 3.2 + index) * 0.13;
-          bat.rotation.y = Math.sin(t * 1.1 + index) * 0.25;
+          bat.position.x = batBasePositions[index].x + Math.sin(t * (0.42 + index * 0.08) + index) * 0.22;
+          bat.position.y = batBasePositions[index].y + Math.sin(t * 2.1 + index * 1.7) * 0.13;
+          bat.rotation.z = Math.sin(t * 3.2 + index) * 0.2;
+          bat.rotation.y = Math.sin(t * 1.1 + index) * 0.38;
         });
         candles.forEach(function (candle, index) {
           candle.flame.scale.y = 0.78 + Math.sin(t * 8 + index * 2) * 0.14;
