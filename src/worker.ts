@@ -1558,6 +1558,199 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
   return null;
 }
 
+const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-style">
+#hero-section .tk-halloween-pumpkin-host {
+  border-radius: 47% 53% 48% 49% / 43% 47% 53% 55% !important;
+  background:
+    radial-gradient(ellipse at 48% 35%, rgba(255, 154, 57, .29), transparent 48%),
+    radial-gradient(ellipse at 55% 70%, rgba(255, 67, 25, .2), transparent 55%),
+    linear-gradient(145deg, #29102a 0%, #160817 55%, #07040c 100%) !important;
+  border-color: rgba(255, 146, 65, .78) !important;
+  box-shadow: 0 0 0 1px rgba(255, 121, 46, .16), 0 0 52px rgba(255, 76, 24, .33), 0 0 110px rgba(124, 58, 237, .23), inset 0 1px 0 rgba(255, 230, 195, .12), inset -24px -28px 60px rgba(0, 0, 0, .78) !important;
+}
+#hero-section .tk-halloween-pumpkin-host .halloween-orb-wordmark,
+#hero-section .tk-halloween-pumpkin-host span.tk-halloween-hidden-wordmark {
+  opacity: 0 !important;
+  transform: scale(.7);
+  filter: blur(5px);
+}
+.tk-tekvix-living-pumpkin {
+  position: absolute;
+  inset: -3%;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  pointer-events: none;
+  animation: tk-pumpkin-enter 1.25s cubic-bezier(.16,.82,.22,1) both;
+}
+.tk-tekvix-living-pumpkin svg {
+  display: block;
+  width: 108%;
+  height: 108%;
+  overflow: visible;
+  transform-origin: 50% 57%;
+  filter: drop-shadow(0 9px 14px rgba(0,0,0,.55));
+  animation: tk-pumpkin-alive 4.7s ease-in-out 1.2s infinite;
+}
+.tk-pumpkin-eye-cut { fill: #190613; stroke: #40101d; stroke-width: 2.4; stroke-linejoin: round; filter: url(#tkPumpkinGlow); animation: tk-pumpkin-flicker 4.4s ease-in-out infinite; }
+.tk-pumpkin-eye-glint { fill: #fff0b7; filter: drop-shadow(0 0 5px #ffbd58); }
+.tk-pumpkin-mouth-cut { fill: #170511; stroke: #3b0d20; stroke-width: 3; stroke-linejoin: round; filter: url(#tkPumpkinGlow); }
+.tk-pumpkin-teeth { fill: #ffe1a0; stroke: #fff0c3; stroke-width: 1.1; stroke-linejoin: round; filter: drop-shadow(0 0 4px rgba(255,132,40,.8)); }
+.tk-pumpkin-rib { fill: none; stroke: url(#tkPumpkinRib); stroke-width: 12; stroke-linecap: round; opacity: .82; }
+.tk-pumpkin-rib.thin { stroke-width: 7; opacity: .66; }
+.tk-pumpkin-aura {
+  position: absolute;
+  inset: 12% 9% 4%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255,91,23,.28), rgba(132,41,141,.12) 48%, transparent 72%);
+  filter: blur(12px);
+  animation: tk-pumpkin-aura-pulse 3.6s ease-in-out infinite;
+}
+@keyframes tk-pumpkin-enter {
+  0% { opacity: 0; transform: scale(.42) rotate(-14deg); filter: blur(10px); }
+  48% { opacity: 1; transform: scale(1.07) rotate(3deg); filter: blur(0); }
+  70% { transform: scale(.97) rotate(-1.5deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); filter: blur(0); }
+}
+@keyframes tk-pumpkin-alive {
+  0%,100% { transform: translate3d(0,0,0) rotate(0) scale(1); }
+  22% { transform: translate3d(0,-3px,0) rotate(-1.1deg) scale(1.012); }
+  49% { transform: translate3d(0,1px,0) rotate(.9deg) scale(1.025); }
+  74% { transform: translate3d(0,-2px,0) rotate(1.3deg) scale(1.01); }
+}
+@keyframes tk-pumpkin-flicker {
+  0%,7%,10%,48%,51%,100% { opacity: 1; }
+  8%,49% { opacity: .52; }
+}
+@keyframes tk-pumpkin-aura-pulse {
+  0%,100% { opacity: .35; transform: scale(.92); }
+  50% { opacity: .92; transform: scale(1.08); }
+}
+@media (max-width: 640px) {
+  .tk-tekvix-living-pumpkin { inset: 1%; }
+  .tk-tekvix-living-pumpkin svg { width: 112%; height: 112%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tk-tekvix-living-pumpkin,
+  .tk-tekvix-living-pumpkin svg,
+  .tk-tekvix-living-pumpkin * ,
+  .tk-pumpkin-aura { animation: none !important; }
+}
+</style>
+<script>
+(function () {
+  if (window.__tekvixLivingPumpkinInstalled) return;
+  window.__tekvixLivingPumpkinInstalled = true;
+  var now = new Date();
+  var month = now.getMonth();
+  var day = now.getDate();
+  var inHalloweenWindow = (month === 9 && day >= 29 && day <= 31) || (month === 10 && day >= 1 && day <= 2);
+  if (!inHalloweenWindow) return;
+
+  var pumpkinSvg = '<svg viewBox="0 0 260 240" role="img" aria-label="کدوی زنده هالووین تکویکس" focusable="false">' +
+    '<defs>' +
+      '<radialGradient id="tkPumpkinSkin" cx="43%" cy="29%" r="78%"><stop offset="0%" stop-color="#ffbf70"/><stop offset="27%" stop-color="#ff922f"/><stop offset="61%" stop-color="#ec591f"/><stop offset="87%" stop-color="#a72b2b"/><stop offset="100%" stop-color="#421025"/></radialGradient>' +
+      '<linearGradient id="tkPumpkinStem" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c2c875"/><stop offset="48%" stop-color="#687c3d"/><stop offset="100%" stop-color="#20372b"/></linearGradient>' +
+      '<linearGradient id="tkPumpkinRib" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#6d192b" stop-opacity=".72"/><stop offset="42%" stop-color="#ffca74" stop-opacity=".08"/><stop offset="100%" stop-color="#571328" stop-opacity=".82"/></linearGradient>' +
+      '<filter id="tkPumpkinGlow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
+    '</defs>' +
+    '<ellipse cx="130" cy="217" rx="84" ry="12" fill="#000" opacity=".5"/>' +
+    '<path d="M130 45 C109 29 82 34 65 53 C42 47 26 66 23 91 C17 124 37 161 68 179 C87 190 109 193 130 186 C151 193 173 190 192 179 C223 161 243 124 237 91 C234 66 218 47 195 53 C178 34 151 29 130 45Z" fill="url(#tkPumpkinSkin)" stroke="#ff9b45" stroke-width="2.5"/>' +
+    '<path class="tk-pumpkin-rib" d="M130 46 C104 66 100 103 105 132 C109 159 119 178 130 186"/>' +
+    '<path class="tk-pumpkin-rib" d="M130 46 C156 66 160 103 155 132 C151 159 141 178 130 186"/>' +
+    '<path class="tk-pumpkin-rib thin" d="M65 53 C78 78 80 113 83 137 C87 158 101 177 114 184"/>' +
+    '<path class="tk-pumpkin-rib thin" d="M195 53 C182 78 180 113 177 137 C173 158 159 177 146 184"/>' +
+    '<path d="M56 78 C42 110 55 143 76 161" fill="none" stroke="#ffe0a2" stroke-opacity=".46" stroke-width="3.5" stroke-linecap="round"/>' +
+    '<path d="M118 48 C111 35 121 20 139 12 C136 28 147 37 143 49 C134 47 126 49 118 55Z" fill="url(#tkPumpkinStem)" stroke="#aeb96b" stroke-width="2" stroke-linejoin="round"/>' +
+    '<path class="tk-pumpkin-eye-cut" d="M60 91 L94 70 L108 101 L84 112Z"/>' +
+    '<path class="tk-pumpkin-eye-cut" d="M152 101 L166 70 L200 91 L176 112Z"/>' +
+    '<path class="tk-pumpkin-eye-glint" d="M69 91 L91 78 L99 95Z"/>' +
+    '<path class="tk-pumpkin-eye-glint" d="M163 95 L171 78 L193 91Z"/>' +
+    '<path d="M120 106 L133 124 L109 128Z" fill="#32101c" stroke="#61202b" stroke-width="2"/>' +
+    '<path class="tk-pumpkin-mouth-cut" d="M56 132 L80 133 L98 126 L112 141 L130 132 L147 142 L166 128 L204 130 L188 158 L166 177 L142 188 L125 190 L103 183 L79 165Z"/>' +
+    '<path class="tk-pumpkin-teeth" d="M70 136 L83 138 L97 132 L111 146 L126 138 L143 148 L164 134 L187 135 L174 151 L158 157 L143 154 L130 166 L114 157 L98 159 L84 151Z"/>' +
+    '<path class="tk-pumpkin-teeth" d="M95 181 L104 163 L119 171 L132 160 L145 175 L157 167 L153 185 L137 191 L119 190Z"/>' +
+    '<path d="M180 56 L172 70 L182 75 L174 88" fill="none" stroke="#72222a" stroke-width="3" stroke-linecap="round"/>' +
+    '<circle cx="49" cy="122" r="2.4" fill="#ffd08c" filter="url(#tkPumpkinGlow)"/><circle cx="207" cy="118" r="2" fill="#ffd08c" filter="url(#tkPumpkinGlow)"/>' +
+  '</svg>';
+
+  function applyPumpkin() {
+    var hero = document.querySelector("#hero-section");
+    var orb = hero && hero.querySelector(".animate-orb-breathe");
+    if (!orb) return false;
+    orb.classList.add("tk-halloween-pumpkin-host");
+    var wordmark = Array.prototype.slice.call(orb.querySelectorAll("span")).find(function (item) {
+      return (item.textContent || "").trim() === "TEKVIX Ai";
+    });
+    if (wordmark) wordmark.classList.add("tk-halloween-hidden-wordmark");
+    var existing = orb.querySelector(".halloween-pumpkin-overlay");
+    if (existing) {
+      existing.classList.add("tk-tekvix-living-pumpkin");
+      existing.style.setProperty("opacity", "1", "important");
+      existing.style.setProperty("transform", "none", "important");
+      return true;
+    }
+    if (orb.querySelector(".tk-tekvix-living-pumpkin")) return true;
+    var wrap = document.createElement("div");
+    wrap.className = "tk-tekvix-living-pumpkin";
+    wrap.setAttribute("aria-label", "کدوی متحرک هالووین تکویکس");
+    wrap.innerHTML = pumpkinSvg + '<span class="tk-pumpkin-aura" aria-hidden="true"></span>';
+    orb.appendChild(wrap);
+    return true;
+  }
+
+  function startPumpkin() {
+    var root = document.getElementById("root");
+    if (root && root.firstElementChild) root.firstElementChild.classList.add("halloween-mode");
+    if (applyPumpkin()) return;
+    if (document.documentElement && window.MutationObserver) {
+      var observer = new MutationObserver(function () {
+        if (applyPumpkin()) observer.disconnect();
+      });
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+      window.setTimeout(function () { observer.disconnect(); }, 30000);
+    }
+    var attempts = 0;
+    var timer = window.setInterval(function () {
+      attempts += 1;
+      if (applyPumpkin() || attempts >= 80) window.clearInterval(timer);
+    }, 250);
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", startPumpkin, { once: true });
+  else startPumpkin();
+})();
+</script>`
+
+function isHalloweenPumpkinWindowActive(date: Date = new Date()): boolean {
+  const month = date.getUTCMonth();
+  const day = date.getUTCDate();
+  return (month === 9 && day >= 29 && day <= 31) || (month === 10 && day >= 1 && day <= 2);
+}
+
+async function serveSeasonalAsset(request: Request, env: Env): Promise<Response> {
+  const headers = new Headers(request.headers);
+  headers.set('accept-encoding', 'identity');
+  const cleanRequest = new Request(request, { headers });
+  const response = await env.ASSETS.fetch(cleanRequest);
+  if (!response.ok || !(response.headers.get('content-type') || '').toLowerCase().includes('text/html')) {
+    return response;
+  }
+  const html = await response.clone().text();
+  if (!/<\/body>/i.test(html)) return response;
+  const enhancedHtml = html.replace(/<\/body>/i, HALLOWEEN_PUMPKIN_INJECTION + '</body>');
+  if (enhancedHtml === html) return response;
+  const responseHeaders = new Headers(response.headers);
+  responseHeaders.delete('content-length');
+  responseHeaders.delete('content-encoding');
+  responseHeaders.delete('etag');
+  responseHeaders.set('cache-control', 'no-store, no-cache, must-revalidate');
+  responseHeaders.set('x-tekvix-halloween', 'living-pumpkin-v1');
+  return new Response(enhancedHtml, { status: response.status, statusText: response.statusText, headers: responseHeaders });
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     if (new URL(request.url).pathname.startsWith('/api/')) {
@@ -1568,6 +1761,9 @@ export default {
       } catch {
         return json({ success: false, error: 'خطای داخلی سرویس. لطفاً دوباره تلاش کنید.' }, 500);
       }
+    }
+    if (request.method === 'GET' && (request.headers.get('accept') || '').includes('text/html') && isHalloweenPumpkinWindowActive()) {
+      return serveSeasonalAsset(request, env);
     }
     return env.ASSETS.fetch(request);
   },
