@@ -1722,6 +1722,7 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", startPumpkin, { once: true });
   else startPumpkin();
 })();
+</script>
 <style id="tekvix-haunted-world-style">
 /* Replace the stray sci-fi props with a balanced, low-noise Halloween scene. */
 .halloween-mode .page-ship,
@@ -2190,7 +2191,7 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
   else boot();
 })();
-</script></script>`
+</script>`
 
 function isHalloweenPumpkinWindowActive(date: Date = new Date()): boolean {
   const month = date.getUTCMonth();
