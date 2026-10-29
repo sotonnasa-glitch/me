@@ -1758,7 +1758,7 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
 .tk-haunted-3d-layer {
   position: absolute;
   inset: 0;
-  z-index: 8;
+  z-index: 20;
   overflow: visible;
   pointer-events: none;
   contain: layout paint;
@@ -1772,7 +1772,7 @@ const HALLOWEEN_PUMPKIN_INJECTION = String.raw`<style id="tekvix-living-pumpkin-
 .tk-haunt-fallback {
   position: absolute;
   inset: 0;
-  z-index: 8;
+  z-index: 20;
   overflow: visible;
   pointer-events: none;
   perspective: 700px;
