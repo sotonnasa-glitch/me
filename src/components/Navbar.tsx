@@ -33,7 +33,7 @@ const RenderNavAiIcon: React.FC<{ href: string }> = ({ href }) => {
           <span className="absolute -top-0.5 -end-0.5 w-1.5 h-1.5 rounded-full bg-purple-300 animate-ping" />
         </div>
       );
-    case '#tools':
+    case '/tools':
       return (
         <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-cyan-950/90 border border-cyan-400/60 flex items-center justify-center shrink-0 shadow-[0_0_14px_rgba(34,211,238,0.4)] group-hover:border-cyan-300 transition-colors overflow-hidden">
           <span className="absolute inset-0 rounded-xl bg-cyan-400/20 animate-neon-radar pointer-events-none" />
@@ -122,6 +122,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { brandInfo, currentUser, navigateToSection } = useSiteData();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isToolsPage = window.location.pathname.replace(/\/+$/, '') === '/tools';
+  const homePrefix = isToolsPage ? '/' : '';
 
   // Secret 5-Tap Easter Egg state for Admin Access
   const tapCountRef = useRef(0);
@@ -164,25 +166,21 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, []);
 
   const navLinks = [
-    { label: 'خدمات', href: '#services' },
-    { label: 'ابزارهای هوش مصنوعی', desktopLabel: 'ابزارها', href: '#tools' },
-    { label: 'فیلم‌ها و مقالات', href: '#blog' },
-    { label: 'نظرات کاربران', href: '#reviews' },
-    { label: 'نحوه کار', href: '#how-it-works' },
-    { label: 'نمونه‌کارها', href: '#portfolio' },
-    { label: 'درباره ما', href: '#about' },
-    { label: 'سوالات متداول', href: '#faq' },
-    { label: 'تماس', href: '#contact' },
+    ...(isToolsPage ? [{ label: 'صفحه اصلی', href: '/' }] : []),
+    { label: 'خدمات', href: `${homePrefix}#services` },
+    { label: 'ابزارهای هوش مصنوعی', desktopLabel: 'ابزارها', href: '/tools' },
+    { label: 'فیلم‌ها و مقالات', href: `${homePrefix}#blog` },
+    { label: 'نظرات کاربران', href: `${homePrefix}#reviews` },
+    { label: 'نحوه کار', href: `${homePrefix}#how-it-works` },
+    { label: 'نمونه‌کارها', href: `${homePrefix}#portfolio` },
+    { label: 'درباره ما', href: `${homePrefix}#about` },
+    { label: 'سوالات متداول', href: `${homePrefix}#faq` },
+    { label: 'تماس', href: `${homePrefix}#contact` },
   ];
 
   const handleVideoLinkClick = (e: React.MouseEvent) => {
     e.preventDefault();
     navigateToSection('blog');
-  };
-
-  const handleToolsLinkClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    navigateToSection('tools');
   };
 
   return (
@@ -248,8 +246,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={(e) => {
                 if (link.href === '#blog') {
                   handleVideoLinkClick(e);
-                } else if (link.href === '#tools') {
-                  handleToolsLinkClick(e);
                 }
               }}
               className="text-xs xl:text-sm px-2.5 xl:px-3 py-1.5 rounded-full transition-all font-medium text-gray-300 hover:text-white hover:bg-white/[0.06]"
@@ -425,8 +421,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setMobileMenuOpen(false);
                   if (link.href === '#blog') {
                     handleVideoLinkClick(e);
-                  } else if (link.href === '#tools') {
-                    handleToolsLinkClick(e);
                   }
                 }}
                 className="text-sm py-2.5 px-3.5 rounded-2xl transition-all flex items-center justify-between group text-gray-200 hover:text-purple-200 hover:bg-white/[0.06] active:bg-purple-900/30 border border-transparent hover:border-purple-500/30 active:border-purple-400/50 animate-in fade-in slide-in-from-right-3 duration-300 fill-mode-both"
