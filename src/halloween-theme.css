@@ -60,7 +60,7 @@
     linear-gradient(90deg,rgba(4,3,4,.02) 0%,rgba(4,3,4,.08) 32%,rgba(4,3,4,.72) 60%,#040304 100%),
     linear-gradient(180deg,rgba(4,3,4,.12),transparent 22%,transparent 70%,#040304 100%),
     url('/assets/tekvix-horror-banner.webp');
-  background-size:100% 100%,100% 100%,68% 100%;
+  background-size:100% 100%,100% 100%,68% auto;
   background-position:center,center,left center; background-repeat:no-repeat;
 }
 .halloween-mode #hero-section::after {
@@ -163,7 +163,7 @@
   .halloween-mode #hero-section { min-height:780px !important; padding:88px 0 28px !important; }
   .halloween-mode #hero-section::before {
     background-image:linear-gradient(180deg,rgba(4,3,4,.02) 0%,rgba(4,3,4,.12) 28%,rgba(4,3,4,.78) 48%,#040304 70%),url('/assets/tekvix-horror-banner.webp');
-    background-size:100% 100%,100% 48%; background-position:center,top center;
+    background-size:100% 100%,100% auto; background-position:center,top center;
   }
   .halloween-mode #hero-section > div.relative.w-full.max-w-5xl { width:calc(100% - 36px) !important; padding:330px 0 20px; align-items:stretch !important; text-align:center !important; }
   .halloween-mode #hero-section > div.relative.w-full.max-w-5xl > .inline-flex,.halloween-mode #hero-section #hero-space-audio-btn { align-self:center; margin-left:auto !important; margin-right:auto !important; }
