@@ -674,3 +674,108 @@
     transition: none !important;
   }
 }
+
+/* Final pass: remove every leftover purple, cyan, amber and green component from old cards/navigation. */
+.halloween-mode [class*="bg-gradient-to-"] {
+  background-image: linear-gradient(135deg,rgba(82,5,24,.96),rgba(8,3,6,.97)) !important;
+}
+.halloween-mode [class*="bg-amber-"],
+.halloween-mode [class*="bg-orange-"],
+.halloween-mode [class*="bg-yellow-"],
+.halloween-mode [class*="bg-emerald-"],
+.halloween-mode [class*="bg-green-"],
+.halloween-mode [class*="bg-teal-"],
+.halloween-mode [class*="bg-sky-"],
+.halloween-mode [class*="bg-cyan-"] {
+  background-color: rgba(87,5,25,.82) !important;
+}
+.halloween-mode [class*="text-amber-"],
+.halloween-mode [class*="text-orange-"],
+.halloween-mode [class*="text-yellow-"],
+.halloween-mode [class*="text-emerald-"],
+.halloween-mode [class*="text-green-"],
+.halloween-mode [class*="text-teal-"],
+.halloween-mode [class*="text-sky-"] {
+  color: #ff536f !important;
+}
+.halloween-mode [class*="border-amber-"],
+.halloween-mode [class*="border-orange-"],
+.halloween-mode [class*="border-yellow-"],
+.halloween-mode [class*="border-emerald-"],
+.halloween-mode [class*="border-green-"],
+.halloween-mode [class*="border-teal-"],
+.halloween-mode [class*="border-sky-"] {
+  border-color: rgba(255,43,82,.34) !important;
+}
+
+/* Main order CTA in desktop and mobile nav. */
+.halloween-mode #nav-place-order-btn > div[class*="bg-gradient"],
+.halloween-mode #mobile-place-order-cta,
+.halloween-mode #drawer-order-button,
+.halloween-mode #nav-order-tracking-btn {
+  background: linear-gradient(110deg,#58071c,#d40c3b) !important;
+  border-color: rgba(255,83,115,.55) !important;
+  color: #fff !important;
+  box-shadow: 0 0 20px rgba(220,0,46,.22) !important;
+}
+.halloween-mode #main-navbar [class*="bg-gradient-to-r"],
+.halloween-mode #main-navbar [class*="bg-gradient-to-br"] {
+  background-image: linear-gradient(135deg,#3d0615,#a90b32) !important;
+}
+.halloween-mode #main-navbar #nav-brand-container [class*="bg-gradient"] {
+  background-image: linear-gradient(135deg,#25040e,#760a25) !important;
+}
+
+/* Service badges and icon tiles: make the little cyan / gold labels blood-red too. */
+.halloween-mode #services [id^="service-card-"] [class*="rounded-xl"][class*="bg-gradient"],
+.halloween-mode #services [id^="service-card-"] [class*="rounded-2xl"][class*="bg-gradient"] {
+  background-image: linear-gradient(145deg,#65091f,#21040c) !important;
+  border-color: rgba(255,49,87,.45) !important;
+  box-shadow: 0 0 17px rgba(210,0,42,.22) !important;
+}
+.halloween-mode #services [id^="service-card-"] [class*="bg-amber-"],
+.halloween-mode #services [id^="service-card-"] [class*="bg-cyan-"],
+.halloween-mode #services [id^="service-card-"] [class*="bg-sky-"] {
+  background: rgba(91,5,25,.82) !important;
+}
+.halloween-mode #services [id^="service-card-"] [class*="text-amber-"],
+.halloween-mode #services [id^="service-card-"] [class*="text-cyan-"],
+.halloween-mode #services [id^="service-card-"] [class*="text-sky-"] {
+  color: #ff617b !important;
+}
+
+/* Floating navigation controls and the AI assistant are part of the seasonal UI, not leftovers. */
+.halloween-mode #floating-video-jump-btn {
+  border-color: rgba(255,43,82,.48) !important;
+  background: rgba(30,4,12,.96) !important;
+  color: #ffdce4 !important;
+}
+.halloween-mode #floating-video-jump-btn svg { color: #ff3156 !important; }
+.halloween-mode .fixed.bottom-6.start-6 button,
+.halloween-mode .fixed.bottom-6.end-6 button {
+  border-color: rgba(255,43,82,.52) !important;
+  background: linear-gradient(110deg,#3d0615,#850b2a) !important;
+  color: #fff !important;
+  box-shadow: 0 0 24px rgba(200,0,43,.25) !important;
+}
+.halloween-mode .fixed.bottom-6.start-6 button [class*="bg-gradient-to-br"],
+.halloween-mode .fixed.bottom-6.start-6 button [class*="bg-gradient-to-r"] {
+  background-image: linear-gradient(145deg,#f01848,#65071f) !important;
+}
+.halloween-mode .fixed.bottom-6.start-6 [class*="bg-gradient-to-b"] {
+  background-image: linear-gradient(180deg,rgba(21,4,10,.99),rgba(5,3,5,.99)) !important;
+  border-color: rgba(255,43,82,.38) !important;
+}
+.halloween-mode .fixed.bottom-6.start-6 [class*="bg-gradient-to-r"] {
+  background-image: linear-gradient(100deg,rgba(52,5,19,.98),rgba(9,3,7,.98)) !important;
+}
+.halloween-mode .fixed.bottom-6.start-6 [class*="bg-purple-"],
+.halloween-mode .fixed.bottom-6.start-6 [class*="bg-indigo-"] {
+  background-color: rgba(82,5,25,.72) !important;
+}
+.halloween-mode .fixed.bottom-6.start-6 input,
+.halloween-mode .fixed.bottom-6.start-6 textarea {
+  color: #fff !important;
+  background: rgba(4,3,5,.92) !important;
+  border-color: rgba(255,43,82,.3) !important;
+}
