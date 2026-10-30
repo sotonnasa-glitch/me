@@ -1,7 +1,6 @@
 import React from 'react';
-import { ShieldCheck, Target, Zap, Sparkles } from 'lucide-react';
+import { ShieldCheck, Target, Zap, Sparkles, ArrowLeft } from 'lucide-react';
 import { useSiteData } from '../context/SiteDataContext';
-import { AIPoweredToolsShowcase } from './AIPoweredToolsShowcase';
 
 export const AboutSection: React.FC = () => {
   const { brandInfo } = useSiteData();
@@ -54,9 +53,17 @@ export const AboutSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Full-width 20 AI Tools Showcase */}
-        <div className="w-full">
-          <AIPoweredToolsShowcase />
+        <div className="flex justify-center">
+          <a
+            href="/tools"
+            className="group inline-flex items-center gap-3 rounded-2xl border border-cyan-400/30 bg-gradient-to-l from-purple-950/80 via-[#11102d]/90 to-cyan-950/60 px-5 py-3.5 text-sm sm:text-base font-bold text-white shadow-[0_0_28px_rgba(34,211,238,0.12)] transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/60 hover:shadow-[0_0_38px_rgba(34,211,238,0.22)]"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-cyan-300/30 bg-cyan-400/10 text-cyan-300">
+              <Sparkles className="h-4 w-4" />
+            </span>
+            مشاهدهٔ صفحهٔ اختصاصی ۲۰ ابزار هوش مصنوعی
+            <ArrowLeft className="h-4 w-4 text-cyan-300 transition-transform group-hover:-translate-x-1" />
+          </a>
         </div>
 
       </div>
