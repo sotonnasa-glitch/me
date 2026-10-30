@@ -919,8 +919,9 @@
   content: "";
   position: absolute;
   inset: 0 0 auto;
-  height: min(92vw, 790px);
-  min-height: 300px;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
   background:
     linear-gradient(180deg, rgba(0,0,0,.03) 0%, rgba(0,0,0,.02) 54%, #030303 100%),
     url("/assets/tekvix-horror-banner.webp") center top / 100% 100% no-repeat;
@@ -935,8 +936,9 @@
   content: "";
   position: absolute;
   inset: 0 0 auto;
-  height: min(92vw, 790px);
-  min-height: 300px;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
   background:
     radial-gradient(ellipse 8% 5% at 44% 28%, rgba(255,24,55,.52), transparent 78%),
     radial-gradient(ellipse 8% 5% at 56% 28%, rgba(255,24,55,.52), transparent 78%),
@@ -1376,7 +1378,9 @@
 @media (max-width:700px) {
   .halloween-mode > .tk-monster-motion-layer::before,
   .halloween-mode > .tk-monster-motion-layer::after {
-    height: min(112vw, 430px);
+    height: auto;
+    aspect-ratio: 16 / 9;
+    min-height: 0;
     background-size:100% 100%;
   }
   .halloween-mode #hero-section {
@@ -1386,7 +1390,7 @@
   }
   .halloween-mode #hero-section > div.relative.w-full.max-w-5xl {
     width:calc(100% - 34px) !important;
-    padding: min(80vw,285px) 0 18px !important;
+    padding: min(64vw,235px) 0 18px !important;
     align-items:stretch !important;
     text-align:center !important;
   }
