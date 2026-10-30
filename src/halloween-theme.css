@@ -1479,12 +1479,14 @@
   content:"";
   position:absolute !important;
   top:72px !important;
-  left:50% !important;
-  right:auto !important;
+  left:0 !important;
+  right:0 !important;
+  margin-left:auto !important;
+  margin-right:auto !important;
   width:min(calc(100% - 20px),640px) !important;
   height:auto !important;
   aspect-ratio:320 / 254 !important;
-  transform:translateX(-50%);
+  transform:none;
   background:
     linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,0) 84%,#030303 100%),
     var(--tk-monster-art) center top / 100% 100% no-repeat !important;
@@ -1521,6 +1523,10 @@
   .halloween-mode > .tk-monster-motion-layer::before,
   .halloween-mode > .tk-monster-motion-layer::after {
     top:68px !important;
+    left:0 !important;
+    right:0 !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
     width:calc(100% - 18px) !important;
     aspect-ratio:320 / 254 !important;
   }
