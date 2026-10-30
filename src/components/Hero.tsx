@@ -8,6 +8,7 @@ import { HeroCanvasStars } from './HeroCanvasStars';
 interface HeroProps {
   onOpenOrderModal: () => void;
   onOpenAdmin?: () => void;
+  isHalloweenMode?: boolean;
 }
 
 // Real NASA space-radio recordings mirrored as browser-compatible MP3 files.
@@ -17,7 +18,7 @@ const NASA_SPACE_AUDIO_URLS = [
   'https://gadgetnews.net/wp-content/uploads/2017/10/Cassini-Enceladus-Sound.mp3',
 ];
 
-export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => {
+export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin, isHalloweenMode = false }) => {
   const { brandInfo } = useSiteData();
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [shockwaves, setShockwaves] = useState<{ id: number; x: number; y: number }[]>([]);
@@ -90,7 +91,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
       className="relative min-h-screen pt-32 pb-20 overflow-hidden flex flex-col justify-between items-center text-center bg-transparent"
     >
       <div className="absolute inset-0 bg-cosmic-grid opacity-30 pointer-events-none z-0" />
-      <HeroCanvasStars />
+      {!isHalloweenMode && <HeroCanvasStars />}
 
       <div className="absolute inset-0 pointer-events-none -z-[8] hero-space-depth hero-space-depth-near" />
       <div className="absolute inset-0 pointer-events-none -z-[9] hero-space-depth hero-space-depth-far" />
@@ -108,27 +109,27 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
       <div className="absolute top-24 start-4 sm:start-7 lg:start-10 z-20 hidden sm:block text-start font-mono select-none pointer-events-none">
         <div className="flex items-center gap-2 text-[10px] sm:text-xs tracking-[0.22em] text-cyan-300/90">
           <Crosshair className="w-3.5 h-3.5 animate-pulse" />
-          <span>MISSION // TEKVIX-01</span>
+          <span>{isHalloweenMode ? 'SIGNAL // TEKVIX-01' : 'MISSION // TEKVIX-01'}</span>
         </div>
         <div className="mt-2 ps-5 text-[9px] sm:text-[10px] tracking-[0.16em] text-gray-500">
-          DEEP SPACE NETWORK
+          {isHalloweenMode ? 'UNKNOWN FREQUENCY' : 'DEEP SPACE NETWORK'}
         </div>
         <div className="mt-1 ps-5 flex items-center gap-2 text-[9px] sm:text-[10px] tracking-[0.14em] text-emerald-300/80">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          SYSTEM ONLINE
+          {isHalloweenMode ? 'ENTITY DETECTED' : 'SYSTEM ONLINE'}
         </div>
       </div>
 
       <div className="absolute top-24 end-4 sm:end-7 lg:end-10 z-20 hidden sm:block text-end font-mono select-none pointer-events-none">
         <div className="flex items-center justify-end gap-2 text-[10px] sm:text-xs tracking-[0.18em] text-purple-300/90">
-          <span>DEEP SPACE LINK</span>
+          <span>{isHalloweenMode ? 'UNKNOWN PRESENCE' : 'DEEP SPACE LINK'}</span>
           <Radio className="w-3.5 h-3.5 animate-pulse" />
         </div>
         <div className="mt-2 text-[9px] sm:text-[10px] tracking-[0.14em] text-gray-500">
-          ORBITAL AI CORE // ACTIVE
+          {isHalloweenMode ? 'THE SIGNAL IS LISTENING' : 'ORBITAL AI CORE // ACTIVE'}
         </div>
         <div className="mt-1 text-[9px] sm:text-[10px] tracking-[0.14em] text-cyan-300/70">
-          CHANNEL 07 // SECURE
+          {isHalloweenMode ? 'DO NOT LOOK BACK' : 'CHANNEL 07 // SECURE'}
         </div>
       </div>
 
@@ -275,7 +276,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => 
           <span className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400/0 via-cyan-300/10 to-fuchsia-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
           <span className="relative z-10 inline-flex items-center gap-2">
             {isSpaceAudioPlaying ? <Volume2 className="w-4 h-4 animate-pulse" /> : <VolumeX className="w-4 h-4" />}
-            <span>{isSpaceAudioPlaying ? 'توقف صدای واقعی فضا' : '🌌 یه صدا از اعماق فضا... گوش کن 🎧'}</span>
+            <span>{isSpaceAudioPlaying ? 'توقف صدای واقعی فضا' : '🩸 یه صدا از اعماق تاریکی... گوش کن 🎧'}</span>
           </span>
         </button>
 
