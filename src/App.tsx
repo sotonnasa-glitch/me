@@ -16,6 +16,7 @@ import { CTASection } from './components/CTASection';
 import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
 import { GlobalBackgroundStars } from './components/GlobalBackgroundStars';
+import { AIToolsPage } from './components/AIToolsPage';
 import { ArrowUp, Video } from 'lucide-react';
 
 const OrderModal = lazy(() => import('./components/OrderModal').then((module) => ({ default: module.OrderModal })));
@@ -29,6 +30,7 @@ import { UniversalBackButton } from './components/common/UniversalBackButton';
 
 function MainWebsite() {
   const { sectionsConfig, newOrdersCount, currentUser, navigateToSection, isAdminAuthenticated } = useSiteData();
+  const isAIToolsPage = window.location.pathname.replace(/\/+$/, '') === '/tools';
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAdminAuthOpen, setIsAdminAuthOpen] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
@@ -112,25 +114,31 @@ function MainWebsite() {
       <Navbar onOpenOrderModal={handleOpenOrderModal} onOpenAdmin={handleOpenAdmin} onOpenGoogleAuth={() => setIsGoogleAuthOpen(true)} onOpenOrderTracking={handleOpenOrderTracking} />
 
       <main>
-        {isEnabled('hero') && <Hero onOpenOrderModal={() => handleOpenOrderModal()} onOpenAdmin={handleOpenAdmin} />}
-        <OpeningEventBanner onOpenOrderModal={handleOpenOrderModal} />
-        {isEnabled('services') && <ServicesSection onSelectServiceForQuote={(serviceId) => handleOpenOrderModal(serviceId)} />}
-        {isEnabled('how_it_works') && <HowItWorks onOpenOrderModal={() => handleOpenOrderModal()} />}
-        {isEnabled('portfolio') && <PortfolioSection onOpenOrderModal={(serviceId) => handleOpenOrderModal(serviceId)} />}
-        {isEnabled('blog') && <BlogSection onOpenOrderModal={handleOpenOrderModal} onOpenAuthModal={() => setIsGoogleAuthOpen(true)} />}
-        <CustomerReviewsSection onOpenAuthModal={() => setIsGoogleAuthOpen(true)} />
-        {isEnabled('testimonials') && <TestimonialsSection />}
-        {isEnabled('about') && <AboutSection />}
-        <SocialMediaSection />
-        {isEnabled('faq') && <FAQSection />}
-        {isEnabled('cta') && <CTASection onOpenOrderModal={() => handleOpenOrderModal()} />}
-        {isEnabled('contact') && <ContactSection />}
+        {isAIToolsPage ? (
+          <AIToolsPage />
+        ) : (
+          <>
+            {isEnabled('hero') && <Hero onOpenOrderModal={() => handleOpenOrderModal()} onOpenAdmin={handleOpenAdmin} />}
+            <OpeningEventBanner onOpenOrderModal={handleOpenOrderModal} />
+            {isEnabled('services') && <ServicesSection onSelectServiceForQuote={(serviceId) => handleOpenOrderModal(serviceId)} />}
+            {isEnabled('how_it_works') && <HowItWorks onOpenOrderModal={() => handleOpenOrderModal()} />}
+            {isEnabled('portfolio') && <PortfolioSection onOpenOrderModal={(serviceId) => handleOpenOrderModal(serviceId)} />}
+            {isEnabled('blog') && <BlogSection onOpenOrderModal={handleOpenOrderModal} onOpenAuthModal={() => setIsGoogleAuthOpen(true)} />}
+            <CustomerReviewsSection onOpenAuthModal={() => setIsGoogleAuthOpen(true)} />
+            {isEnabled('testimonials') && <TestimonialsSection />}
+            {isEnabled('about') && <AboutSection />}
+            <SocialMediaSection />
+            {isEnabled('faq') && <FAQSection />}
+            {isEnabled('cta') && <CTASection onOpenOrderModal={() => handleOpenOrderModal()} />}
+            {isEnabled('contact') && <ContactSection />}
+          </>
+        )}
       </main>
 
       <div className="fixed bottom-6 end-6 z-30 flex items-center gap-2.5 animate-in fade-in duration-300 pb-[env(safe-area-inset-bottom)] sm:pb-0 max-sm:bottom-4 max-sm:end-4">
-        <button type="button" id="floating-video-jump-btn" onClick={() => navigateToSection('blog')} className="min-w-[44px] min-h-[44px] px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-purple-950/80 hover:bg-purple-900 text-purple-200 hover:text-white border border-purple-500/40 shadow-lg backdrop-blur-xl transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation" title="پرش به بخش فیلم و ویدیوها" aria-label="پرش به بخش فیلم و ویدیوها">
+        {!isAIToolsPage && <button type="button" id="floating-video-jump-btn" onClick={() => navigateToSection('blog')} className="min-w-[44px] min-h-[44px] px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-purple-950/80 hover:bg-purple-900 text-purple-200 hover:text-white border border-purple-500/40 shadow-lg backdrop-blur-xl transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation" title="پرش به بخش فیلم و ویدیوها" aria-label="پرش به بخش فیلم و ویدیوها">
           <Video className="w-4 h-4 text-purple-300 animate-pulse" /><span className="text-xs font-bold hidden sm:inline">فیلم‌ها</span>
-        </button>
+        </button>}
         {showScrollTop && <button type="button" onClick={scrollToTop} className="min-w-[44px] min-h-[44px] p-2.5 sm:p-3 rounded-2xl bg-[#09090b]/90 hover:bg-zinc-800 text-white border border-zinc-700/80 shadow-2xl backdrop-blur-xl transition-all duration-200 hover:scale-105 active:scale-95 group focus:outline-none cursor-pointer touch-manipulation" title="بازگشت به بالای صفحه" aria-label="بازگشت به بالای صفحه">
           <ArrowUp className="w-4 h-4 text-purple-400 group-hover:-translate-y-0.5 transition-transform" />
         </button>}
