@@ -25,14 +25,14 @@
   z-index: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(180deg, rgba(3, 2, 3, .17) 0%, rgba(3, 2, 3, .42) 42%, rgba(3, 2, 3, .66) 100%),
-    radial-gradient(ellipse at 8% 28%, rgba(132, 0, 28, .21), transparent 48%),
-    radial-gradient(ellipse at 95% 76%, rgba(116, 0, 24, .20), transparent 42%),
+    linear-gradient(180deg, rgba(3, 2, 3, .02) 0%, rgba(3, 2, 3, .17) 54%, rgba(3, 2, 3, .31) 100%),
+    radial-gradient(ellipse at 8% 28%, rgba(132, 0, 28, .16), transparent 48%),
+    radial-gradient(ellipse at 95% 76%, rgba(116, 0, 24, .16), transparent 42%),
     url("/assets/tekvix-horror-banner.webp");
-  background-size: 100% 100%, 100% 100%, 100% 100%, min(100vw, 920px) auto;
-  background-position: center, center, center, center 86px;
+  background-size: 100% 100%, 100% 100%, 100% 100%, cover;
+  background-position: center, center, center, center;
   background-repeat: no-repeat;
-  opacity: .96;
+  opacity: 1;
   transform: translateZ(0);
   will-change: background-position;
 }
@@ -616,8 +616,8 @@
 /* Mobile: retain the fixed creature, let it overlap the first-screen content slightly, and avoid the former blank gap. */
 @media (max-width: 700px) {
   .halloween-mode::before {
-    background-size: 100% 100%,100% 100%,100% 100%,100vw auto;
-    background-position: center,center,center,center 82px;
+    background-size: 100% 100%,100% 100%,100% 100%,cover;
+    background-position: center,center,center,center;
   }
   .halloween-season-pill { top: 72px; gap: 6px; padding: 5px 9px; font-size: 7px; }
   .halloween-pill-mode::after { font-size: 7px; }
