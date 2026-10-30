@@ -3,6 +3,7 @@
  * Seasonal visual layer: original site copy, routes, order forms and interactions remain intact.
  */
 .halloween-mode {
+  --tk-monster-art: url("data:image/webp;base64,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");
   --tk-red: #f20b3b;
   --tk-red-hot: #ff3157;
   --tk-red-deep: #5a071b;
@@ -28,7 +29,7 @@
     linear-gradient(180deg, rgba(3, 2, 3, .02) 0%, rgba(3, 2, 3, .17) 54%, rgba(3, 2, 3, .31) 100%),
     radial-gradient(ellipse at 8% 28%, rgba(132, 0, 28, .16), transparent 48%),
     radial-gradient(ellipse at 95% 76%, rgba(116, 0, 24, .16), transparent 42%),
-    url("/assets/tekvix-horror-banner.webp");
+    var(--tk-monster-art);
   background-size: 100% 100%, 100% 100%, 100% 100%, cover;
   background-position: center, center, center, center;
   background-repeat: no-repeat;
@@ -44,7 +45,7 @@
   z-index: 1;
   display: block;
   pointer-events: none;
-  background-image: url("/assets/tekvix-horror-banner.webp");
+  background-image: var(--tk-monster-art);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -924,7 +925,7 @@
   min-height: 0;
   background:
     linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.01) 82%, #030303 100%),
-    url("/assets/tekvix-horror-banner.webp") center top / 100% 100% no-repeat;
+    var(--tk-monster-art) center top / 100% 100% no-repeat;
   opacity: 1;
   filter: brightness(1.32) contrast(1.18) saturate(1.16);
   transform-origin: 50% 22%;
@@ -1456,4 +1457,76 @@
 }
 .halloween-mode #services [id^="service-card-"] [class*="w-14"][class*="h-14"] [class*="bg-gradient"] {
   background-image: linear-gradient(90deg,transparent,rgba(255,35,75,.17),transparent) !important;
+}
+
+
+/* Final monster hero frame: uncropped 4:3 face/hand artwork + moving breath/glitch. */
+.halloween-mode > .tk-monster-motion-layer {
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:auto !important;
+  min-height:100% !important;
+  z-index:0 !important;
+  pointer-events:none !important;
+  background:
+    radial-gradient(ellipse at 7% 18%,rgba(145,0,33,.24),transparent 34%),
+    radial-gradient(ellipse at 92% 57%,rgba(95,0,25,.18),transparent 38%),
+    repeating-linear-gradient(132deg,transparent 0 130px,rgba(255,20,52,.028) 131px,transparent 133px 240px),
+    linear-gradient(180deg,#080304 0%,#050304 36%,#030303 100%) !important;
+}
+.halloween-mode > .tk-monster-motion-layer::before {
+  content:"";
+  position:absolute !important;
+  top:72px !important;
+  left:50% !important;
+  right:auto !important;
+  width:min(calc(100% - 20px),640px) !important;
+  height:auto !important;
+  aspect-ratio:320 / 254 !important;
+  transform:translateX(-50%);
+  background:
+    linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,0) 84%,#030303 100%),
+    var(--tk-monster-art) center top / 100% 100% no-repeat !important;
+  opacity:1 !important;
+  filter:brightness(1.08) contrast(1.12) saturate(1.12);
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 88%,rgba(0,0,0,.84) 97%,transparent 100%);
+  mask-image:linear-gradient(180deg,#000 0%,#000 88%,rgba(0,0,0,.84) 97%,transparent 100%);
+  transform-origin:50% 24%;
+  animation:tk-monster-alive 8.4s ease-in-out infinite;
+  will-change:transform,filter;
+}
+.halloween-mode > .tk-monster-motion-layer::after {
+  content:"";
+  position:absolute !important;
+  top:72px !important;
+  left:50% !important;
+  right:auto !important;
+  width:min(calc(100% - 20px),640px) !important;
+  height:auto !important;
+  aspect-ratio:320 / 254 !important;
+  transform:translateX(-50%);
+  background:
+    radial-gradient(ellipse 8% 5% at 44% 28%,rgba(255,24,55,.36),transparent 78%),
+    radial-gradient(ellipse 8% 5% at 56% 28%,rgba(255,24,55,.36),transparent 78%),
+    repeating-linear-gradient(0deg,transparent 0 4px,rgba(255,255,255,.018) 5px,transparent 6px 10px);
+  opacity:.28;
+  mix-blend-mode:screen;
+  animation:tk-monster-eyes 7.8s ease-in-out infinite;
+}
+.halloween-mode #hero-section > div.relative.w-full.max-w-5xl {
+  padding-top:500px !important;
+}
+@media (max-width:700px) {
+  .halloween-mode > .tk-monster-motion-layer::before,
+  .halloween-mode > .tk-monster-motion-layer::after {
+    top:68px !important;
+    width:calc(100% - 18px) !important;
+    aspect-ratio:320 / 254 !important;
+  }
+  .halloween-mode #hero-section { min-height:780px !important; }
+  .halloween-mode #hero-section > div.relative.w-full.max-w-5xl {
+    width:calc(100% - 30px) !important;
+    padding:286px 0 18px !important;
+  }
 }
