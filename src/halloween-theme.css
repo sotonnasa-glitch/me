@@ -180,3 +180,43 @@
 @media (prefers-reduced-motion: reduce) {
   .halloween-mode *, .halloween-atmosphere * { animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important; }
 }
+
+/* Final conversion of the original neural purchase controls and seasonal event strip. */
+.halloween-mode .neural-btn-wrapper {
+  background: conic-gradient(from 135deg,#6d061e 0%,#ff3157 36%,#a30a2e 70%,#6d061e 100%) !important;
+  box-shadow:0 5px 22px rgba(210,0,42,.25),0 0 26px rgba(255,20,65,.15),inset 0 0 10px rgba(255,70,100,.12) !important;
+}
+.halloween-mode .neural-btn-inner { background:rgba(9,3,6,.97) !important; }
+.halloween-mode .neural-label-text {
+  background-image:linear-gradient(90deg,#fff1f3 0%,#ff526f 48%,#fff1f3 100%) !important;
+  -webkit-text-fill-color:transparent !important;
+}
+.halloween-mode .neural-blob-violet,.halloween-mode .neural-blob-cyan,.halloween-mode .neural-blob-pink {
+  background:radial-gradient(circle,rgba(255,30,70,.48) 0%,rgba(150,0,35,0) 70%) !important;
+}
+.halloween-mode .neural-dot { background-color:#8c102d !important; }
+.halloween-mode .neural-grid-visible .neural-dot {
+  animation-name:tk-red-signal-pulse !important;
+}
+.halloween-mode .neural-check-svg { stroke:#ff3156 !important; filter:drop-shadow(0 0 7px rgba(255,30,70,.75)) !important; }
+.halloween-mode .neural-success-text { text-shadow:0 0 12px rgba(255,30,70,.45) !important; }
+@keyframes tk-red-signal-pulse {
+  0% { transform:scale(.65); background:#6d061e; box-shadow:0 0 3px rgba(255,20,55,.25); opacity:.35; }
+  50% { transform:scale(1.35); background:#ff3157; box-shadow:0 0 10px #ff3157,0 0 18px rgba(255,49,87,.8); opacity:1; }
+  100% { transform:scale(1.1); background:#bd1237; box-shadow:0 0 8px #bd1237,0 0 16px rgba(189,18,55,.72); opacity:.9; }
+}
+.halloween-mode #opening-event-banner {
+  background:linear-gradient(180deg,rgba(16,3,8,.92),rgba(5,3,4,.72)) !important;
+  border-top:1px solid rgba(255,35,75,.18);
+  border-bottom:1px solid rgba(255,35,75,.18);
+}
+.halloween-mode #opening-event-banner [class*="bg-zinc-900"],
+.halloween-mode #opening-event-banner [class*="bg-black/"] {
+  border-color:rgba(255,35,75,.24) !important;
+}
+.halloween-mode #opening-event-banner [class*="text-amber-"],
+.halloween-mode #opening-event-banner [class*="text-orange-"],
+.halloween-mode #opening-event-banner [class*="text-yellow-"] { color:#ff5471 !important; }
+.halloween-mode #opening-event-banner [class*="border-amber-"],
+.halloween-mode #opening-event-banner [class*="border-orange-"] { border-color:rgba(255,35,75,.32) !important; }
+.halloween-mode #opening-event-banner button:hover { border-color:rgba(255,35,75,.55) !important; }
