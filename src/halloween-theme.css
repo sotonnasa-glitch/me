@@ -82,6 +82,7 @@
 .halloween-mode > .fixed.bottom-6 { z-index: 70 !important; }
 
 /* Stop all cosmic leftovers: DOM starfields are also skipped by React in horror mode. */
+.halloween-mode > div.fixed.inset-0.pointer-events-none.z-0 { display: none !important; }
 .halloween-mode .page-meteor,
 .halloween-mode .page-ship,
 .halloween-mode #hero-section .hero-meteor,
