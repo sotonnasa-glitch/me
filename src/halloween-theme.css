@@ -918,24 +918,24 @@
 .halloween-mode > .tk-monster-motion-layer::before {
   content: "";
   position: absolute;
-  inset: 0 0 auto;
+  inset: 72px 0 auto;
   height: min(84vw, 760px);
   min-height: 260px;
   background:
-    linear-gradient(180deg, rgba(0,0,0,.01) 0%, rgba(0,0,0,.02) 60%, #030303 100%),
-    url("/assets/tekvix-horror-banner.webp") center 24% / cover no-repeat;
+    linear-gradient(180deg, rgba(0,0,0,.01) 0%, rgba(0,0,0,.02) 65%, #030303 100%),
+    url("/assets/tekvix-horror-banner.webp") center top / cover no-repeat;
   opacity: 1;
   filter: brightness(1.32) contrast(1.18) saturate(1.16);
   transform-origin: 50% 22%;
   animation: tk-monster-alive 8.4s ease-in-out infinite;
-  -webkit-mask-image: linear-gradient(180deg,#000 0%,#000 62%,rgba(0,0,0,.7) 80%,transparent 100%);
-  mask-image: linear-gradient(180deg,#000 0%,#000 62%,rgba(0,0,0,.7) 80%,transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg,#000 0%,#000 70%,rgba(0,0,0,.72) 86%,transparent 100%);
+  mask-image: linear-gradient(180deg,#000 0%,#000 70%,rgba(0,0,0,.72) 86%,transparent 100%);
   will-change: transform, filter;
 }
 .halloween-mode > .tk-monster-motion-layer::after {
   content: "";
   position: absolute;
-  inset: 0 0 auto;
+  inset: 72px 0 auto;
   height: min(84vw, 760px);
   min-height: 260px;
   background:
@@ -1377,10 +1377,11 @@
 @media (max-width:700px) {
   .halloween-mode > .tk-monster-motion-layer::before,
   .halloween-mode > .tk-monster-motion-layer::after {
+    inset: 68px 0 auto;
     height: min(86vw, 370px);
     min-height: 250px;
     background-size: cover;
-    background-position: center 20%;
+    background-position: center top;
   }
   .halloween-mode #hero-section {
     min-height: 760px !important;
