@@ -919,11 +919,12 @@
   content: "";
   position: absolute;
   inset: 72px 0 auto;
-  height: min(84vw, 760px);
-  min-height: 260px;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
   background:
     linear-gradient(180deg, rgba(0,0,0,.01) 0%, rgba(0,0,0,.02) 65%, #030303 100%),
-    url("/assets/tekvix-horror-banner.webp") center top / cover no-repeat;
+    url("/assets/tekvix-horror-banner.webp") center top / 100% 100% no-repeat;
   opacity: 1;
   filter: brightness(1.32) contrast(1.18) saturate(1.16);
   transform-origin: 50% 22%;
@@ -936,8 +937,9 @@
   content: "";
   position: absolute;
   inset: 72px 0 auto;
-  height: min(84vw, 760px);
-  min-height: 260px;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
   background:
     radial-gradient(ellipse 8% 5% at 44% 28%, rgba(255,24,55,.52), transparent 78%),
     radial-gradient(ellipse 8% 5% at 56% 28%, rgba(255,24,55,.52), transparent 78%),
@@ -1378,9 +1380,10 @@
   .halloween-mode > .tk-monster-motion-layer::before,
   .halloween-mode > .tk-monster-motion-layer::after {
     inset: 68px 0 auto;
-    height: min(86vw, 370px);
-    min-height: 250px;
-    background-size: cover;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    min-height: 0;
+    background-size: 100% 100%;
     background-position: center top;
   }
   .halloween-mode #hero-section {
@@ -1390,7 +1393,7 @@
   }
   .halloween-mode #hero-section > div.relative.w-full.max-w-5xl {
     width:calc(100% - 34px) !important;
-    padding: min(82vw,275px) 0 18px !important;
+    padding: min(72vw,250px) 0 18px !important;
     align-items:stretch !important;
     text-align:center !important;
   }
@@ -1426,4 +1429,31 @@
   .halloween-mode main section h2::after {
     animation:none !important;
   }
+}
+
+
+/* Strict crimson treatment for original service labels and live mini-illustrations. */
+.halloween-mode #services [id^="service-card-"] [class*="bg-amber-500"],
+.halloween-mode #services [id^="service-card-"] [class*="bg-yellow-"],
+.halloween-mode #services [id^="service-card-"] [class*="border-amber-"],
+.halloween-mode #services [id^="service-card-"] [class*="border-yellow-"] {
+  background: rgba(112,6,31,.28) !important;
+  border-color: rgba(255,44,82,.55) !important;
+  color: #ff6b83 !important;
+}
+.halloween-mode #services [id^="service-card-"] [class*="text-amber-"],
+.halloween-mode #services [id^="service-card-"] [class*="text-yellow-"] {
+  color: #ff5a76 !important;
+}
+.halloween-mode #services [id^="service-card-"] [class*="w-14"][class*="h-14"] {
+  background: linear-gradient(145deg,#540719,#100307) !important;
+  border-color: rgba(255,41,78,.62) !important;
+  box-shadow: 0 0 22px rgba(210,0,42,.2),inset 0 0 16px rgba(190,0,42,.13) !important;
+}
+.halloween-mode #services [id^="service-card-"] [class*="w-14"][class*="h-14"] svg {
+  color: #ff365d !important;
+  filter: sepia(1) saturate(8) hue-rotate(305deg) brightness(1.15) contrast(1.15) drop-shadow(0 0 8px rgba(255,30,70,.42)) !important;
+}
+.halloween-mode #services [id^="service-card-"] [class*="w-14"][class*="h-14"] [class*="bg-gradient"] {
+  background-image: linear-gradient(90deg,transparent,rgba(255,35,75,.17),transparent) !important;
 }
