@@ -9,19 +9,22 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onOpenAdmin, onOpenOrderTracking }) => {
   const { brandInfo, services } = useSiteData();
+  const isToolsPage = window.location.pathname.replace(/\/+$/, '') === '/tools';
+  const homePrefix = isToolsPage ? '/' : '';
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const navLinks = [
-    { label: 'خدمات', href: '#services' },
-    { label: 'ویژگی‌ها', href: '#tools' },
-    { label: 'نحوه کار', href: '#how-it-works' },
-    { label: 'نمونه‌کارها', href: '#portfolio' },
-    { label: 'درباره ما', href: '#about' },
-    { label: 'سوالات متداول', href: '#faq' },
-    { label: 'تماس با ما', href: '#contact' },
+    ...(isToolsPage ? [{ label: 'صفحه اصلی', href: '/' }] : []),
+    { label: 'خدمات', href: `${homePrefix}#services` },
+    { label: 'ابزارهای هوش مصنوعی', href: '/tools' },
+    { label: 'نحوه کار', href: `${homePrefix}#how-it-works` },
+    { label: 'نمونه‌کارها', href: `${homePrefix}#portfolio` },
+    { label: 'درباره ما', href: `${homePrefix}#about` },
+    { label: 'سوالات متداول', href: `${homePrefix}#faq` },
+    { label: 'تماس با ما', href: `${homePrefix}#contact` },
   ];
 
   return (
@@ -102,7 +105,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin, onOpenOrderTracking
               {services.slice(0, 6).map((srv) => (
                 <a
                   key={srv.id}
-                  href="#services"
+                  href={`${homePrefix}#services`}
                   className="text-gray-400 hover:text-purple-200 transition-colors p-1.5 rounded hover:bg-white/[0.02]"
                 >
                   {srv.title}
