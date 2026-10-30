@@ -920,7 +920,7 @@
   position: absolute;
   inset: 72px 0 auto;
   height: auto;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 535 / 400;
   min-height: 0;
   background:
     linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.01) 82%, #030303 100%),
@@ -938,7 +938,7 @@
   position: absolute;
   inset: 72px 0 auto;
   height: auto;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 535 / 400;
   min-height: 0;
   background:
     radial-gradient(ellipse 8% 5% at 44% 28%, rgba(255,24,55,.52), transparent 78%),
@@ -1381,7 +1381,7 @@
   .halloween-mode > .tk-monster-motion-layer::after {
     inset: 68px 0 auto;
     height: auto;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 535 / 400;
     min-height: 0;
     background-size: 100% 100%;
     background-position: center top;
@@ -1393,7 +1393,7 @@
   }
   .halloween-mode #hero-section > div.relative.w-full.max-w-5xl {
     width:calc(100% - 34px) !important;
-    padding: min(72vw,250px) 0 18px !important;
+    padding: min(94vw,300px) 0 18px !important;
     align-items:stretch !important;
     text-align:center !important;
   }
