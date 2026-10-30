@@ -779,3 +779,35 @@
   background: rgba(4,3,5,.92) !important;
   border-color: rgba(255,43,82,.3) !important;
 }
+
+
+/* Last UI cleanup on the real mobile controls and assistant launcher. */
+.halloween-mode #mobile-menu-toggle-btn,
+.halloween-mode #mobile-place-order-cta,
+.halloween-mode #nav-place-order-btn,
+.halloween-mode #nav-order-tracking-btn {
+  border-color: rgba(255,49,87,.58) !important;
+  box-shadow: 0 0 18px rgba(210,0,42,.20) !important;
+}
+.halloween-mode #mobile-menu-toggle-btn svg,
+.halloween-mode #nav-place-order-btn svg,
+.halloween-mode #nav-order-tracking-btn svg { color: #ff4265 !important; }
+.halloween-mode #nav-crystal-frame {
+  background: linear-gradient(145deg,#29040f,#69071f) !important;
+  border-color: rgba(255,49,87,.68) !important;
+  box-shadow: 0 0 18px rgba(220,0,46,.30) !important;
+}
+.halloween-mode #nav-crystal-frame svg { color: #ff4569 !important; filter: drop-shadow(0 0 7px rgba(255,20,55,.6)); }
+.halloween-mode .fixed.bottom-6.start-6 > button {
+  border-color: rgba(255,49,87,.58) !important;
+  background: linear-gradient(125deg,#5b071e,#b10b32) !important;
+  box-shadow: 0 0 24px rgba(220,0,46,.25) !important;
+}
+.halloween-mode .fixed.bottom-6.start-6 > button [class*="bg-gradient-to-br"] {
+  background-image: linear-gradient(145deg,#f01848,#65071f) !important;
+}
+.halloween-mode .fixed.bottom-6.start-6 > button svg,
+.halloween-mode .fixed.bottom-6.start-6 > button [class*="text-purple-"],
+.halloween-mode .fixed.bottom-6.start-6 > button [class*="text-amber-"] {
+  color: #fff0f3 !important;
+}
