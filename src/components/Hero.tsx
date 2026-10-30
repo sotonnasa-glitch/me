@@ -8,7 +8,6 @@ import { HeroCanvasStars } from './HeroCanvasStars';
 interface HeroProps {
   onOpenOrderModal: () => void;
   onOpenAdmin?: () => void;
-  isHalloweenMode?: boolean;
 }
 
 // Real NASA space-radio recordings mirrored as browser-compatible MP3 files.
@@ -18,7 +17,7 @@ const NASA_SPACE_AUDIO_URLS = [
   'https://gadgetnews.net/wp-content/uploads/2017/10/Cassini-Enceladus-Sound.mp3',
 ];
 
-export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin, isHalloweenMode = false }) => {
+export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin }) => {
   const { brandInfo } = useSiteData();
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [shockwaves, setShockwaves] = useState<{ id: number; x: number; y: number }[]>([]);
@@ -91,7 +90,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin, isHal
       className="relative min-h-screen pt-32 pb-20 overflow-hidden flex flex-col justify-between items-center text-center bg-transparent"
     >
       <div className="absolute inset-0 bg-cosmic-grid opacity-30 pointer-events-none z-0" />
-      {!isHalloweenMode && <HeroCanvasStars />}
+      <HeroCanvasStars />
 
       <div className="absolute inset-0 pointer-events-none -z-[8] hero-space-depth hero-space-depth-near" />
       <div className="absolute inset-0 pointer-events-none -z-[9] hero-space-depth hero-space-depth-far" />
@@ -109,27 +108,27 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin, isHal
       <div className="absolute top-24 start-4 sm:start-7 lg:start-10 z-20 hidden sm:block text-start font-mono select-none pointer-events-none">
         <div className="flex items-center gap-2 text-[10px] sm:text-xs tracking-[0.22em] text-cyan-300/90">
           <Crosshair className="w-3.5 h-3.5 animate-pulse" />
-          <span>{isHalloweenMode ? 'SIGNAL // TEKVIX-01' : 'MISSION // TEKVIX-01'}</span>
+          <span>MISSION // TEKVIX-01</span>
         </div>
         <div className="mt-2 ps-5 text-[9px] sm:text-[10px] tracking-[0.16em] text-gray-500">
-          {isHalloweenMode ? 'UNKNOWN FREQUENCY' : 'DEEP SPACE NETWORK'}
+          DEEP SPACE NETWORK
         </div>
         <div className="mt-1 ps-5 flex items-center gap-2 text-[9px] sm:text-[10px] tracking-[0.14em] text-emerald-300/80">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          {isHalloweenMode ? 'ENTITY DETECTED' : 'SYSTEM ONLINE'}
+          SYSTEM ONLINE
         </div>
       </div>
 
       <div className="absolute top-24 end-4 sm:end-7 lg:end-10 z-20 hidden sm:block text-end font-mono select-none pointer-events-none">
         <div className="flex items-center justify-end gap-2 text-[10px] sm:text-xs tracking-[0.18em] text-purple-300/90">
-          <span>{isHalloweenMode ? 'UNKNOWN PRESENCE' : 'DEEP SPACE LINK'}</span>
+          <span>DEEP SPACE LINK</span>
           <Radio className="w-3.5 h-3.5 animate-pulse" />
         </div>
         <div className="mt-2 text-[9px] sm:text-[10px] tracking-[0.14em] text-gray-500">
-          {isHalloweenMode ? 'THE SIGNAL IS LISTENING' : 'ORBITAL AI CORE // ACTIVE'}
+          ORBITAL AI CORE // ACTIVE
         </div>
         <div className="mt-1 text-[9px] sm:text-[10px] tracking-[0.14em] text-cyan-300/70">
-          {isHalloweenMode ? 'DO NOT LOOK BACK' : 'CHANNEL 07 // SECURE'}
+          CHANNEL 07 // SECURE
         </div>
       </div>
 
@@ -195,57 +194,12 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin, isHal
             <div className="absolute -top-12 inset-x-0 h-40 bg-gradient-to-b from-purple-300/40 via-violet-500/15 to-transparent blur-xl pointer-events-none" />
             <div className="absolute inset-0 rounded-full border border-cyan-400/30 pointer-events-none shadow-[inset_0_8px_20px_rgba(56,189,248,0.35)]" />
             <div className="absolute -inset-x-10 top-1/2 -translate-y-1/2 h-16 bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent blur-md pointer-events-none rotate-[-12deg]" />
-            <div className="relative z-10 flex flex-col items-center justify-center pointer-events-none halloween-orb-wordmark">
+            <div className="relative z-10 flex flex-col items-center justify-center pointer-events-none">
               <span className="text-3xl sm:text-5xl md:text-7xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-white via-purple-100 to-purple-400 font-sans drop-shadow-[0_0_30px_rgba(192,132,252,0.85)] select-none group-hover:brightness-110 transition-all">
                 TEKVIX Ai
               </span>
             </div>
             <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:100%_24px] pointer-events-none opacity-35" />
-            <div className="halloween-pumpkin-overlay" aria-hidden="true">
-              <svg className="halloween-pumpkin-art" viewBox="0 0 240 220" role="presentation" focusable="false">
-                <defs>
-                  <radialGradient id="tekvix-pumpkin-skin" cx="44%" cy="32%" r="74%">
-                    <stop offset="0%" stopColor="#ffbd68" />
-                    <stop offset="38%" stopColor="#ff842e" />
-                    <stop offset="76%" stopColor="#d84a1d" />
-                    <stop offset="100%" stopColor="#531526" />
-                  </radialGradient>
-                  <linearGradient id="tekvix-pumpkin-stem" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#b5c36b" />
-                    <stop offset="48%" stopColor="#526a34" />
-                    <stop offset="100%" stopColor="#1b3027" />
-                  </linearGradient>
-                  <linearGradient id="tekvix-pumpkin-rib" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#791d25" stopOpacity=".65" />
-                    <stop offset="48%" stopColor="#ffb14e" stopOpacity=".08" />
-                    <stop offset="100%" stopColor="#5e1725" stopOpacity=".75" />
-                  </linearGradient>
-                </defs>
-                <ellipse className="halloween-pumpkin-shadow" cx="120" cy="195" rx="78" ry="13" />
-                <g className="halloween-pumpkin-body-group">
-                  <path className="halloween-pumpkin-body" d="M120 48 C101 32 76 38 61 53 C41 49 28 65 24 87 C18 118 38 150 65 165 C81 176 101 182 120 179 C139 182 159 176 175 165 C202 150 222 118 216 87 C212 65 199 49 179 53 C164 38 139 32 120 48Z" />
-                  <path className="halloween-pumpkin-rib" d="M120 47 C96 62 91 91 96 119 C100 145 108 166 120 179" />
-                  <path className="halloween-pumpkin-rib" d="M120 47 C144 62 149 91 144 119 C140 145 132 166 120 179" />
-                  <path className="halloween-pumpkin-rib halloween-pumpkin-rib-side" d="M61 53 C70 72 74 99 76 123 C79 143 91 161 103 173" />
-                  <path className="halloween-pumpkin-rib halloween-pumpkin-rib-side" d="M179 53 C170 72 166 99 164 123 C161 143 149 161 137 173" />
-                  <path className="halloween-pumpkin-highlight" d="M58 70 C43 96 52 130 74 148" />
-                  <path className="halloween-pumpkin-stem" d="M108 51 C104 38 111 23 128 15 C126 30 135 39 132 49 C124 48 116 50 108 56Z" />
-                  <path className="halloween-pumpkin-eye" d="M62 86 L91 68 L103 94 L84 102Z" />
-                  <path className="halloween-pumpkin-eye" d="M137 94 L149 68 L178 86 L156 102Z" />
-                  <path className="halloween-pumpkin-eye-glint" d="M69 85 L87 75 L94 90Z" />
-                  <path className="halloween-pumpkin-eye-glint" d="M146 90 L153 75 L170 85Z" />
-                  <path className="halloween-pumpkin-nose" d="M111 98 L123 113 L103 116Z" />
-                  <path className="halloween-pumpkin-mouth" d="M62 119 L80 125 L94 120 L107 133 L120 126 L134 133 L149 122 L177 118 L165 145 L147 157 L123 164 L99 157 L79 144Z" />
-                  <path className="halloween-pumpkin-teeth" d="M76 124 L94 120 L107 133 L120 126 L134 133 L149 122 L160 123 L149 138 L132 145 L117 148 L100 143 L86 136Z" />
-                  <path className="halloween-pumpkin-lower-tooth" d="M103 157 L108 143 L120 150 L130 141 L137 154 L123 159Z" />
-                  <path className="halloween-pumpkin-cut-line" d="M62 119 C81 129 97 121 107 133 C121 127 132 135 149 122 L177 118" />
-                </g>
-                <path className="halloween-pumpkin-scar" d="M177 57 L169 70 L177 74 L169 85" />
-                <circle className="halloween-pumpkin-spark" cx="50" cy="111" r="2" />
-                <circle className="halloween-pumpkin-spark halloween-pumpkin-spark-two" cx="188" cy="109" r="1.5" />
-              </svg>
-              <span className="halloween-pumpkin-aura" />
-            </div>
           </div>
 
           <div className="absolute -top-4 start-1/3 w-1.5 h-1.5 rounded-full bg-cyan-300 shadow-[0_0_8px_#38bdf8] pointer-events-none animate-stardust" />
@@ -276,7 +230,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrderModal, onOpenAdmin, isHal
           <span className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400/0 via-cyan-300/10 to-fuchsia-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
           <span className="relative z-10 inline-flex items-center gap-2">
             {isSpaceAudioPlaying ? <Volume2 className="w-4 h-4 animate-pulse" /> : <VolumeX className="w-4 h-4" />}
-            <span>{isSpaceAudioPlaying ? 'توقف صدای واقعی فضا' : '🩸 یه صدا از اعماق تاریکی... گوش کن 🎧'}</span>
+            <span>{isSpaceAudioPlaying ? 'توقف صدای واقعی فضا' : '🌌 یه صدا از اعماق فضا... گوش کن 🎧'}</span>
           </span>
         </button>
 
