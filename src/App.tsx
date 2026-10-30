@@ -94,7 +94,7 @@ function MainWebsite() {
 
   return (
     <div className={`min-h-screen bg-[#05050d] text-gray-200 selection:bg-purple-600 selection:text-white font-sans antialiased overflow-x-hidden relative ${isHalloweenTheme ? 'halloween-mode' : ''}`} dir="rtl">
-      <GlobalBackgroundStars />
+      {!isHalloweenTheme && <GlobalBackgroundStars />}
 
       {isHalloweenTheme && (
         <>
@@ -144,7 +144,7 @@ function MainWebsite() {
       <Navbar onOpenOrderModal={handleOpenOrderModal} onOpenAdmin={handleOpenAdmin} onOpenGoogleAuth={() => setIsGoogleAuthOpen(true)} onOpenOrderTracking={handleOpenOrderTracking} />
 
       <main>
-        {isEnabled('hero') && <Hero onOpenOrderModal={() => handleOpenOrderModal()} onOpenAdmin={handleOpenAdmin} />}
+        {isEnabled('hero') && <Hero onOpenOrderModal={() => handleOpenOrderModal()} onOpenAdmin={handleOpenAdmin} isHalloweenMode={isHalloweenTheme} />}
         <OpeningEventBanner onOpenOrderModal={handleOpenOrderModal} />
         {isEnabled('services') && <ServicesSection onSelectServiceForQuote={(serviceId) => handleOpenOrderModal(serviceId)} />}
         {isEnabled('how_it_works') && <HowItWorks onOpenOrderModal={() => handleOpenOrderModal()} />}
