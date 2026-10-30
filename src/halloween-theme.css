@@ -1536,3 +1536,22 @@
     padding:320px 0 18px !important;
   }
 }
+
+
+/* Final visibility pass: let the monster read clearly and connect the image to the hero copy. */
+.halloween-mode > .tk-monster-motion-layer::before {
+  filter: brightness(1.52) contrast(1.2) saturate(1.22) !important;
+  opacity: 1 !important;
+  background:
+    var(--tk-monster-art) center top / 100% 100% no-repeat !important;
+}
+.halloween-mode #hero-section::before {
+  background:
+    linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.02) 78%,rgba(0,0,0,.72) 100%) !important;
+}
+.halloween-mode > main::before { opacity:.16 !important; }
+@media (max-width:700px) {
+  .halloween-mode #hero-section > div.relative.w-full.max-w-5xl {
+    padding:260px 0 18px !important;
+  }
+}
