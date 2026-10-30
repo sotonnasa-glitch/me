@@ -48,12 +48,12 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: .30;
+  opacity: .39;
   mix-blend-mode: screen;
-  filter: contrast(1.24) saturate(1.25);
+  filter: contrast(1.30) saturate(1.32);
   transform-origin: 50% 24%;
   will-change: transform, filter;
-  animation: tk-monster-alive 11.5s ease-in-out infinite;
+  animation: tk-monster-alive 8.4s ease-in-out infinite;
   -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.95) 42%, rgba(0,0,0,.42) 66%, transparent 84%);
   mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.95) 42%, rgba(0,0,0,.42) 66%, transparent 84%);
 }
@@ -605,15 +605,15 @@
 
 /* Animations: restrained, intermittent and GPU-friendly rather than constant large movement. */
 @keyframes tk-monster-alive {
-  0%, 100% { transform: translate3d(0,0,0) scale(1.015); filter: contrast(1.22) saturate(1.18); }
-  18% { transform: translate3d(-.35%,.28%,0) scale(1.035); filter: contrast(1.3) saturate(1.24); }
-  38% { transform: translate3d(.28%,-.22%,0) scale(1.02); }
-  57% { transform: translate3d(0,0,0) scale(1.04); }
-  58% { transform: translate3d(-.85%,.18%,0) skewX(-.45deg) scale(1.055); filter: contrast(1.62) saturate(1.52) hue-rotate(-7deg); }
-  59% { transform: translate3d(.7%,-.12%,0) skewX(.38deg) scale(1.04); filter: contrast(1.7) saturate(1.6); }
-  60% { transform: translate3d(-.22%,0,0) scale(1.045); filter: contrast(1.35) saturate(1.28); }
-  62% { transform: translate3d(0,0,0) scale(1.035); filter: contrast(1.24) saturate(1.2); }
-  80% { transform: translate3d(.25%,.18%,0) scale(1.02); }
+  0%, 100% { transform: translate3d(0,0,0) scale(1.02); filter: contrast(1.28) saturate(1.24); }
+  18% { transform: translate3d(-.45%,.42%,0) scale(1.065); filter: contrast(1.36) saturate(1.3); }
+  34% { transform: translate3d(.5%,-.28%,0) scale(1.035); }
+  50% { transform: translate3d(0,0,0) scale(1.055); }
+  56% { transform: translate3d(-1.8%,.24%,0) skewX(-.9deg) scale(1.075); filter: contrast(1.75) saturate(1.58) hue-rotate(-8deg); }
+  57% { transform: translate3d(1.35%,-.2%,0) skewX(.75deg) scale(1.05); filter: contrast(1.88) saturate(1.68); }
+  58% { transform: translate3d(-.4%,.08%,0) scale(1.06); filter: contrast(1.48) saturate(1.35); }
+  61% { transform: translate3d(0,0,0) scale(1.04); filter: contrast(1.32) saturate(1.27); }
+  80% { transform: translate3d(.35%,.2%,0) scale(1.025); }
 }
 @keyframes tk-monster-eyes {
   0%, 36%, 45%, 100% { opacity: .08; }
@@ -719,7 +719,7 @@
   .halloween-mode #services [id^="service-card-"],
   .halloween-mode #portfolio [id^="portfolio-card-"] { border-radius: 12px !important; }
   .halloween-mode .halloween-mist { width: 88vw; height: 22vh; filter: blur(28px); opacity: .11; }
-  .halloween-mode > .tk-monster-motion-layer { background-position: center top; opacity: .34; }
+  .halloween-mode > .tk-monster-motion-layer { background-position: center top; opacity: .44; }
 }
 
 /* Respect accessibility preferences: all motion can be reduced without hiding content or effects. */
