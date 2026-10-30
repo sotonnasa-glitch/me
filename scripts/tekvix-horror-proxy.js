@@ -44,7 +44,7 @@ export default {
   async fetch(request, env) {
     const origin = await env.ORIGIN.fetch(request);
     const contentType = origin.headers.get("content-type") || "";
-    if (request.method !== "GET" || origin.status < 200 || origin.status >= 300 || !/text\\/html/i.test(contentType)) {
+    if (request.method !== "GET" || origin.status < 200 || origin.status >= 300 || !/text\/html/i.test(contentType)) {
       return origin;
     }
 
@@ -52,8 +52,8 @@ export default {
     if (originalHtml.includes('id="tekvix-red-signal-css"')) return origin;
 
     const stylesheet = '<style id="tekvix-red-signal-css">' + HORROR_CSS + '</style>';
-    let html = originalHtml.replace(/<\\/head>/i, stylesheet + '</head>');
-    html = html.replace(/<\\/body>/i, HORROR_BOOT + '</body>');
+    let html = originalHtml.replace(/<\/head>/i, stylesheet + '</head>');
+    html = html.replace(/<\/body>/i, HORROR_BOOT + '</body>');
 
     const headers = new Headers(origin.headers);
     headers.delete("content-length");
