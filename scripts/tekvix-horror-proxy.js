@@ -11,12 +11,15 @@ export default {
     const origin = await env.ORIGIN.fetch(request);
     if (Date.now() >= THEME_EXPIRES_AT) return origin;
     const contentType = origin.headers.get("content-type") || "";
-    if (request.method !== "GET" || origin.status < 200 || origin.status >= 300 || !/text\\/html/i.test(contentType)) return origin;
+    if (request.method !== "GET" || origin.status < 200 || origin.status >= 300 || !contentType.toLowerCase().includes("text/html")) return origin;
     const originalHtml = await origin.text();
     if (originalHtml.includes('id="tekvix-temporary-theme-css"')) return origin;
     const style = '<style id="tekvix-temporary-theme-css">' + HORROR_CSS + '</style>';
-    let html = originalHtml.replace(/<\\/head>/i,style + '</head>');
-    html = html.replace(/<\\/body>/i,HORROR_BOOT + '</body>');
+    let html = originalHtml;
+    const headEnd = html.toLowerCase().lastIndexOf("</head>");
+    if (headEnd >= 0) html = html.slice(0, headEnd) + style + html.slice(headEnd);
+    const bodyEnd = html.toLowerCase().lastIndexOf("</body>");
+    if (bodyEnd >= 0) html = html.slice(0, bodyEnd) + HORROR_BOOT + html.slice(bodyEnd);
     const headers = new Headers(origin.headers);
     headers.delete("content-length");
     headers.delete("content-encoding");
