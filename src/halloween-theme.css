@@ -37,6 +37,45 @@
   will-change: background-position;
 }
 
+/* Independent monster layer: the creature breathes, twitches and briefly glitches while the UI stays still. */
+.halloween-mode > .tk-monster-motion-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  pointer-events: none;
+  background-image: url("/assets/tekvix-horror-banner.webp");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: .30;
+  mix-blend-mode: screen;
+  filter: contrast(1.24) saturate(1.25);
+  transform-origin: 50% 24%;
+  will-change: transform, filter;
+  animation: tk-monster-alive 11.5s ease-in-out infinite;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.95) 42%, rgba(0,0,0,.42) 66%, transparent 84%);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.95) 42%, rgba(0,0,0,.42) 66%, transparent 84%);
+}
+.halloween-mode > .tk-monster-motion-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 7% 4% at 45% 27%, rgba(255,40,65,.42), transparent 78%),
+    radial-gradient(ellipse 7% 4% at 56% 27%, rgba(255,40,65,.42), transparent 78%);
+  opacity: .12;
+  filter: blur(9px);
+  animation: tk-monster-eyes 7.8s ease-in-out infinite;
+}
+
+/* A second, slower breath on the base image makes the monster feel physical. */
+.halloween-mode::before {
+  animation: tk-wallpaper-breathe 15s ease-in-out infinite;
+  transform-origin: 50% 22%;
+}
+
 /* Continuous scratched-film texture and slow red signal scan across the full document. */
 .halloween-mode::after {
   content: "";
@@ -565,6 +604,31 @@
 .halloween-mode ::-webkit-scrollbar-thumb:hover { background: #f20b3b; }
 
 /* Animations: restrained, intermittent and GPU-friendly rather than constant large movement. */
+@keyframes tk-monster-alive {
+  0%, 100% { transform: translate3d(0,0,0) scale(1.015); filter: contrast(1.22) saturate(1.18); }
+  18% { transform: translate3d(-.35%,.28%,0) scale(1.035); filter: contrast(1.3) saturate(1.24); }
+  38% { transform: translate3d(.28%,-.22%,0) scale(1.02); }
+  57% { transform: translate3d(0,0,0) scale(1.04); }
+  58% { transform: translate3d(-.85%,.18%,0) skewX(-.45deg) scale(1.055); filter: contrast(1.62) saturate(1.52) hue-rotate(-7deg); }
+  59% { transform: translate3d(.7%,-.12%,0) skewX(.38deg) scale(1.04); filter: contrast(1.7) saturate(1.6); }
+  60% { transform: translate3d(-.22%,0,0) scale(1.045); filter: contrast(1.35) saturate(1.28); }
+  62% { transform: translate3d(0,0,0) scale(1.035); filter: contrast(1.24) saturate(1.2); }
+  80% { transform: translate3d(.25%,.18%,0) scale(1.02); }
+}
+@keyframes tk-monster-eyes {
+  0%, 36%, 45%, 100% { opacity: .08; }
+  40% { opacity: .48; }
+  42% { opacity: .18; }
+  72% { opacity: .13; }
+  74% { opacity: .4; }
+  76% { opacity: .1; }
+}
+@keyframes tk-wallpaper-breathe {
+  0%,100% { transform: translate3d(0,0,0) scale(1); }
+  30% { transform: translate3d(-.35%,.18%,0) scale(1.012); }
+  65% { transform: translate3d(.28%,-.12%,0) scale(1.006); }
+}
+
 @keyframes tk-global-signal {
   0%,100% { background-position: 0 0, 0 0, 0 -260px; opacity: .14; }
   48% { opacity: .24; }
@@ -655,11 +719,15 @@
   .halloween-mode #services [id^="service-card-"],
   .halloween-mode #portfolio [id^="portfolio-card-"] { border-radius: 12px !important; }
   .halloween-mode .halloween-mist { width: 88vw; height: 22vh; filter: blur(28px); opacity: .11; }
+  .halloween-mode > .tk-monster-motion-layer { background-position: center top; opacity: .34; }
 }
 
 /* Respect accessibility preferences: all motion can be reduced without hiding content or effects. */
 @media (prefers-reduced-motion: reduce) {
   .halloween-mode::after,
+  .halloween-mode::before,
+  .halloween-mode > .tk-monster-motion-layer,
+  .halloween-mode > .tk-monster-motion-layer::after,
   .halloween-mode .halloween-mist,
   .halloween-mode .halloween-ember,
   .halloween-mode main h2,
