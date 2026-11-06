@@ -181,6 +181,9 @@ export interface BlogPost {
   excerpt: string;
   content: string;
   coverImage?: string;
+  externalUrl?: string;
+  externalLinkLabel?: string;
+  externalLinkDescription?: string;
   videoUrl?: string; // YouTube / Aparat / MP4 video url
   videoDuration?: string;
   author: string;
