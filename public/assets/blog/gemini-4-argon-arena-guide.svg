@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">آموزش انتخاب Gemini 4 Argon در Arena.ai</title>
+  <desc id="desc">کاور مقاله تکویکس درباره انتخاب مدل Gemini 4 Argon در حالت Direct و بخش Code سایت Arena.ai با امکان استفاده رایگان محدود.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#050b1b"/><stop offset=".55" stop-color="#0a1230"/><stop offset="1" stop-color="#160a32"/>
+    </linearGradient>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#22d3ee"/><stop offset="1" stop-color="#2563eb"/></linearGradient>
+    <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8b5cf6"/><stop offset="1" stop-color="#d946ef"/></linearGradient>
+    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#67e8f9"/><stop offset=".55" stop-color="#60a5fa"/><stop offset="1" stop-color="#c084fc"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="12" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="soft"><feGaussianBlur stdDeviation="34"/></filter>
+    <pattern id="grid" width="42" height="42" patternUnits="userSpaceOnUse"><path d="M42 0H0V42" fill="none" stroke="#6d8cff" stroke-opacity=".09" stroke-width="1"/></pattern>
+  </defs>
+  <rect width="1200" height="675" rx="34" fill="url(#bg)"/>
+  <rect width="1200" height="675" rx="34" fill="url(#grid)"/>
+  <circle cx="1050" cy="105" r="180" fill="#2563eb" opacity=".15" filter="url(#soft)"/>
+  <circle cx="175" cy="560" r="190" fill="#8b5cf6" opacity=".13" filter="url(#soft)"/>
+  <path d="M0 145C220 40 335 80 470 0M790 675C900 540 1050 520 1200 570" fill="none" stroke="#22d3ee" stroke-opacity=".28" stroke-width="2"/>
+  <g transform="translate(70 52)">
+    <path d="M0 0h76l-15 16H15v62L0 94V0zm22 24h38L42 44v36L22 61V24z" fill="url(#cyan)" filter="url(#glow)"/>
+    <text x="95" y="54" fill="#f8fafc" font-size="42" font-weight="800" font-family="Arial, sans-serif" letter-spacing="2">TEK<tspan fill="#22d3ee">VIX</tspan></text>
+    <text x="98" y="82" fill="#9fb2d8" font-size="16" font-family="Arial, sans-serif" letter-spacing="3">AI • DIGITAL SERVICES</text>
+  </g>
+  <g text-anchor="end" font-family="Tahoma, Arial, sans-serif" direction="rtl">
+    <text x="1125" y="93" fill="#c7d2fe" font-size="24" font-weight="700">راهنمای تصویری تکویکس</text>
+    <text x="1125" y="185" fill="#ffffff" font-size="64" font-weight="900">Gemini 4 Argon</text>
+    <text x="1125" y="242" fill="url(#titleGrad)" font-size="37" font-weight="800">در سایت Arena.ai</text>
+    <text x="1125" y="295" fill="#cbd5e1" font-size="24">انتخاب مدل در چند مرحله ساده</text>
+  </g>
+  <g transform="translate(70 345)">
+    <rect width="1060" height="170" rx="28" fill="#0b1228" stroke="#334b83" stroke-width="2"/>
+    <rect x="2" y="2" width="1056" height="166" rx="26" fill="none" stroke="url(#titleGrad)" stroke-opacity=".75" stroke-width="2"/>
+    <g font-family="Arial, sans-serif" font-size="16" font-weight="700" text-anchor="middle">
+      <g transform="translate(28 36)">
+        <rect width="225" height="98" rx="18" fill="#111d3b" stroke="#2563eb" stroke-width="2"/>
+        <text x="112" y="34" fill="#93c5fd" font-size="15">MODE</text>
+        <text x="112" y="70" fill="#ffffff" font-size="30">Direct</text>
+        <circle cx="112" cy="122" r="20" fill="url(#cyan)"/>
+        <text x="112" y="129" fill="#04111f" font-size="20">1</text>
+      </g>
+      <path d="M270 84h35m-12-12 12 12-12 12" fill="none" stroke="#22d3ee" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <g transform="translate(325 36)">
+        <rect width="190" height="98" rx="18" fill="#111d3b" stroke="#2563eb" stroke-width="2"/>
+        <text x="95" y="34" fill="#93c5fd" font-size="15">MODEL MENU</text>
+        <text x="95" y="70" fill="#ffffff" font-size="30">Max</text>
+        <circle cx="95" cy="122" r="20" fill="url(#cyan)"/>
+        <text x="95" y="129" fill="#04111f" font-size="20">2</text>
+      </g>
+      <path d="M530 84h35m-12-12 12 12-12 12" fill="none" stroke="#22d3ee" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <g transform="translate(590 36)">
+        <rect width="170" height="98" rx="18" fill="#111d3b" stroke="#8b5cf6" stroke-width="2"/>
+        <text x="85" y="34" fill="#c4b5fd" font-size="15">CODE</text>
+        <text x="85" y="70" fill="#ffffff" font-size="31">&lt;/&gt;</text>
+        <circle cx="85" cy="122" r="20" fill="url(#violet)"/>
+        <text x="85" y="129" fill="#ffffff" font-size="20">3</text>
+      </g>
+      <path d="M775 84h35m-12-12 12 12-12 12" fill="none" stroke="#c084fc" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <g transform="translate(840 36)">
+        <rect width="190" height="98" rx="18" fill="#0a2829" stroke="#10b981" stroke-width="2"/>
+        <text x="95" y="34" fill="#6ee7b7" font-size="14">SELECT MODEL</text>
+        <text x="95" y="70" fill="#ffffff" font-size="22">Gemini 4</text>
+        <circle cx="95" cy="122" r="20" fill="#10b981"/>
+        <text x="95" y="129" fill="#041f18" font-size="20">4</text>
+      </g>
+    </g>
+  </g>
+  <g transform="translate(70 555)">
+    <rect width="1060" height="67" rx="18" fill="#251336" stroke="#a855f7" stroke-opacity=".8" stroke-width="2"/>
+    <circle cx="38" cy="33" r="10" fill="#fbbf24"/>
+    <text x="1018" y="42" fill="#fef3c7" font-size="25" font-weight="800" text-anchor="end" font-family="Tahoma, Arial, sans-serif" direction="rtl">استفاده رایگان با محدودیت؛ دسترسی نامحدود نیست</text>
+  </g>
+  <text x="1125" y="650" fill="#8da4d7" font-size="17" text-anchor="end" font-family="Arial, sans-serif">tekvix.ir</text>
+</svg>
