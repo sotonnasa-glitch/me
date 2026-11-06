@@ -292,6 +292,28 @@ export const BlogSection: React.FC<BlogSectionProps> = ({ onOpenOrderModal, onOp
               {activeArticle.excerpt}
             </div>
 
+            {activeArticle.externalUrl && (
+              <div className="rounded-2xl border border-cyan-400/25 bg-gradient-to-l from-cyan-950/55 via-indigo-950/45 to-purple-950/55 p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg shadow-cyan-950/20">
+                <div className="space-y-1.5">
+                  <h4 className="text-sm sm:text-base font-extrabold text-white">
+                    {activeArticle.externalLinkLabel || 'ورود مستقیم به سایت مقصد'}
+                  </h4>
+                  <p className="text-xs sm:text-sm leading-relaxed text-zinc-300">
+                    {activeArticle.externalLinkDescription || 'برای استفاده از ابزار، از طریق لینک رسمی وارد سایت شوید.'}
+                  </p>
+                </div>
+                <a
+                  href={activeArticle.externalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-5 py-3 text-sm font-extrabold transition-colors shadow-lg shadow-cyan-500/20"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  ورود به Arena.ai
+                </a>
+              </div>
+            )}
+
             {/* Main Content Body */}
             <div className="text-xs sm:text-sm text-zinc-300 leading-loose space-y-4 whitespace-pre-line border-t border-zinc-800/80 pt-4">
               {activeArticle.content}
