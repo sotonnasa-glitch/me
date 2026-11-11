@@ -25,6 +25,13 @@ jobs:
         run: bun run lint
       - name: Production build
         run: bun run build
+      - name: Upload production assets for Cloudflare deployment
+        uses: actions/upload-artifact@v4
+        with:
+          name: tekvix-dist
+          path: dist/
+          if-no-files-found: error
+          retention-days: 1
       - name: Runtime API smoke tests
         run: node scripts/smoke-test.mjs
       - name: Cloudflare Worker API smoke tests
