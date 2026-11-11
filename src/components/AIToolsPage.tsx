@@ -38,7 +38,7 @@ export const AIToolsPage: React.FC = () => {
             </a>
             <span className="inline-flex items-center gap-2 rounded-xl border border-purple-400/20 bg-purple-950/35 px-4 py-2.5 text-xs font-semibold text-purple-200">
               <Sparkles className="h-4 w-4" />
-              ۲۰ ابزار منتخب
+              ۲۱ ابزار منتخب
             </span>
           </div>
         </div>

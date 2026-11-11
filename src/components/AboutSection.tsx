@@ -61,7 +61,7 @@ export const AboutSection: React.FC = () => {
             <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-cyan-300/30 bg-cyan-400/10 text-cyan-300">
               <Sparkles className="h-4 w-4" />
             </span>
-            مشاهدهٔ صفحهٔ اختصاصی ۲۰ ابزار هوش مصنوعی
+            مشاهدهٔ صفحهٔ اختصاصی ۲۱ ابزار هوش مصنوعی
             <ArrowLeft className="h-4 w-4 text-cyan-300 transition-transform group-hover:-translate-x-1" />
           </a>
         </div>

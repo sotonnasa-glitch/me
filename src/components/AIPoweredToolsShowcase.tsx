@@ -48,7 +48,7 @@ export const AIPoweredToolsShowcase: React.FC = () => {
       ? AI_TOOLS_LIST.filter((t) => ['runway-ml', 'sora-openai', 'kling-ai', 'pika-labs'].includes(t.id))
       : activeFilter === 'audio'
       ? AI_TOOLS_LIST.filter((t) => ['suno-ai', 'elevenlabs'].includes(t.id))
-      : AI_TOOLS_LIST.filter((t) => ['chatgpt-openai', 'google-gemini', 'claude-anthropic', 'deepseek', 'meta-llama', 'perplexity-ai', 'n8n-automation', 'grok-xai'].includes(t.id));
+      : AI_TOOLS_LIST.filter((t) => ['chatgpt-openai', 'google-gemini', 'claude-anthropic', 'deepseek', 'meta-llama', 'perplexity-ai', 'n8n-automation', 'grok-xai', 'meta-muse'].includes(t.id));
 
   return (
     <div
@@ -79,11 +79,11 @@ export const AIPoweredToolsShowcase: React.FC = () => {
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-base sm:text-xl font-black text-white leading-tight">
-                  قدرت‌گرفته از ۲۰ موتور هوش مصنوعی برتر دنیا
+                  قدرت‌گرفته از ۲۱ موتور هوش مصنوعی برتر دنیا
                 </h3>
               </div>
               <p className="text-xs text-purple-200/80 font-medium">
-                تمامی ۲۰ ابزار جهانی به صورت یکپارچه در پروژه‌های تکویکس فعال هستند
+                تمامی ۲۱ ابزار جهانی به صورت یکپارچه در پروژه‌های تکویکس فعال هستند
               </p>
             </div>
           </div>
@@ -91,18 +91,18 @@ export const AIPoweredToolsShowcase: React.FC = () => {
 
         <div className="self-start sm:self-auto px-3 py-1.5 rounded-full bg-purple-950/80 border border-purple-400/40 text-purple-200 text-xs font-bold flex items-center gap-2 shadow-inner">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-          <span>نمایش کامل ۲۰ ابزار فعال (۲۰ از ۲۰)</span>
+          <span>نمایش کامل ۲۱ ابزار فعال (۲۱ از ۲۱)</span>
         </div>
       </div>
 
       {/* Filter Tabs with explicit counts */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-5 custom-scrollbar relative z-10 touch-pan-x overscroll-contain">
         {[
-          { id: 'all', label: 'همه ابزارها', count: 20 },
+          { id: 'all', label: 'همه ابزارها', count: 21 },
           { id: 'visual', label: 'تصویر و گرافیک', count: 6 },
           { id: 'video', label: 'ویدیو و تیزر', count: 4 },
           { id: 'audio', label: 'صدا و موزیک', count: 2 },
-          { id: 'code', label: 'متن و اتوماسیون', count: 8 },
+          { id: 'code', label: 'متن و اتوماسیون', count: 9 },
         ].map((filter) => (
           <button
             key={filter.id}

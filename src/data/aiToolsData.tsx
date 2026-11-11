@@ -40,6 +40,7 @@ export const AI_TOOL_WEBSITE_URLS: Record<string, string> = {
   'pika-labs': 'https://pika.art',
   'adobe-firefly': 'https://firefly.adobe.com',
   'meta-llama': 'https://www.meta.ai',
+  'meta-muse': 'https://muse.ai',
   'leonardo-ai': 'https://leonardo.ai',
   'perplexity-ai': 'https://www.perplexity.ai',
   'n8n-automation': 'https://n8n.io',
@@ -63,6 +64,7 @@ export const AI_TOOL_BEST_USED_FOR: Record<string, string> = {
   'pika-labs': 'ایجاد افکت‌های سه‌بعدی ویدیویی خلاقانه مانند خرد شدن، کش‌آمدن و بادکنکی شدن.',
   'adobe-firefly': 'طراحی گرافیک تجاری بدون حق کپی‌رایت، وکتورسازی و ادغام با فتوشاپ.',
   'meta-llama': 'موتور پردازش سریع زبان طبیعی، درک متن و پاسخ‌دهی به مکالمات پیچیده.',
+  'meta-muse': 'دستیار شخصی هوشمند متا برای پیگیری و اجرای کارهای روزمره، از مدیریت برنامه‌ها تا جست‌وجو و رزرو، با تأیید شما.',
   'leonardo-ai': 'ایده‌آل برای بازی‌سازی، طراحی کانسپت کاراکتر و تکسچرسازی سه‌بعدی.',
   'perplexity-ai': 'جستجو و تحقیق دقیق با ارائه منابع معتبر وب و مقالات به‌صورت زنده.',
   'n8n-automation': 'اتوماسیون فرآیندها، اتصال مدل‌های هوش مصنوعی به تلگرام و پایگاه‌های داده.',
@@ -464,6 +466,30 @@ const RAW_AI_TOOLS: Omit<AIToolItem, 'websiteUrl' | 'bestUsedFor'>[] = [
     svgIcon: (
       <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none">
         <circle cx="12" cy="12" r="7.5" stroke="#0081fb" strokeWidth="3.2" />
+      </svg>
+    ),
+  },
+  {
+    id: 'meta-muse',
+    name: 'Muse (Meta)',
+    categoryBadge: 'Meta Muse',
+    categoryFa: 'دستیار شخصی و انجام کارها',
+    company: 'Meta',
+    animType: 'ai-glow-cyan',
+    duration: '4.1s',
+    delay: '2.4s',
+    logoUrl: '/logos/muse.jpg',
+    colorScheme: {
+      badgeBg: 'rgba(0, 129, 251, 0.15)',
+      badgeBorder: 'rgba(0, 129, 251, 0.4)',
+      badgeText: '#60a5fa',
+      iconBg: '#ffffff',
+      iconBorder: 'rgba(0, 129, 251, 0.4)',
+      glowColor: 'rgba(0, 129, 251, 0.35)',
+    },
+    svgIcon: (
+      <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none">
+        <path d="M2 18L9 5l3.3 6.8L15 7l7 11H2Z" fill="#1670e8" />
       </svg>
     ),
   },
