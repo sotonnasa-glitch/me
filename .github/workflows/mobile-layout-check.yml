@@ -1,0 +1,37 @@
+name: Tekvix Mobile Layout Check
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Check live mobile and desktop layouts
+        run: node scripts/mobile-visual-test.mjs
+        env:
+          TEKVIX_URL: https://tekvix.ir/tools
+      - name: Upload responsive screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tekvix-mobile-layout-screenshots
+          path: artifacts/mobile-tools/
+          if-no-files-found: warn
+          retention-days: 7
