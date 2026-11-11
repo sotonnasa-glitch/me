@@ -171,7 +171,33 @@ try {
         ok: status >= 200 && status < 400 || restricted,
       };
     } catch (error) {
-      return { ...link, result: 'network-error', error: String(error).slice(0, 240), ok: false };
+      // Some sites (notably Google) send response headers that exceed APIRequestContext's parser limit.
+      // Retry through Chromium's normal navigation stack before marking the destination as failed.
+      let retryPage;
+      try {
+        retryPage = await browser.newPage();
+        const retryResponse = await retryPage.goto(link.href, { waitUntil: 'domcontentloaded', timeout: 20000 });
+        const status = retryResponse?.status();
+        const restricted = [401, 403, 429].includes(status);
+        return {
+          ...link,
+          finalUrl: retryPage.url(),
+          status: status ?? null,
+          result: restricted ? 'reachable-restricted' : status >= 200 && status < 400 ? 'ok' : 'http-error',
+          ok: status >= 200 && status < 400 || restricted,
+          retry: 'browser-navigation',
+        };
+      } catch (retryError) {
+        return {
+          ...link,
+          result: 'network-error',
+          error: String(retryError).slice(0, 240),
+          originalError: String(error).slice(0, 180),
+          ok: false,
+        };
+      } finally {
+        if (retryPage) await retryPage.close();
+      }
     }
   }));
   for (const link of linkChecks.filter(item => !item.ok)) {
