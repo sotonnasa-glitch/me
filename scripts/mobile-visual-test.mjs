@@ -133,6 +133,61 @@ try {
     });
     await page.close();
   }
+  // Verify all 21 production logo assets, not just the newly added Muse logo.
+  const logoPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const logoPageResponse = await logoPage.goto(TARGET_URL, { waitUntil: 'domcontentloaded', timeout: 45000 });
+  if (!logoPageResponse || logoPageResponse.status() >= 400) {
+    failures.push(`logos: tools page returned HTTP ${logoPageResponse?.status() ?? 'no response'}`);
+  }
+  await logoPage.locator('#tools .grid > a').first().waitFor({ state: 'attached', timeout: 20000 });
+  const logoCards = logoPage.locator('#tools .grid > a');
+  const logoCardCount = await logoCards.count();
+  if (logoCardCount !== 21) failures.push(`logos: expected 21 tool cards, found ${logoCardCount}`);
+
+  const logoChecks = [];
+  for (let index = 0; index < logoCardCount; index += 1) {
+    const card = logoCards.nth(index);
+    const name = (await card.locator('h4').innerText()).trim();
+    const img = card.locator('img');
+    await img.evaluate(element => {
+      element.loading = 'eager';
+      element.scrollIntoView({ block: 'center' });
+    });
+    const decoded = await img.evaluate(async element => {
+      try {
+        await element.decode();
+        return true;
+      } catch {
+        return false;
+      }
+    });
+    const state = await img.evaluate(element => {
+      const fallback = element.parentElement?.querySelector('.logo-fallback');
+      const fallbackStyle = fallback ? getComputedStyle(fallback) : null;
+      return {
+        src: element.getAttribute('src'),
+        complete: element.complete,
+        naturalWidth: element.naturalWidth,
+        naturalHeight: element.naturalHeight,
+        imageDisplay: getComputedStyle(element).display,
+        fallbackDisplay: fallbackStyle?.display ?? null,
+      };
+    });
+    const ok = decoded &&
+      state.complete &&
+      state.naturalWidth >= 16 &&
+      state.naturalHeight >= 16 &&
+      state.imageDisplay !== 'none' &&
+      state.fallbackDisplay === 'none';
+    logoChecks.push({ name, ...state, decoded, ok });
+    if (!ok) failures.push(`logos: ${name} failed to load/render correctly (${state.src}, ${state.naturalWidth}x${state.naturalHeight})`);
+  }
+
+  const logoUrls = logoChecks.map(item => item.src);
+  if (new Set(logoUrls).size !== 21) failures.push(`logos: expected 21 unique logo assets, found ${new Set(logoUrls).size}`);
+  await logoPage.close();
+  results.push({ logoAssets: logoChecks });
+
   // Check every external AI-tool destination from the live production page.
   const linkPage = await browser.newPage();
   const linkPageResponse = await linkPage.goto(TARGET_URL, { waitUntil: 'domcontentloaded', timeout: 45000 });
