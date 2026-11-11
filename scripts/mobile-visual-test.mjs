@@ -150,9 +150,9 @@ try {
   if (links.length !== 21) failures.push(`external-links: expected 21 tool cards, found ${links.length}`);
   if (uniqueLinks.length !== links.length) failures.push('external-links: duplicate destinations detected');
   const linkChecks = await Promise.all(uniqueLinks.map(async link => {
-    if (!link.href || !/^https:\\/\\//i.test(link.href)) {
-      return { ...link, result: 'invalid-url', ok: false };
-    }
+    let parsedUrl;
+    try { parsedUrl = new URL(link.href); } catch { return { ...link, result: 'invalid-url', ok: false }; }
+    if (parsedUrl.protocol !== 'https:') return { ...link, result: 'invalid-url', ok: false };
     try {
       let response = await linkPage.request.get(link.href, { timeout: 20000, maxRedirects: 10 });
       if ([405, 501].includes(response.status())) {
