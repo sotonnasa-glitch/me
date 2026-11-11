@@ -133,6 +133,52 @@ try {
     });
     await page.close();
   }
+  // Check every external AI-tool destination from the live production page.
+  const linkPage = await browser.newPage();
+  const linkPageResponse = await linkPage.goto(TARGET_URL, { waitUntil: 'domcontentloaded', timeout: 45000 });
+  if (!linkPageResponse || linkPageResponse.status() >= 400) {
+    failures.push(`external-links: tools page returned HTTP ${linkPageResponse?.status() ?? 'no response'}`);
+  }
+  await linkPage.locator('#tools .grid > a').first().waitFor({ state: 'attached', timeout: 20000 });
+  const links = await linkPage.locator('#tools .grid > a').evaluateAll(cards => cards.map(card => ({
+    name: card.innerText.trim().split('\\n')[0],
+    href: card.getAttribute('href'),
+    target: card.getAttribute('target'),
+    rel: card.getAttribute('rel'),
+  })));
+  const uniqueLinks = [...new Map(links.map(link => [link.href, link])).values()];
+  if (links.length !== 21) failures.push(`external-links: expected 21 tool cards, found ${links.length}`);
+  if (uniqueLinks.length !== links.length) failures.push('external-links: duplicate destinations detected');
+  const linkChecks = await Promise.all(uniqueLinks.map(async link => {
+    if (!link.href || !/^https:\\/\\//i.test(link.href)) {
+      return { ...link, result: 'invalid-url', ok: false };
+    }
+    try {
+      let response = await linkPage.request.get(link.href, { timeout: 20000, maxRedirects: 10 });
+      if ([405, 501].includes(response.status())) {
+        response = await linkPage.request.get(link.href, {
+          timeout: 20000, maxRedirects: 10,
+          headers: { Range: 'bytes=0-0' },
+        });
+      }
+      const status = response.status();
+      const restricted = [401, 403, 429].includes(status);
+      return {
+        ...link,
+        finalUrl: response.url(),
+        status,
+        result: restricted ? 'reachable-restricted' : status >= 200 && status < 400 ? 'ok' : 'http-error',
+        ok: status >= 200 && status < 400 || restricted,
+      };
+    } catch (error) {
+      return { ...link, result: 'network-error', error: String(error).slice(0, 240), ok: false };
+    }
+  }));
+  for (const link of linkChecks.filter(item => !item.ok)) {
+    failures.push(`external-links: ${link.name} (${link.href}) failed: ${link.result} ${link.status ?? link.error ?? ''}`);
+  }
+  await linkPage.close();
+  results.push({ externalLinks: linkChecks });
 } finally {
   await browser.close();
 }
