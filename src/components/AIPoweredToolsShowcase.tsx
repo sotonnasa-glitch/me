@@ -122,7 +122,7 @@ export const AIPoweredToolsShowcase: React.FC = () => {
         ))}
       </div>
 
-      {/* Grid of ALL 20 AI Cards - Fully visible without internal scroll restriction */}
+      {/* Grid of ALL 21 AI Cards - Fully visible without internal scroll restriction */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 relative z-10">
         {filteredTools.map((tool) => {
           return (

@@ -67,25 +67,26 @@ try {
 
     const gridState = await page.locator('#tools .grid').evaluate(el => {
       const style = getComputedStyle(el);
-      const firstCard = el.querySelector('a');
-      const cardRect = firstCard?.getBoundingClientRect();
+      const gridRect = el.getBoundingClientRect();
+      const cards = [...el.querySelectorAll(':scope > a')].map(card => card.getBoundingClientRect());
       const museRect = el.querySelector('a[href="https://muse.ai"]')?.getBoundingClientRect();
       return {
         columns: style.gridTemplateColumns.split(' ').length,
-        gridWidth: Math.round(el.getBoundingClientRect().width),
-        cardWidth: cardRect ? Math.round(cardRect.width) : 0,
+        gridWidth: Math.round(gridRect.width),
+        cardWidth: cards[0] ? Math.round(cards[0].width) : 0,
         museCardWidth: museRect ? Math.round(museRect.width) : 0,
         museCardHeight: museRect ? Math.round(museRect.height) : 0,
-        containerScrollWidth: el.scrollWidth,
-        containerClientWidth: el.clientWidth,
+        cardsStayInsideGrid: cards.every(rect =>
+          rect.left >= gridRect.left - 1 && rect.right <= gridRect.right + 1
+        ),
       };
     });
     if (gridState.columns !== viewport.columns) {
       failures.push(`${viewport.name}: expected ${viewport.columns} grid columns, found ${gridState.columns}`);
     }
     if (gridState.cardWidth < 90) failures.push(`${viewport.name}: AI cards are too narrow (${gridState.cardWidth}px)`);
-    if (gridState.containerScrollWidth > gridState.containerClientWidth + 2) {
-      failures.push(`${viewport.name}: AI card grid has horizontal overflow`);
+    if (!gridState.cardsStayInsideGrid) {
+      failures.push(`${viewport.name}: one or more AI cards exceed the visible grid bounds`);
     }
 
     const pageWidth = await page.evaluate(() => ({
@@ -110,6 +111,8 @@ try {
 
     // Capture a screenshot from the actual deployed site at every target viewport.
     await page.locator('#tools').scrollIntoViewIfNeeded();
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    await page.waitForTimeout(100);
     await page.screenshot({
       path: path.join(ARTIFACT_DIR, `${viewport.name}.png`),
       fullPage: true,
