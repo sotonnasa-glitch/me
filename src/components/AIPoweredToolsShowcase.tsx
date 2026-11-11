@@ -166,7 +166,7 @@ export const AIPoweredToolsShowcase: React.FC = () => {
                     backgroundColor: tool.colorScheme.iconBg,
                     borderColor: tool.colorScheme.iconBorder,
                   }}
-                  className={`w-11 h-11 rounded-xl border flex items-center justify-center shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-110 overflow-hidden ${tool.id === 'n8n-automation' ? 'p-1' : 'p-2'} relative`}
+                  className="w-11 h-11 rounded-xl border flex items-center justify-center shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-110 overflow-hidden p-2 relative"
                 >
                   <img
                     src={tool.logoUrl}
